@@ -11,14 +11,14 @@ using System.Threading.Tasks;
 
 namespace Interpreter
 {
-    public class RuntimeInterpreter
+    public class Interpreter
     {
         private readonly Namespace _namespace;
         private readonly RuntimeEnvironment _environment;
 
         public Namespace Namespace => _namespace;
 
-        public RuntimeInterpreter(Namespace ns, RuntimeEnvironment environment)
+        public Interpreter(Namespace ns, RuntimeEnvironment environment)
         {
             _namespace = ns;
             _environment = environment;
