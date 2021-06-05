@@ -1,4 +1,4 @@
-﻿using CLI.Extensions;
+﻿using PointlessCLI.Extensions;
 using Interpreter;
 using Interpreter.Environment;
 using Interpreter.NativeImplementations;
@@ -13,7 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace CLI
+namespace PointlessCLI
 {
     public class Program
     {
@@ -26,7 +26,7 @@ namespace CLI
                     .InformationalVersion
                     .ToString();
 
-                string info = $"plcli v{version}";
+                string info = $"PointLess Command Line Interface v{version}";
                 Console.WriteLine(info);
                 Console.WriteLine(string.Concat(Enumerable.Repeat('=', info.Length)));
                 Console.WriteLine();
@@ -122,7 +122,7 @@ namespace CLI
 
                 var keyRegex = new Regex(@"^([A-Za-z0-9]+)Source$");
                 var keyMatch = keyRegex.Match(key);
-                string filename = keyMatch.Groups[1].Value.FirstToLower() + ".pl";
+                string filename = keyMatch.Groups[1].Value.FirstToLower() + ".ptls";
 
                 using (var fileStream = File.Create(Path.Combine("system", filename)))
                 {
@@ -135,7 +135,7 @@ namespace CLI
 
             byte[] programTemplate = ProjectGeneration.ProjectFiles.program;
 
-            using (var fileStream = File.Create("source\\program.pl"))
+            using (var fileStream = File.Create("source\\program.ptls"))
             {
                 var readOnlySpan = new ReadOnlySpan<byte>(programTemplate);
                 fileStream.Write(readOnlySpan);
@@ -143,7 +143,7 @@ namespace CLI
 
             var projectFileModel = new ProjectModel
             {
-                Include = new[] { "source\\program.pl" },
+                Include = new[] { "source\\program.ptls" },
                 CompileOrder = new[] { "program" },
                 EntryPoint = new ProjectEntryPointModel
                 {
@@ -172,13 +172,13 @@ namespace CLI
 
             // Load system code
             var libSources = new Dictionary<string, string>();
-            string[] libs = Directory.GetFiles("system", "*.pl");
+            string[] libs = Directory.GetFiles("system", "*.ptls");
 
             foreach (string lib in libs)
             {
                 string libSource = File.ReadAllText(lib);
 
-                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.pl$");
+                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.ptls$");
                 var match = regex.Match(lib);
 
                 string name = match.Groups[1].Value;
@@ -207,7 +207,7 @@ namespace CLI
             {
                 string source = File.ReadAllText(srcPath);
 
-                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.pl$");
+                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.ptls$");
                 var match = regex.Match(srcPath);
 
                 string srcName = match.Groups[1].Value;

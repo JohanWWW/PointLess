@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31129.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Interpreter", "Interpreter\Interpreter.csproj", "{9FE3E2B2-D5DA-46CB-820B-4F922073AAF2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI", "CLI\CLI.csproj", "{777C4C5A-F89C-42D4-9689-A2E99AA512FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointlessCLI", "CLI\PointlessCLI.csproj", "{777C4C5A-F89C-42D4-9689-A2E99AA512FE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EF8F9571-3335-4B30-AB90-61C8935A094E}"
 EndProject
