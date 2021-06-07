@@ -100,7 +100,7 @@ To uninstall the command line interface run the following command \
 
 ## Get Started
 - Create a new project by creating a new directory anywhere on your system and open in Visual Studio Code
-- In vs code, launch a new instance of Windows PowerShell (or cmd) and run `pointless init`. This command will generate project files such as configurations, libraries and boilerplate code
+- In vs code, launch a new instance of Windows PowerShell (or cmd) and run `pointless new`. This command will generate project files such as configurations, libraries and boilerplate code
 
 The generated files will appear in the project directory.
 Open the file named 'program.ptls' which is located in 'source' and begin coding! \

@@ -26,18 +26,14 @@ namespace PointlessCLI
                     .InformationalVersion
                     .ToString();
 
-                string info = $"PointLess Command Line Interface v{version}";
+                string info = $"Pointless Command Line Interface v{version}";
                 Console.WriteLine(info);
                 Console.WriteLine(string.Concat(Enumerable.Repeat('=', info.Length)));
                 Console.WriteLine();
                 Console.WriteLine("Usage:");
-                Console.WriteLine("Launch PointLess in interactive mode");
-                Console.WriteLine("  interactive");
-
                 Console.WriteLine();
                 Console.WriteLine("Creates necessary files for your new project");
-                Console.WriteLine("  init");
-
+                Console.WriteLine("  new");
                 Console.WriteLine();
                 Console.WriteLine("Execute the current project");
                 Console.WriteLine("  run [-a <arg list>]");
@@ -45,11 +41,7 @@ namespace PointlessCLI
                 return;
             }
 
-            if (args[0] is "interactive")
-            {
-                //Interactive();
-            }
-            else if (args[0] is "init")
+            if (args[0] is "new")
             {
                 Console.WriteLine($"This operation is going to create files in current directory which is \"{Environment.CurrentDirectory}\"");
                 Console.Write("Type 'yes' to continue: ");
@@ -72,7 +64,7 @@ namespace PointlessCLI
                 }
                 else
                 {
-                    string[] programArgs = new string[0];
+                    string[] programArgs = Array.Empty<string>();
                     Run(programArgs);
                 }
             }
