@@ -105,3 +105,5 @@ To uninstall the command line interface run the following command \
 The generated files will appear in the project directory.
 Open the file named 'program.ptls' which is located in 'source' and begin coding! \
 By default, the program's entry point is the function named 'main'. You can change this by modifying the project file.
+
+To run code, execute `pointless run`.
