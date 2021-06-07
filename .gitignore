@@ -10,8 +10,8 @@
 *.userosscache
 *.sln.docstates
 
-CLI/ProjectGeneration/ProjectFiles.Designer.cs
-CLI/ProjectGeneration/StandardLibraries.Designer.cs
+CLI/ProjectGeneration/
+!CLI/ProjectGeneration/*.resx
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
