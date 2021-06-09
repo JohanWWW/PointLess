@@ -1,4 +1,4 @@
-﻿grammar PointLess;
+﻿grammar ZeroPoint;
 
 root
 	: (use_statement SEMICOLON)*

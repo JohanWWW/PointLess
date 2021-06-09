@@ -34,16 +34,16 @@ namespace Interpreter
         public RootModel ToAST(string program)
         {
             ICharStream charStream = new AntlrInputStream(program);
-            ITokenSource tokenSource = new PointLessLexer(charStream);
+            ITokenSource tokenSource = new ZeroPointLexer(charStream);
             ITokenStream tokenStream = new CommonTokenStream(tokenSource);
 
-            var parser = new PointLessParser(tokenStream);
+            var parser = new ZeroPointParser(tokenStream);
             parser.BuildParseTree = true;
 
             return EnterRoot(parser.root());
         }
 
-        private RootModel EnterRoot(PointLessParser.RootContext context)
+        private RootModel EnterRoot(ZeroPointParser.RootContext context)
         {
             var statements = new List<IStatementModel>();
 
@@ -69,7 +69,7 @@ namespace Interpreter
             };
         }
 
-        private IStatementModel EnterStatement(PointLessParser.StatementContext context)
+        private IStatementModel EnterStatement(ZeroPointParser.StatementContext context)
         {
             if (context.assign_statement() != null)
             {
@@ -94,7 +94,7 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        private IStatementModel EnterAssignStatement(PointLessParser.Assign_statementContext context)
+        private IStatementModel EnterAssignStatement(ZeroPointParser.Assign_statementContext context)
         {
             if (context.IDENTIFIER() != null)
             {
@@ -112,7 +112,7 @@ namespace Interpreter
             };
         }
 
-        private ConditionalStatementModel EnterConditionalStatement(PointLessParser.Conditional_statementContext context)
+        private ConditionalStatementModel EnterConditionalStatement(ZeroPointParser.Conditional_statementContext context)
         {
             var ifStatement = new IfStatementModel
             {
@@ -152,7 +152,7 @@ namespace Interpreter
             };
         }
 
-        private ILoopStatementModel EnterLoopStatement(PointLessParser.Loop_statementContext context)
+        private ILoopStatementModel EnterLoopStatement(ZeroPointParser.Loop_statementContext context)
         {
             if (context.for_loop_statement() != null)
             {
@@ -167,7 +167,7 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        private WhileLoopStatement EnterWhileLoop(PointLessParser.While_loop_statementContext context)
+        private WhileLoopStatement EnterWhileLoop(ZeroPointParser.While_loop_statementContext context)
         {
             return new WhileLoopStatement
             {
@@ -176,7 +176,7 @@ namespace Interpreter
             };
         }
 
-        private IExpressionModel EnterExpression(PointLessParser.ExpressionContext context)
+        private IExpressionModel EnterExpression(ZeroPointParser.ExpressionContext context)
         {
             if (context.anonymous_function_definition_statement() != null)
             {
@@ -220,7 +220,7 @@ namespace Interpreter
         /// <summary>
         /// Unary or binary expression
         /// </summary>
-        private IExpressionModel EnterExpressionExpression(PointLessParser.ExpressionContext context)
+        private IExpressionModel EnterExpressionExpression(ZeroPointParser.ExpressionContext context)
         {
             if (context.expression().Length is 1)
             {
@@ -400,7 +400,7 @@ namespace Interpreter
             }
         }
 
-        private IExpressionModel EnterFunctionDefinitionExpression(PointLessParser.Anonymous_function_definition_statementContext context)
+        private IExpressionModel EnterFunctionDefinitionExpression(ZeroPointParser.Anonymous_function_definition_statementContext context)
         {
             if (context.function_statement() != null)
             {
@@ -435,10 +435,10 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        private string[] EnterIdentifierAccess(PointLessParser.Identifier_accessContext context) =>
+        private string[] EnterIdentifierAccess(ZeroPointParser.Identifier_accessContext context) =>
             context.IDENTIFIER().Select(i => i.GetText()).ToArray();
 
-        private LiteralExpressionModel EnterLiteral(PointLessParser.LiteralContext context)
+        private LiteralExpressionModel EnterLiteral(ZeroPointParser.LiteralContext context)
         {
             if (context.BOOLEAN() != null)
             {
@@ -487,7 +487,7 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        private FunctionStatementModel EnterFunctionStatement(PointLessParser.Function_statementContext context)
+        private FunctionStatementModel EnterFunctionStatement(ZeroPointParser.Function_statementContext context)
         {
             return new FunctionStatementModel
             {
@@ -497,7 +497,7 @@ namespace Interpreter
             };
         }
 
-        private ActionStatementModel EnterActionStatement(PointLessParser.Action_statementContext context)
+        private ActionStatementModel EnterActionStatement(ZeroPointParser.Action_statementContext context)
         {
             return new ActionStatementModel
             {
@@ -505,7 +505,7 @@ namespace Interpreter
             };
         }
 
-        private ConsumerStatementModel EnterConsumerStatement(PointLessParser.Consumer_statementContext context)
+        private ConsumerStatementModel EnterConsumerStatement(ZeroPointParser.Consumer_statementContext context)
         {
             return new ConsumerStatementModel
             {
@@ -514,7 +514,7 @@ namespace Interpreter
             };
         }
 
-        private ProviderStatementModel EnterProviderStatement(PointLessParser.Provider_statementContext context)
+        private ProviderStatementModel EnterProviderStatement(ZeroPointParser.Provider_statementContext context)
         {
             return new ProviderStatementModel
             {
@@ -523,21 +523,21 @@ namespace Interpreter
             };
         }
 
-        private NativeProviderStatementModel EnterNativeProviderStatement(PointLessParser.Native_provider_statementContext context)
+        private NativeProviderStatementModel EnterNativeProviderStatement(ZeroPointParser.Native_provider_statementContext context)
         {
             string implementationIdentifier = EnterInjectStatement(context.inject_statement());
 
             return _nativeImplementations[implementationIdentifier] as NativeProviderStatementModel;
         }
 
-        private NativeFunctionStatementModel EnterNativeFunctionStatement(PointLessParser.Native_function_statementContext context)
+        private NativeFunctionStatementModel EnterNativeFunctionStatement(ZeroPointParser.Native_function_statementContext context)
         {
             string implementationIdentifier = EnterInjectStatement(context.inject_statement());
 
             return _nativeImplementations[implementationIdentifier] as NativeFunctionStatementModel;
         }
 
-        private string EnterInjectStatement(PointLessParser.Inject_statementContext context)
+        private string EnterInjectStatement(ZeroPointParser.Inject_statementContext context)
         {
             string implIdentifier = context.STRING().GetText();
             var sb = new StringBuilder();
@@ -546,7 +546,7 @@ namespace Interpreter
             return sb.ToString();
         }
 
-        private BlockModel EnterBlock(PointLessParser.BlockContext context)
+        private BlockModel EnterBlock(ZeroPointParser.BlockContext context)
         {
             if (context.statement() is null)
             {
@@ -563,7 +563,7 @@ namespace Interpreter
             return new BlockModel { Statements = statements };
         }
 
-        private FunctionCallStatement EnterFunctionCall(PointLessParser.Function_call_statementContext context)
+        private FunctionCallStatement EnterFunctionCall(ZeroPointParser.Function_call_statementContext context)
         {
             if (context.IDENTIFIER() != null)
             {
@@ -581,7 +581,7 @@ namespace Interpreter
             };
         }
 
-        private ArgumentListModel EnterArgumentList(PointLessParser.Argument_listContext context)
+        private ArgumentListModel EnterArgumentList(ZeroPointParser.Argument_listContext context)
         {
             var expressions = new List<IExpressionModel>();
 
@@ -596,7 +596,7 @@ namespace Interpreter
             };
         }
 
-        private ObjectInitializationExpressionModel EnterObjectInitialization(PointLessParser.Object_initialization_expressionContext context)
+        private ObjectInitializationExpressionModel EnterObjectInitialization(ZeroPointParser.Object_initialization_expressionContext context)
         {
             if (context.assign_statement() is null)
             {

@@ -1,4 +1,4 @@
-﻿using PointlessCLI.Extensions;
+﻿using ZeroPointCLI.Extensions;
 using Interpreter;
 using Interpreter.Environment;
 using Interpreter.NativeImplementations;
@@ -13,7 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace PointlessCLI
+namespace ZeroPointCLI
 {
     public class Program
     {
@@ -26,7 +26,7 @@ namespace PointlessCLI
                     .InformationalVersion
                     .ToString();
 
-                string info = $"Pointless Command Line Interface v{version}";
+                string info = $"ZeroPoint Command Line Interface v{version}";
                 Console.WriteLine(info);
                 Console.WriteLine(string.Concat(Enumerable.Repeat('=', info.Length)));
                 Console.WriteLine();
@@ -85,9 +85,9 @@ namespace PointlessCLI
         ///       |       |__compile-order.txt
         ///       |
         ///       |__source
-        ///       |       |__program.pl
+        ///       |       |__program.0p
         ///       |
-        ///       |__plproj.json
+        ///       |__project.json
         /// </code>
         /// </summary>
         private static void Initialize()
@@ -114,7 +114,7 @@ namespace PointlessCLI
 
                 var keyRegex = new Regex(@"^([A-Za-z0-9]+)Source$");
                 var keyMatch = keyRegex.Match(key);
-                string filename = keyMatch.Groups[1].Value.FirstToLower() + ".ptls";
+                string filename = keyMatch.Groups[1].Value.FirstToLower() + ".0p";
 
                 using (var fileStream = File.Create(Path.Combine("system", filename)))
                 {
@@ -127,7 +127,7 @@ namespace PointlessCLI
 
             byte[] programTemplate = ProjectGeneration.ProjectFiles.program;
 
-            using (var fileStream = File.Create("source\\program.ptls"))
+            using (var fileStream = File.Create("source\\program.0p"))
             {
                 var readOnlySpan = new ReadOnlySpan<byte>(programTemplate);
                 fileStream.Write(readOnlySpan);
@@ -135,7 +135,7 @@ namespace PointlessCLI
 
             var projectFileModel = new ProjectModel
             {
-                Include = new[] { "source\\program.ptls" },
+                Include = new[] { "source\\program.0p" },
                 CompileOrder = new[] { "program" },
                 EntryPoint = new ProjectEntryPointModel
                 {
@@ -149,7 +149,7 @@ namespace PointlessCLI
                 WriteIndented = true
             });
 
-            using (var fileStream = File.Create("plproj.json"))
+            using (var fileStream = File.Create("project.json"))
             {
                 var readOnlySpan = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(json));
                 fileStream.Write(readOnlySpan);
@@ -164,13 +164,13 @@ namespace PointlessCLI
 
             // Load system code
             var libSources = new Dictionary<string, string>();
-            string[] libs = Directory.GetFiles("system", "*.ptls");
+            string[] libs = Directory.GetFiles("system", "*.0p");
 
             foreach (string lib in libs)
             {
                 string libSource = File.ReadAllText(lib);
 
-                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.ptls$");
+                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.0p$");
                 var match = regex.Match(lib);
 
                 string name = match.Groups[1].Value;
@@ -191,7 +191,7 @@ namespace PointlessCLI
                 libInterpreter.Interpret(compiledTree);
             }
 
-            ProjectModel project = LoadProjectConfigurations("plproj.json");
+            ProjectModel project = LoadProjectConfigurations("project.json");
 
             var sources = new Dictionary<string, string>();
 
@@ -199,7 +199,7 @@ namespace PointlessCLI
             {
                 string source = File.ReadAllText(srcPath);
 
-                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.ptls$");
+                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.0p$");
                 var match = regex.Match(srcPath);
 
                 string srcName = match.Groups[1].Value;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PointlessCLI.Extensions
+namespace ZeroPointCLI.Extensions
 {
     internal static class StringExtensions
     {
