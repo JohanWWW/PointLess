@@ -1,5 +1,5 @@
-# Pointless (Programming Language)
-Pointless is a dynamic and object oriented programming language.
+# ZeroPoint (Programming Language)
+ZeroPoint is a dynamic and object oriented programming language.
 
 ## Examples
 ### Variable Declarations
@@ -22,7 +22,7 @@ HelloWorld
 ```
 
 ### Object Definitions
-Objects in Pointless are anonymous and are really simple to define. Below is an example of an object being assigned to a variable.
+Objects in ZeroPoint are anonymous and are really simple to define. Below is an example of an object being assigned to a variable.
 ```
 person = {
     firstName = "Björn",
@@ -52,7 +52,7 @@ Hello World!
 Hello World!
 ```
 
-Although classes are non-existent in Pointless it is still possible to simulate class definitions with functions which allows for encapsulation.
+Although classes are non-existent in ZeroPoint it is still possible to simulate class definitions with functions which allows for encapsulation.
 ```
 // Class-like function with constructor parameters
 Person = (firstName, lastName, age) => {
@@ -91,19 +91,19 @@ Person = (firstName, lastName, age) => {
 - Run the following command in the developer command prompt to generate nuget package \
 `dotnet pack`
 - Install the command line interface \
-`dotnet tool install --global --add-source .\nupkg pointlesscli`
+`dotnet tool install --global --add-source .\nupkg zeropointcli`
 
 ## Uninstall CLI
 To uninstall the command line interface run the following command \
-`dotnet tool uninstall --global pointlesscli`
+`dotnet tool uninstall --global zeropointcli`
 
 
 ## Get Started
 - Create a new project by creating a new directory anywhere on your system and open in Visual Studio Code
-- In vs code, launch a new instance of Windows PowerShell (or cmd) and run `pointless new`. This command will generate project files such as configurations, libraries and boilerplate code
+- In vs code, launch a new instance of Windows PowerShell (or cmd) and run `zero new`. This command will generate project files such as configurations, libraries and boilerplate code
 
 The generated files will appear in the project directory.
-Open the file named 'program.ptls' which is located in 'source' and begin coding! \
+Open the file named 'program.0p' which is located in 'source' and begin coding! \
 By default, the program's entry point is the function named 'main'. You can change this by modifying the project file.
 
-To run code, execute `pointless run`.
+To run code, execute `zero run`.

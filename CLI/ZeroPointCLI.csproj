@@ -13,19 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="ProjectGeneration\ProjectFiles.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ProjectFiles.resx</DependentUpon>
-    </Compile>
-    <Compile Update="ProjectGeneration\StandardLibraries.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>StandardLibraries.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Update="ProjectGeneration\ProjectFiles.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ProjectFiles.Designer.cs</LastGenOutput>
