@@ -1,4 +1,5 @@
-﻿using Interpreter.Models;
+﻿using Interpreter;
+using Interpreter.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,9 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Interpreter.NativeImplementations
+namespace NativeLibraries
 {
-    public class StdNativeImplementations : NativeImplementation
+    public class StdNativeImplementations : NativeImplementationBase
     {
         [ImplementationIdentifier("std.print")]
         public static readonly NativeFunctionStatementModel Print = new NativeFunctionStatementModel("obj")

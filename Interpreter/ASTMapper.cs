@@ -2,7 +2,7 @@
 using Interpreter.Models;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
-using Interpreter.NativeImplementations;
+using Interpreter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +16,7 @@ namespace Interpreter
     {
         private readonly IReadOnlyDictionary<string, IFunctionModel> _nativeImplementations;
 
-        public ASTMapper(NativeImplementation implementation)
+        public ASTMapper(NativeImplementationBase implementation)
         {
             _nativeImplementations = implementation.GetImplementationMap();
         }

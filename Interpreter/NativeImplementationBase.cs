@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Interpreter.NativeImplementations
+namespace Interpreter
 {
-    public class NativeImplementation
+    public abstract class NativeImplementationBase
     {
         internal IReadOnlyDictionary<string, IFunctionModel> GetImplementationMap()
         {

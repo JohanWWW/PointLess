@@ -1,7 +1,6 @@
 ﻿using ZeroPointCLI.Extensions;
 using Interpreter;
 using Interpreter.Environment;
-using Interpreter.NativeImplementations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using NativeLibraries;
 
 namespace ZeroPointCLI
 {
