@@ -68,6 +68,15 @@ namespace ZeroPointCLI
                     Run(programArgs);
                 }
             }
+            else if (args[0] is "test")
+            {
+                var impl = GetImplementations();
+
+                foreach (var im in impl)
+                {
+                    Console.WriteLine(impl.GetType());
+                }
+            }
             else
             {
                 Console.WriteLine($"Unknown command: {string.Concat(' ', args)}");
@@ -160,7 +169,8 @@ namespace ZeroPointCLI
         {
             var environment = new RuntimeEnvironment();
 
-            var stdImplementation = new StdNativeImplementations();
+            //var stdImplementation = new StdNativeImplementations();
+            var implementations = GetImplementations();
 
             // Load system code
             var libSources = new Dictionary<string, string>();
@@ -182,7 +192,8 @@ namespace ZeroPointCLI
             // Build and run all library sources
             foreach (string lib in compileOrder)
             {
-                var compiler = new ASTMapper(stdImplementation);
+                //var compiler = new ASTMapper(stdImplementation);
+                var compiler = new ASTMapper(implementations);
                 var compiledTree = compiler.ToAST(libSources[lib]);
 
                 var libInterpreter = CreateInterpreter(lib, environment);
@@ -224,6 +235,19 @@ namespace ZeroPointCLI
                 entryPoint.Invoke(new List<dynamic> { null });
             else
                 entryPoint.Invoke(args.Select(a => (dynamic)a).ToList());
+        }
+
+        private static NativeImplementationBase[] GetImplementations()
+        {
+            Type[] types = Assembly.Load(nameof(NativeLibraries)).GetTypes().Where(t => t.IsPublic).ToArray();
+            NativeImplementationBase[] implementations = new NativeImplementationBase[types.Length];
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                implementations[i] = Activator.CreateInstance(types[i]) as NativeImplementationBase;
+            }
+
+            return implementations;
         }
 
         private static ProjectModel LoadProjectConfigurations(string path)

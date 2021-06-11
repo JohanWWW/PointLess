@@ -16,9 +16,9 @@ namespace Interpreter
     {
         private readonly IReadOnlyDictionary<string, IFunctionModel> _nativeImplementations;
 
-        public ASTMapper(NativeImplementationBase implementation)
+        public ASTMapper(params NativeImplementationBase[] implementations)
         {
-            _nativeImplementations = implementation.GetImplementationMap();
+            _nativeImplementations = implementations.SelectMany(i => i.GetImplementationMap()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
         public ASTMapper()
