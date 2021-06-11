@@ -68,15 +68,6 @@ namespace ZeroPointCLI
                     Run(programArgs);
                 }
             }
-            else if (args[0] is "test")
-            {
-                var impl = GetImplementations();
-
-                foreach (var im in impl)
-                {
-                    Console.WriteLine(impl.GetType());
-                }
-            }
             else
             {
                 Console.WriteLine($"Unknown command: {string.Concat(' ', args)}");
