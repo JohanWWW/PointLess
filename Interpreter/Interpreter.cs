@@ -2,7 +2,7 @@
 using Interpreter.Models;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
-using Interpreter.Models.Runtime;
+using Interpreter.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,6 +72,18 @@ namespace Interpreter
             if (statement is UseStatementModel)
             {
                 EnterUseStatementModel(statement as UseStatementModel, scope);
+                return;
+            }
+
+            if (statement is TryCatchStatementModel)
+            {
+                EnterTryCatchStatement(statement as TryCatchStatementModel, scope);
+                return;
+            }
+
+            if (statement is ThrowStatement)
+            {
+                EnterThrowStatement(statement as ThrowStatement, scope);
                 return;
             }
         }
@@ -656,5 +668,38 @@ namespace Interpreter
             }
 
         }
+
+        public void EnterTryCatchStatement(TryCatchStatementModel statement, Scoping scope)
+        {
+            try
+            {
+                var tryBlockScope = new Scoping();
+                tryBlockScope.SetLeftScope(scope);
+                EnterBlock(statement.Try.Body, tryBlockScope);
+            }
+            catch (LanguageException le) // Catches exceptions thrown by language interpreter
+            {
+                var catchBlockScope = new Scoping();
+                catchBlockScope.SetLeftScope(scope);
+                catchBlockScope.AddLocalVariable(statement.Catch.ArgumentName, le.Argument);
+                EnterBlock(statement.Catch.Body, catchBlockScope);
+            }
+            catch (Exception e) // Catches exceptions thrown by .NET
+            {
+                var catchBlockScope = new Scoping();
+                catchBlockScope.SetLeftScope(scope);
+
+                // Map the .NET exception to an object readable by the interpreter
+                var dotnetExceptionRuntimeObject = new RuntimeObject();
+                dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("message"), $"Core exception: {e.Message}");
+                dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("messageFull"), $"Core exception: {e}");
+
+                catchBlockScope.AddLocalVariable(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject);
+
+                EnterBlock(statement.Catch.Body, catchBlockScope);
+            }
+        }
+
+        public void EnterThrowStatement(ThrowStatement statement, Scoping scope) => throw new LanguageException(EnterExpression(statement.Expression, scope));
     }
 }

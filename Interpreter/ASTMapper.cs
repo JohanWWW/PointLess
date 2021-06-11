@@ -91,6 +91,16 @@ namespace Interpreter
                 return EnterLoopStatement(context.loop_statement());
             }
 
+            if (context.try_catch_statement() != null)
+            {
+                return EnterTryCatchStatement(context.try_catch_statement());
+            }
+
+            if (context.throw_statement() != null)
+            {
+                return EnterThrowStatement(context.throw_statement());
+            }
+
             throw new NotImplementedException();
         }
 
@@ -168,6 +178,43 @@ namespace Interpreter
             {
                 Condition = EnterExpression(context.expression()),
                 Body = EnterBlock(context.block())
+            };
+        }
+
+        private TryCatchStatementModel EnterTryCatchStatement(ZeroPointParser.Try_catch_statementContext context)
+        {
+            TryStatement tryStatement = EnterTryStatement(context.try_statement());
+            CatchStatement catchStatement = EnterCatchStatment(context.catch_statement());
+
+            return new TryCatchStatementModel
+            {
+                Try = tryStatement,
+                Catch = catchStatement
+            };
+        }
+
+        private TryStatement EnterTryStatement(ZeroPointParser.Try_statementContext context)
+        {
+            return new TryStatement
+            {
+                Body = EnterBlock(context.block())
+            };
+        }
+
+        private CatchStatement EnterCatchStatment(ZeroPointParser.Catch_statementContext context)
+        {
+            return new CatchStatement
+            {
+                ArgumentName = context.IDENTIFIER().GetText(),
+                Body = EnterBlock(context.block())
+            };
+        }
+
+        private ThrowStatement EnterThrowStatement(ZeroPointParser.Throw_statementContext context)
+        {
+            return new ThrowStatement
+            {
+                Expression = EnterExpression(context.expression())
             };
         }
 

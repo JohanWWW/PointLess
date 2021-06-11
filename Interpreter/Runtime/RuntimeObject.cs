@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Interpreter.Models.Runtime
+namespace Interpreter.Runtime
 {
     public class RuntimeObject : DynamicObject
     {

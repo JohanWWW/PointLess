@@ -14,6 +14,8 @@ statement
 	| conditional_statement
 	| loop_statement
 	| function_call_statement SEMICOLON
+	| try_catch_statement
+	| throw_statement SEMICOLON
 	;
 	
 use_statement
@@ -58,6 +60,22 @@ while_loop_statement
 	: WHILE '(' expression ')' '{'
 		block
 	  '}'
+	;
+	
+try_catch_statement
+	: try_statement catch_statement
+	;
+	
+try_statement
+	: TRY '{' block '}'
+	;
+	
+catch_statement
+	: CATCH IDENTIFIER LAMBDA '{' block '}'
+	;
+	
+throw_statement
+	: THROW expression
 	;
 	
 // Functions
@@ -254,6 +272,10 @@ NATIVE: 'native';
 WHILE: 'while';
 
 RETURN: 'return';
+
+TRY: 'try';
+CATCH: 'catch';
+THROW: 'throw';
 
 IDENTIFIER
 	: [A-Za-z0-9_]+
