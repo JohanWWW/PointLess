@@ -51,20 +51,7 @@ else_statement
 	;
 	
 loop_statement
-	: for_loop_statement
-	| while_loop_statement
-	;
-	
-for_loop_statement
-	: FOR '(' for_loop_initialization ')' '{'
-		block
-	  '}'
-	;
-	
-for_loop_initialization
-	: assign_statement IN expression '..' expression
-	| IDENTIFIER IN IDENTIFIER
-	| IDENTIFIER IN identifier_access
+	: while_loop_statement
 	;
 	
 while_loop_statement
@@ -235,11 +222,6 @@ BITWISE_XOR_ASSIGN: '^=';
 BITWISE_OR_ASSIGN: '|=';
 SHIFT_LEFT_ASSIGN: '<<=';
 SHIFT_RIGHT_ASSIGN: '>>=';
-
-// Unary
-INCREMENT: '++';
-DECREMENT: '--';
-EXCLAMATION: '!';
 	
 ACCESSOR: '.';
 	
@@ -269,7 +251,6 @@ USE: 'use';
 IN: 'in';
 NATIVE: 'native';
 
-FOR: 'for';
 WHILE: 'while';
 
 RETURN: 'return';

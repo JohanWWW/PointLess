@@ -154,11 +154,6 @@ namespace Interpreter
 
         private ILoopStatementModel EnterLoopStatement(ZeroPointParser.Loop_statementContext context)
         {
-            if (context.for_loop_statement() != null)
-            {
-                throw new NotImplementedException();
-            }
-
             if (context.while_loop_statement() != null)
             {
                 return EnterWhileLoop(context.while_loop_statement());
