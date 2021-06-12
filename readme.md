@@ -79,6 +79,31 @@ Person = (firstName, lastName, age) => {
 };
 ```
 
+### Error Handling
+ZeroPoint support try-catch and throw statements as many other languages do.
+However, the catch part of the statement is a type of consumer function that accepts anything as an argument whether it is a string, integer, object etc. and is invoked whenever a throw statement is reached.
+```
+operationThatMightFail = (x, y) => {
+    if (y == 0) {
+        throw "Cannot divide by zero!";
+    }
+    return x / y;
+};
+
+try {
+    q = operationThatMightFail(5, 0);
+    println(q);
+}
+catch e => {
+    println("Following error occurred: " + e);
+}
+```
+
+Output:
+```
+Following error occurred: Cannot divide by zero!
+```
+
 ## CLI Installation
 .NET 5.0 SDK is recommended. Not tested on earlier .NET releases. Not tested on Mac.
 
