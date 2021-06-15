@@ -106,20 +106,73 @@ namespace Interpreter
 
         private IStatementModel EnterAssignStatement(ZeroPointParser.Assign_statementContext context)
         {
+            // Standalone identifier
             if (context.IDENTIFIER() != null)
             {
                 return new AssignStatementModel
                 {
                     Identifier = new[] { context.IDENTIFIER().GetText() },
+                    OperatorCombination = EnterAssignmentOperator(context.assignment_operator()),
                     Assignee = EnterExpression(context.expression())
                 };
             }
 
+            // Path to identifier
             return new AssignStatementModel
             {
                 Identifier = context.identifier_access().IDENTIFIER().Select(i => i.GetText()).ToArray(),
+                OperatorCombination = EnterAssignmentOperator(context.assignment_operator()),
                 Assignee = EnterExpression(context.expression())
             };
+        }
+
+        private AssignmentOperator EnterAssignmentOperator(ZeroPointParser.Assignment_operatorContext context)
+        {
+            // Declare/Update referenced value (=)
+            if (context.ASSIGN() != null)
+                return AssignmentOperator.Assign;
+
+            // Variants of the assignment operator should only work on existing variables (<operator>=)
+            if (context.ADD_ASSIGN() != null)
+                return AssignmentOperator.AddAssign;
+
+            if (context.SUB_ASSIGN() != null)
+                return AssignmentOperator.SubAssign;
+
+            if (context.MULT_ASSIGN() != null)
+                return AssignmentOperator.MultAssign;
+
+            if (context.DIV_ASSIGN() != null)
+                return AssignmentOperator.DivAssign;
+
+            if (context.MOD_ASSIGN() != null)
+                return AssignmentOperator.ModAssign;
+
+            if (context.AND_ASSIGN() != null)
+                return AssignmentOperator.AndAssign;
+
+            if (context.XOR_ASSIGN() != null)
+                return AssignmentOperator.XorAssign;
+
+            if (context.OR_ASSIGN() != null)
+                return AssignmentOperator.OrAssign;
+
+            if (context.BITWISE_AND_ASSIGN() != null)
+                return AssignmentOperator.BitwiseAndAssign;
+
+            if (context.BITWISE_XOR_ASSIGN() != null)
+                return AssignmentOperator.BitwiseXorAssign;
+
+            if (context.BITWISE_OR_ASSIGN() != null)
+                return AssignmentOperator.BitwiseOrAssign;
+
+            if (context.SHIFT_LEFT_ASSIGN() != null)
+                return AssignmentOperator.ShiftLeftAssign;
+
+            if (context.SHIFT_RIGHT_ASSIGN() != null)
+                return AssignmentOperator.ShiftRightAssign;
+
+            throw new NotImplementedException("That operator is not supported.");
         }
 
         private ConditionalStatementModel EnterConditionalStatement(ZeroPointParser.Conditional_statementContext context)

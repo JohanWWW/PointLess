@@ -24,8 +24,8 @@ use_statement
 	;
 	
 assign_statement
-	: IDENTIFIER ASSIGN expression
-	| identifier_access ASSIGN expression
+	: IDENTIFIER assignment_operator expression
+	| identifier_access assignment_operator expression
 	;
 	
 conditional_statement

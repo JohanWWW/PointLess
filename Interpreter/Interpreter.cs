@@ -3,6 +3,7 @@ using Interpreter.Models;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
 using Interpreter.Runtime;
+using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -550,26 +551,169 @@ namespace Interpreter
             EnterBlock(elseStatement.Body, scope);
         }
 
+        private void UpdateBinding(string identifier, AssignmentOperator operatorCombination, dynamic value, Scoping scope)
+        {
+            switch (operatorCombination)
+            {
+                case AssignmentOperator.Assign:
+                    scope.SetBacktrackedVariable(identifier, value);
+                    break;
+                case AssignmentOperator.AddAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) + value);
+                    break;
+                case AssignmentOperator.SubAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) - value);
+                    break;
+                case AssignmentOperator.MultAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) * value);
+                    break;
+                case AssignmentOperator.DivAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) / value);
+                    break;
+                case AssignmentOperator.ModAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) % value);
+                    break;
+                case AssignmentOperator.AndAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) && value);
+                    break;
+                case AssignmentOperator.XorAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) ^ value);
+                    break;
+                case AssignmentOperator.OrAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) || value);
+                    break;
+                case AssignmentOperator.BitwiseAndAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) & value);
+                    break;
+                case AssignmentOperator.BitwiseXorAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) ^ value);
+                    break;
+                case AssignmentOperator.BitwiseOrAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) | value);
+                    break;
+                case AssignmentOperator.ShiftLeftAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) << value);
+                    break;
+                case AssignmentOperator.ShiftRightAssign:
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) >> value);
+                    break;
+                default:
+                    throw new NotImplementedException("Operator combination not implemented.");
+            }
+        }
+
+        private void UpdateImportedBinding(string identifier, AssignmentOperator operatorCombination, dynamic value, Namespace ns)
+        {
+            IDictionary<string, dynamic> bindings = ns.GetImportedBindings();
+            switch (operatorCombination)
+            {
+                case AssignmentOperator.Assign:
+                    bindings[identifier] = value;
+                    break;
+                case AssignmentOperator.AddAssign:
+                    bindings[identifier] += value;
+                    break;
+                case AssignmentOperator.SubAssign:
+                    bindings[identifier] -= value;
+                    break;
+                case AssignmentOperator.MultAssign:
+                    bindings[identifier] *= value;
+                    break;
+                case AssignmentOperator.DivAssign:
+                    bindings[identifier] /= value;
+                    break;
+                case AssignmentOperator.ModAssign:
+                    bindings[identifier] %= value;
+                    break;
+                case AssignmentOperator.AndAssign:
+                    bindings[identifier] &= value;
+                    break;
+                case AssignmentOperator.XorAssign:
+                    bindings[identifier] ^= value;
+                    break;
+                case AssignmentOperator.OrAssign:
+                    bindings[identifier] |= value;
+                    break;
+                case AssignmentOperator.BitwiseAndAssign:
+                    bindings[identifier] &= value;
+                    break;
+                case AssignmentOperator.BitwiseXorAssign:
+                    bindings[identifier] ^= value;
+                    break;
+                case AssignmentOperator.BitwiseOrAssign:
+                    bindings[identifier] |= value;
+                    break;
+                case AssignmentOperator.ShiftLeftAssign:
+                    bindings[identifier] <<= value;
+                    break;
+                case AssignmentOperator.ShiftRightAssign:
+                    bindings[identifier] >>= value;
+                    break;
+                default:
+                    throw new NotImplementedException("Operator combination not implemented.");
+            }
+        }
+
+        private bool TryUpdateOrSetRuntimeObjectMember(RuntimeObject obj, string identifier, AssignmentOperator operatorCombination, dynamic value)
+        {
+            if (!obj.TryGetMember(new RuntimeObject.GetterBinder(identifier), out object o) && operatorCombination == AssignmentOperator.Assign)
+                return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), value);
+
+            var binder = new RuntimeObject.SetterBinder(identifier);
+
+            return operatorCombination switch
+            {
+                AssignmentOperator.Assign => obj.TrySetMember(binder, value),
+                AssignmentOperator.AddAssign => obj.TrySetMember(binder, (dynamic)o + value),
+                AssignmentOperator.SubAssign => obj.TrySetMember(binder, (dynamic)o - value),
+                AssignmentOperator.MultAssign => obj.TrySetMember(binder, (dynamic)o * value),
+                AssignmentOperator.DivAssign => obj.TrySetMember(binder, (dynamic)o / value),
+                AssignmentOperator.ModAssign => obj.TrySetMember(binder, (dynamic)o % value),
+                AssignmentOperator.AndAssign => obj.TrySetMember(binder, (dynamic)o && value),
+                AssignmentOperator.XorAssign => obj.TrySetMember(binder, (dynamic)o ^ value),
+                AssignmentOperator.OrAssign => obj.TrySetMember(binder, (dynamic)o || value),
+                AssignmentOperator.BitwiseAndAssign => obj.TrySetMember(binder, (dynamic)o & value),
+                AssignmentOperator.BitwiseXorAssign => obj.TrySetMember(binder, (dynamic)o ^ value),
+                AssignmentOperator.BitwiseOrAssign => obj.TrySetMember(binder, (dynamic)o | value),
+                AssignmentOperator.ShiftLeftAssign => obj.TrySetMember(binder, (dynamic)o << value),
+                AssignmentOperator.ShiftRightAssign => obj.TrySetMember(binder, (dynamic)o >> value),
+                _ => throw new NotImplementedException($"{nameof(TryUpdateOrSetRuntimeObjectMember)}: That operator combination is not implemented."),
+            };
+        }
+
         public void EnterAssignStatement(AssignStatementModel assignStatement, Scoping scope)
         {
             IExpressionModel expression = assignStatement.Assignee;
+            AssignmentOperator operatorCombination = assignStatement.OperatorCombination;
             dynamic result = EnterExpression(expression, scope);
 
+            // Standalone identifier
             if (assignStatement.Identifier.Length is 1)
             {
                 string identifier = assignStatement.Identifier[0];
 
                 if (scope.ContainsBacktrack(identifier))
                 {
-                    scope.SetBacktrackedVariable(identifier, result);
+                    UpdateBinding(identifier, operatorCombination, result, scope);
                 }
                 else if (_namespace.GetImportedBindings().ContainsKey(identifier))
                 {
-                    _namespace.GetImportedBindings().Add(identifier, result);
+                    if (operatorCombination == AssignmentOperator.Assign)
+                    {
+                        _namespace.GetImportedBindings().Add(identifier, result);
+                    }
+                    else
+                    {
+                        UpdateImportedBinding(identifier, operatorCombination, result, _namespace);
+                    }
                 }
                 else
                 {
-                    scope.AddLocalVariable(identifier, result);
+                    if (operatorCombination == AssignmentOperator.Assign)
+                    {
+                        scope.AddLocalVariable(identifier, result);
+                    }
+                    else throw new KeyNotFoundException($"Cannot use operator '{operatorCombination}' with the undefined variable '{identifier}'.".Replace('\'', '"'));
                 }
 
                 return;
@@ -592,7 +736,8 @@ namespace Interpreter
                         throw new KeyNotFoundException($"Could not find property '{assignStatement.Identifier[i]}' in '{assignStatement.Identifier[i - 1]}'");
                 }
 
-                if (obj.TrySetMember(new RuntimeObject.SetterBinder(assignStatement.Identifier.Last()), result))
+                //if (obj.TrySetMember(new RuntimeObject.SetterBinder(assignStatement.Identifier.Last()), result))
+                if (TryUpdateOrSetRuntimeObjectMember(obj, assignStatement.Identifier.Last(), operatorCombination, result))
                     return;
                 else
                     throw new KeyNotFoundException($"Could not find property '{assignStatement.Identifier.Last()}' in '{assignStatement.Identifier[assignStatement.Identifier.Length - 2]}'");
