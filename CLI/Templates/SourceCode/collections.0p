@@ -56,7 +56,7 @@ LinkedList = () => {
 			__head.next = n;
 			__head = n;
 		}
-		__length = __length + 1;
+		__length += 1;
 	};
 
 	_insertAt = (index, e) => {
@@ -77,14 +77,14 @@ LinkedList = () => {
 			while (i < index) {
 				previous = current;
 				current = current.next;
-				i = i + 1;
+				i += 1;
 			}
 			
 			node = _Node(e);
 			node.next = current;
 			previous.next = node;
 		}
-		__length = __length + 1;
+		__length += 1;
 	};
 
 	// TODO: Implement O(1) operation
@@ -101,7 +101,7 @@ LinkedList = () => {
 			while (i < index) {
 				previous = current;
 				current = current.next;
-				i = i + 1;
+				i += 1;
 			}
 
 			e = current.value;
@@ -116,7 +116,7 @@ LinkedList = () => {
 			}
 		}
 
-		__length = __length - 1;
+		__length -= 1;
 
 		return e;
 	};
@@ -158,7 +158,7 @@ LinkedList = () => {
 			}
 		}
 
-		__length = __length - 1;
+		__length -= 1;
 	};
 
 	_get = (index) => {
@@ -175,7 +175,7 @@ LinkedList = () => {
 			n = __root;
 			while (i < index) {
 				n = n.next;
-				i = i + 1;
+				i += 1;
 			}
 			e = n.value;
 		}
@@ -199,7 +199,7 @@ LinkedList = () => {
 					}
 					else {
 						n = n.next;
-						i = i + 1;
+						i += 1;
 					}
 				}
 			}
@@ -231,14 +231,14 @@ LinkedList = () => {
 				if (i != __length - 1) {
 					sb.add(",");
 				}
-				i = i + 1;
+				i += 1;
 			}
 		}
 		sb.add("]");
 		s = "";
 		se = sb.enumerator();
 		while (se.next()) {
-			s = s + se.current();
+			s += se.current();
 		}
 		return s;
 	};
@@ -366,6 +366,6 @@ foreachin = (list, consumer) => {
 	i = 0;
 	while (enumerator.next()) {
 		consumer(enumerator.current(), i);
-		i = i + 1;
+		i += 1;
 	}
 };

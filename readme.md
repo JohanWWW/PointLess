@@ -37,7 +37,7 @@ repeat = (message, count) => {
     i = 0;
     while (i < count) {
         println(message);
-        i = i + 1;
+        i += 1;
     }
 };
 
@@ -61,7 +61,7 @@ Person = (firstName, lastName, age) => {
     };
 
     _ageUp = () => {
-        age = age + 1;
+        age += 1;
     };
 
     _getFullName = () => {

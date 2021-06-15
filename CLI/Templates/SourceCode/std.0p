@@ -51,7 +51,7 @@ Array = (size) => {
                     hasNext = false;
                 }
                 else {
-                    i = i + 1;
+                    i += 1;
                     hasNext = true;
                 }
                 return hasNext;
@@ -105,7 +105,7 @@ ArrayList = (size) => {
         i = 0;
         while (i < src.length) {
             dst.set(i, src.get(i));
-            i = i + 1;
+            i += 1;
         }
     };
 
@@ -118,7 +118,7 @@ ArrayList = (size) => {
                 hasNext = false;
             }
             else {
-                i = i + 1;
+                i += 1;
                 hasNext = true;
             }
             return hasNext;
@@ -140,7 +140,7 @@ ArrayList = (size) => {
         }
 
         _array.set(_length, value);
-        _length = _length + 1;
+        _length += 1;
     };
 
     _set = (index, value) => {
@@ -163,15 +163,15 @@ ArrayList = (size) => {
     _removeAt = (index) => {
         if (index == _length - 1) {
             _array.set(_length - 1, null);
-            _length = _length - 1;
+            _length -= 1;
         }
         else {
             i = index + 1;
             while (i < _length) {
                 _array.set(i - 1, _array.get(i));
-                i = i + 1;
+                i += 1;
             }
-            _length = _length - 1;
+            _length -= 1;
         }
     };
 
@@ -215,7 +215,7 @@ String = (s) => {
                     hasNext = false;
                 }
                 else {
-                    i = i + 1;
+                    i += 1;
                     hasNext = true;
                 }
                 return hasNext;
@@ -234,7 +234,7 @@ String = (s) => {
         sb = "";
         enumerator = _Enumerator();
         while (enumerator.next()) {
-            sb = sb + enumerator.current();
+            sb += enumerator.current();
         }
         return sb;
     };
@@ -244,7 +244,7 @@ String = (s) => {
         i = 0;
         while (i < charArray.length) {
             charArray.set(i, _get(i));
-            i = i + 1;
+            i += 1;
         }
         return charArray;
     };
@@ -258,9 +258,9 @@ String = (s) => {
         i = 0;
         while (i < _length) {
             if (_get(i) == delimiter) {
-                segmentCount = segmentCount + 1;
+                segmentCount += 1;
             }
-            i = i + 1;
+            i += 1;
         }
 
         stringSegments = null;
@@ -277,12 +277,12 @@ String = (s) => {
             while (enumerator.next()) {
                 char = enumerator.current();
                 if (char != delimiter) {
-                    sb = sb + char;
+                    sb += char;
                 }
                 else {
                     stringSegments.set(insertIndex, sb);
                     sb = "";
-                    insertIndex = insertIndex + 1;
+                    insertIndex += 1;
                 }
             }
             stringSegments.set(insertIndex, sb);
@@ -305,17 +305,17 @@ String = (s) => {
             while (j < xOldString.length) {
                 if (i + j < _length) {
                     if (xOldString.get(j) == _get(i + j)) {
-                        continiousCharOccurrences = continiousCharOccurrences + 1;
+                        continiousCharOccurrences += 1;
                     }
                 }
-                j = j + 1;
+                j += 1;
             }
 
             if (continiousCharOccurrences == xOldString.length) {
                 occurrenceIndices.add(i);
             }
 
-            i = i + 1;
+            i += 1;
         }
 
         stringLength = _length;
@@ -327,22 +327,22 @@ String = (s) => {
             occurrenceIndices.removeAt(0);
 
             while (cursor < idx) {
-                sb = sb + _get(cursor);
-                cursor = cursor + 1;
+                sb += _get(cursor);
+                cursor += 1;
             }
 
             newStringEnumerator = xNewString.enumerator();
             while (newStringEnumerator.next()) {
-                sb = sb + newStringEnumerator.current();
+                sb += newStringEnumerator.current();
             }
 
-            cursor = cursor + xOldString.length;
+            cursor += xOldString.length;
         }
 
         // Add remaining characters
         while (cursor < _length) {
-            sb = sb + _get(cursor);
-            cursor = cursor + 1;
+            sb += _get(cursor);
+            cursor += 1;
         }
 
         return String(sb);
@@ -352,8 +352,8 @@ String = (s) => {
         sb = "";
         i = start;
         while (i < end) {
-            sb = sb + _get(i);
-            i = i + 1;
+            sb += _get(i);
+            i += 1;
         }
         return String(sb);
     };
