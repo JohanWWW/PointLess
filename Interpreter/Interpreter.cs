@@ -45,12 +45,6 @@ namespace Interpreter
                 return;
             }
 
-            if (statement is AssignObjectPropertyStatementModel)
-            {
-                EnterAssignObjectPropertyStatement(statement as AssignObjectPropertyStatementModel, scope);
-                return;
-            }
-
             if (statement is ConditionalStatementModel)
             {
                 EnterConditionalStatement(statement as ConditionalStatementModel, scope);
@@ -606,52 +600,6 @@ namespace Interpreter
             }
 
             throw new KeyNotFoundException("Could not find variable named " + assignStatement.Identifier[0]);
-        }
-
-        public void EnterAssignObjectPropertyStatement(AssignObjectPropertyStatementModel assignStatement, Scoping scope)
-        {
-            string[] propertyChain = assignStatement.PropertyChain;
-            IExpressionModel expression = assignStatement.Assignee;
-
-            if (propertyChain.Length is 1)
-            {
-                if (scope.ContainsBacktrack(propertyChain[0]))
-                {
-                    scope.SetBacktrackedVariable(propertyChain[0], EnterExpression(expression, scope));
-                    return;
-                }
-                else if (_namespace.GetImportedBindings().ContainsKey(propertyChain[0]))
-                {
-                    _namespace.GetImportedBindings().Add(propertyChain[0], EnterExpression(expression, scope));
-                }
-
-                throw new KeyNotFoundException("Could not find variable named " + propertyChain[0]);
-            }
-
-            RuntimeObject obj =
-                    scope.ContainsBacktrack(propertyChain[0]) ?
-                        scope.GetBacktrackedVariable(propertyChain[0]) :
-                    _namespace.GetImportedBindings().ContainsKey(propertyChain[0]) ?
-                        _namespace.GetImportedBinding(propertyChain[0]) :
-                    null;
-
-            if (obj != null)
-            {
-                for (int i = 1; i < propertyChain.Length - 1; i++)
-                {
-                    if (obj.TryGetMember(new RuntimeObject.GetterBinder(propertyChain[i]), out object prop))
-                        obj = (RuntimeObject)prop;
-                    else
-                        throw new KeyNotFoundException($"Could not find property '{propertyChain[i]}' in '{propertyChain[i - 1]}'");
-                }
-
-                if (obj.TrySetMember(new RuntimeObject.SetterBinder(propertyChain.Last()), EnterExpression(expression, scope)))
-                    return;
-
-                throw new KeyNotFoundException($"Could not find property '{propertyChain.Last()}' in '{propertyChain[propertyChain.Length - 2]}'");
-            }
-
-            throw new KeyNotFoundException("Could not find variable named " + propertyChain[0]);
         }
 
         public void EnterUseStatementModel(UseStatementModel statement, Scoping scope)
