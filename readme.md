@@ -1,5 +1,5 @@
 # ZeroPoint (Programming Language)
-ZeroPoint is a dynamic and object oriented programming language.
+ZeroPoint is a dynamic and object oriented programming language built in C#.
 
 ## Examples
 ### Variable Declarations
@@ -52,9 +52,30 @@ Hello World!
 Hello World!
 ```
 
-Although classes are non-existent in ZeroPoint it is still possible to simulate class definitions with functions which allows for encapsulation.
+### Recursion
 ```
-// Class-like function with constructor parameters
+factorial = (x) => {
+    result = null;
+    if (x == 1) {
+        result = x;
+    }
+    else {
+        result = x * factorial(x - 1);
+    }
+    return result;
+};
+
+println(factorial(5));
+```
+
+Output:
+```
+120
+```
+
+### Encapsulation
+Although classes are non-existent and more of a pattern in ZeroPoint it is still possible to simulate classes with functions which also allows for encapsulation.
+```
 Person = (firstName, lastName, age) => {
     _getAge = () => {
         return age;
@@ -81,9 +102,9 @@ Person = (firstName, lastName, age) => {
 
 ### Error Handling
 ZeroPoint support try-catch and throw statements as many other languages do.
-However, the catch part of the statement is a type of consumer function that accepts anything as an argument whether it is a string, integer, object etc. and is invoked whenever a throw statement is reached.
+The catch part of the statement is a type of consumer function that accepts anything as an argument whether it is a string, integer, object etc. and is invoked whenever a throw statement is reached.
 ```
-operationThatMightFail = (x, y) => {
+divide = (x, y) => {
     if (y == 0) {
         throw "Cannot divide by zero!";
     }
@@ -91,7 +112,7 @@ operationThatMightFail = (x, y) => {
 };
 
 try {
-    q = operationThatMightFail(5, 0);
+    q = divide(5, 0);
     println(q);
 }
 catch e => {
@@ -105,30 +126,37 @@ Following error occurred: Cannot divide by zero!
 ```
 
 ## CLI Installation
-.NET 5.0 SDK is recommended. Not tested on earlier .NET releases. Not tested on Mac.
+.NET 5 SDK is recommended. Not tested on earlier .NET releases.
 
-- Clone this repository
-- Launch 'Developer Command Prompt for VS' and set current directory to the repository's path
-- Set the current directory the CLI-project: `cd CLI`
-- Strongly typed resource classes needs to be generated in order for the project template engine to work. To do this you can use ResGen. In the developer command prompt run the following commands \
-`resgen /useSourcePath /str:csharp,ProjectGeneration ProjectGeneration\ProjectFiles.resx` \
-`resgen /useSourcePath /str:csharp,ProjectGeneration ProjectGeneration\StandardLibraries.resx`
-- Run the following command in the developer command prompt to generate nuget package \
-`dotnet pack`
-- Install the command line interface \
-`dotnet tool install --global --add-source .\nupkg zeropointcli`
+- Clone this repository and place it anywhere on your system.
+
+### Windows Cmd
+- Navigate to the project named *CLI* with the `cd` command. \
+For example `cd <path>\ZeroPoint\CLI` *(replace \<path\> with appropiate path)*
+- Run the following commands in the command prompt to generate nuget package and install the command line interface
+    - `dotnet pack`
+    - `dotnet tool install --global --add-source .\nupkg zeropointcli`
+
+### macOS/Linux Terminal
+- Navigate to the project named *CLI* with the `cd` command. \
+For example `cd <path>/ZeroPoint/CLI` *(replace \<path\> with the appropiate path)*
+- Run the following commands in Terminal to generate nuget package and install the command line interface
+    - `dotnet pack`
+    - `dotnet tool install --global --add-source ./nupkg zeropointcli`
 
 ## Uninstall CLI
 To uninstall the command line interface run the following command \
 `dotnet tool uninstall --global zeropointcli`
 
 
-## Get Started
-- Create a new project by creating a new directory anywhere on your system and open in Visual Studio Code
-- In vs code, launch a new instance of Windows PowerShell (or cmd) and run `zero new`. This command will generate project files such as configurations, libraries and boilerplate code
+## Create and run project
+- Create a new project by creating a new directory anywhere on your system and navigate to it in Cmd/Terminal 
+- Run following command `zero new` to generate project files such as configurations, libraries and boilerplate code
 
 The generated files will appear in the project directory.
-Open the file named 'program.0p' which is located in 'source' and begin coding! \
-By default, the program's entry point is the function named 'main'. You can change this by modifying the project file.
+Open the file named *program.0p* which is located in *source* and begin coding!
+To run the program, execute `zero run`.
 
-To run code, execute `zero run`.
+By default, the program's entry point is the function named *main*. You can change this at any time by modifying the project file.
+A program can consist of code that is split into multiple `.0p` files. If a new file is added to the project it needs to be manually included in the project file. The filename (extension omitted) also needs to be listed somewhere in the compile order list. The file that is listed first in the compile order is compiled first. The file that contains the program's entry point should always be the last to be compiled. The compile order needs to be ordered properly in order to avoid referencing problems. Reference code from another file with the `use <lib_name>;` keyword. The `use` statement should be placed at the top the referencer file.
+
