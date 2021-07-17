@@ -104,7 +104,7 @@ namespace ZeroPointCLI
                 if (key is "CompileOrder")
                 {
                     string content = defaultLibrariesEnumerator.Value as string;
-                    using var fileStream = File.Create("system\\compile-order.txt");
+                    using var fileStream = File.Create(Path.Combine("system", "compile-order.txt"));
                     var readOnlySpan = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(content));
                     fileStream.Write(readOnlySpan);
                     continue;
@@ -127,7 +127,7 @@ namespace ZeroPointCLI
 
             byte[] programTemplate = ProjectGeneration.ProjectFiles.program;
 
-            using (var fileStream = File.Create("source\\program.0p"))
+            using (var fileStream = File.Create(Path.Combine("source", "program.0p")))
             {
                 var readOnlySpan = new ReadOnlySpan<byte>(programTemplate);
                 fileStream.Write(readOnlySpan);
@@ -135,7 +135,7 @@ namespace ZeroPointCLI
 
             var projectFileModel = new ProjectModel
             {
-                Include = new[] { "source\\program.0p" },
+                Include = new[] { Path.Combine("source", "program.0p") },
                 CompileOrder = new[] { "program" },
                 EntryPoint = new ProjectEntryPointModel
                 {
@@ -160,7 +160,6 @@ namespace ZeroPointCLI
         {
             var environment = new RuntimeEnvironment();
 
-            //var stdImplementation = new StdNativeImplementations();
             var implementations = GetImplementations();
 
             // Load system code
@@ -171,19 +170,18 @@ namespace ZeroPointCLI
             {
                 string libSource = File.ReadAllText(lib);
 
-                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.0p$");
+                var regex = new Regex(@"^(?:[\w\d]+(\\|/))*([\w\d]+)\.0p$");
                 var match = regex.Match(lib);
 
-                string name = match.Groups[1].Value;
+                string name = match.Groups[2].Value;
                 libSources[name] = libSource;
             }
 
-            string[] compileOrder = File.ReadAllLines("system\\compile-order.txt");
+            string[] compileOrder = File.ReadAllLines(Path.Combine("system", "compile-order.txt"));
 
             // Build and run all library sources
             foreach (string lib in compileOrder)
             {
-                //var compiler = new ASTMapper(stdImplementation);
                 var compiler = new ASTMapper(implementations);
                 var compiledTree = compiler.ToAST(libSources[lib]);
 
@@ -201,10 +199,10 @@ namespace ZeroPointCLI
             {
                 string source = File.ReadAllText(srcPath);
 
-                var regex = new Regex(@"^(?:[\w\d]+\\)*([\w\d]+)\.0p$");
+                var regex = new Regex(@"^(?:[\w\d]+(\\|/))*([\w\d]+)\.0p$");
                 var match = regex.Match(srcPath);
 
-                string srcName = match.Groups[1].Value;
+                string srcName = match.Groups[2].Value;
 
                 sources[srcName] = source;
             }

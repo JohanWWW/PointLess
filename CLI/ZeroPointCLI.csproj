@@ -17,10 +17,18 @@
     <EmbeddedResource Update="ProjectGeneration\ProjectFiles.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ProjectFiles.Designer.cs</LastGenOutput>
+      <StronglyTypedFileName>ProjectGeneration/ProjectFiles.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>$(MSBuildProjectName).ProjectGeneration</StronglyTypedNamespace>
+      <StronglyTypedClassName>ProjectFiles</StronglyTypedClassName>
     </EmbeddedResource>
     <EmbeddedResource Update="ProjectGeneration\StandardLibraries.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>StandardLibraries.Designer.cs</LastGenOutput>
+      <StronglyTypedFileName>ProjectGeneration/StandardLibraries.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>$(MSBuildProjectName).ProjectGeneration</StronglyTypedNamespace>
+      <StronglyTypedClassName>StandardLibraries</StronglyTypedClassName>
     </EmbeddedResource>
   </ItemGroup>
 
