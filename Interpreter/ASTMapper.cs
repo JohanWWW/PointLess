@@ -2,19 +2,22 @@
 using Interpreter.Models;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
-using Interpreter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using Singulink.Numerics;
 
 namespace Interpreter
 {
     public class ASTMapper
     {
         private readonly IReadOnlyDictionary<string, IFunctionModel> _nativeImplementations;
+
+        private static readonly Regex _integerNumberPattern = new Regex(@"^\d+$");
+        private static readonly Regex _decimalNumberPattern = new Regex(@"^\d*\.\d+$");
 
         public ASTMapper(params NativeImplementationBase[] implementations)
         {
@@ -553,10 +556,24 @@ namespace Interpreter
 
             if (context.NUMBER() != null)
             {
-                return new LiteralExpressionModel
+                string numberText = context.NUMBER().GetText();
+
+                // Order might be important!
+                if (_decimalNumberPattern.IsMatch(numberText))
                 {
-                    Value = BigInteger.Parse(context.NUMBER().GetText())
-                };
+                    return new LiteralExpressionModel
+                    {
+                        Value = BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture)
+                    };
+                }
+                else if (_integerNumberPattern.IsMatch(numberText))
+                {
+                    return new LiteralExpressionModel
+                    {
+                        Value = BigInteger.Parse(numberText)
+                    };
+                }
+                else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
             }
 
             if (context.STRING() != null)
@@ -565,7 +582,7 @@ namespace Interpreter
 
                 var stringBuilder = new StringBuilder();
 
-                if (s.Length is 2) // ""
+                if (s.Length is 2) // is empty string: ""
                     stringBuilder.Append(string.Empty);
                 else
                 {

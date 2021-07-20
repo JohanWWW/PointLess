@@ -112,48 +112,55 @@ namespace Interpreter
         public dynamic EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope)
         {
             dynamic leftExpressionEval = EnterExpression(expression.LeftExpression, scope);
-            dynamic rightExpressionEval = EnterExpression(expression.RightExpression, scope);
+
+            //
+            // Evaluate right expression later for performance when evaluating logical expressions.
+            // For example (a && b): if a = false then b should never be evaluated
+            // Also to avoid unexpected inconsistencies in a program.
+            //
+            dynamic getRightExpressionEval() =>
+                EnterExpression(expression.RightExpression, scope);
 
             switch (expression.Operator)
             {
                 case BinaryOperator.Plus:
-                    return leftExpressionEval + rightExpressionEval;
+                    return leftExpressionEval + getRightExpressionEval();
                 case BinaryOperator.Minus:
-                    return leftExpressionEval - rightExpressionEval;
+                    return leftExpressionEval - getRightExpressionEval();
                 case BinaryOperator.Mult:
-                    return leftExpressionEval * rightExpressionEval;
+                    return leftExpressionEval * getRightExpressionEval();
                 case BinaryOperator.Div:
-                    return leftExpressionEval / rightExpressionEval;
+                    return leftExpressionEval / getRightExpressionEval();
                 case BinaryOperator.Mod:
-                    return leftExpressionEval % rightExpressionEval;
+                    return leftExpressionEval % getRightExpressionEval();
                 case BinaryOperator.Equal:
-                    return leftExpressionEval == rightExpressionEval;
+                    return leftExpressionEval == getRightExpressionEval();
                 case BinaryOperator.NotEqual:
-                    return leftExpressionEval != rightExpressionEval;
+                    return leftExpressionEval != getRightExpressionEval();
                 case BinaryOperator.LessThan:
-                    return leftExpressionEval < rightExpressionEval;
+                    return leftExpressionEval < getRightExpressionEval();
                 case BinaryOperator.LessThanOrEqual:
-                    return leftExpressionEval <= rightExpressionEval;
+                    return leftExpressionEval <= getRightExpressionEval();
                 case BinaryOperator.GreaterThan:
-                    return leftExpressionEval > rightExpressionEval;
+                    return leftExpressionEval > getRightExpressionEval();
                 case BinaryOperator.GreaterThanOrEqual:
-                    return leftExpressionEval >= rightExpressionEval;
-                case BinaryOperator.LogicalAnd:
-                    return leftExpressionEval && rightExpressionEval;
+                    return leftExpressionEval >= getRightExpressionEval();
+                case BinaryOperator.LogicalAnd: 
+                    return leftExpressionEval && getRightExpressionEval();
                 case BinaryOperator.LogicalXOr:
-                    return leftExpressionEval ^ rightExpressionEval;
+                    return leftExpressionEval ^ getRightExpressionEval();
                 case BinaryOperator.LogicalOr:
-                    return leftExpressionEval || rightExpressionEval;
+                    return leftExpressionEval || getRightExpressionEval();
                 case BinaryOperator.BitwiseAnd:
-                    return leftExpressionEval & rightExpressionEval;
+                    return leftExpressionEval & getRightExpressionEval();
                 case BinaryOperator.BitwiseXOr:
-                    return leftExpressionEval ^ rightExpressionEval;
+                    return leftExpressionEval ^ getRightExpressionEval();
                 case BinaryOperator.BitwiseOr:
-                    return leftExpressionEval | rightExpressionEval;
+                    return leftExpressionEval | getRightExpressionEval();
                 case BinaryOperator.ShiftLeft:
-                    return leftExpressionEval << rightExpressionEval;
+                    return leftExpressionEval << (int)getRightExpressionEval();
                 case BinaryOperator.ShiftRight:
-                    return leftExpressionEval >> rightExpressionEval;
+                    return leftExpressionEval >> (int)getRightExpressionEval();
                 default:
                     throw new NotImplementedException();
             }
@@ -592,10 +599,10 @@ namespace Interpreter
                     scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) | value);
                     break;
                 case AssignmentOperator.ShiftLeftAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) << value);
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) << (int)value);
                     break;
                 case AssignmentOperator.ShiftRightAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) >> value);
+                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) >> (int)value);
                     break;
                 default:
                     throw new NotImplementedException("Operator combination not implemented.");
@@ -644,10 +651,10 @@ namespace Interpreter
                     bindings[identifier] |= value;
                     break;
                 case AssignmentOperator.ShiftLeftAssign:
-                    bindings[identifier] <<= value;
+                    bindings[identifier] <<= (int)value;
                     break;
                 case AssignmentOperator.ShiftRightAssign:
-                    bindings[identifier] >>= value;
+                    bindings[identifier] >>= (int)value;
                     break;
                 default:
                     throw new NotImplementedException("Operator combination not implemented.");

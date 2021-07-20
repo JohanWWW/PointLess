@@ -78,7 +78,6 @@ throw_statement
 	: THROW expression
 	;
 	
-// Functions
 anonymous_function_definition_statement
 	: function_statement
 	| action_statement
@@ -88,39 +87,45 @@ anonymous_function_definition_statement
 	| native_provider_statement
 	;
 
-function_statement
-	: '(' parameter_list ')' LAMBDA '{'
-		block
-		RETURN expression SEMICOLON
-	  '}'
-	;
+	// Accepts parameters and returns
+	function_statement
+		: '(' parameter_list ')' LAMBDA '{'
+			block
+			RETURN expression SEMICOLON
+		  '}'
+		;
 	
-action_statement
-	: '(' ')' LAMBDA '{'
-		block
-	  '}'
-	;
+	// No parameters and returns
+	action_statement
+		: '(' ')' LAMBDA '{'
+			block
+		  '}'
+		;
 
-consumer_statement
-	: '(' parameter_list ')' LAMBDA '{'
-		block
-	  '}'
-	;
+	// Only accepts parameters
+	consumer_statement
+		: '(' parameter_list ')' LAMBDA '{'
+			block
+		  '}'
+		;
 	
-provider_statement
-	: '(' ')' LAMBDA '{'
-		block
-		RETURN expression SEMICOLON
-	  '}'
-	;
+	// Only return
+	provider_statement
+		: '(' ')' LAMBDA '{'
+			block
+			RETURN expression SEMICOLON
+		  '}'
+		;
 	
-native_function_statement
-	: NATIVE '(' parameter_list ')' LAMBDA inject_statement
-	;
+	// Accepts parameters, returns a value from backend referenced by inject statement
+	native_function_statement
+		: NATIVE '(' parameter_list ')' LAMBDA inject_statement
+		;
 	
-native_provider_statement
-	: NATIVE '(' ')' LAMBDA inject_statement
-	;
+	// Only return, same as above
+	native_provider_statement
+		: NATIVE '(' ')' LAMBDA inject_statement
+		;
 
 inject_statement
 	: '<' '@' STRING '>'
@@ -253,8 +258,18 @@ BOOLEAN
 	;
 	
 NUMBER
-	: [0-9]+
+	: DECIMAL_NUMBER
+	| INTEGER_NUMBER
 	;
+
+	INTEGER_NUMBER
+		: [0-9]+
+		;
+
+	DECIMAL_NUMBER
+		: [0-9]+ '.' [0-9]+
+		| '.' [0-9]+
+		;
 	
 STRING
 	: '"' ~('"')+ '"'
