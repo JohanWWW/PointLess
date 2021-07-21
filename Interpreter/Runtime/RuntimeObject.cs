@@ -69,9 +69,13 @@ namespace Interpreter.Runtime
                     string[] parameters = (memberValue as Action<IList<dynamic>>).Method.GetParameters().Select(p => p.Name).ToArray();
                     stringBuilder.Append(memberName).Append('=').Append($"({string.Join(",", parameters)})=>{{}}");
                 }
+                else if (memberValue is string s)
+                {
+                    stringBuilder.Append(memberName).Append('=').Append('"').Append(s.Replace("\\", "\\\\").Replace("\"", "\\\"")).Append('"');
+                }
                 else
                 {
-                    stringBuilder.Append(memberName).Append('=').Append("'").Append(memberValue).Append("'");
+                    stringBuilder.Append(memberName).Append('=').Append('\'').Append(memberValue).Append('\'');
                 }
 
                 if (i < memberNames.Length - 1)
@@ -79,6 +83,9 @@ namespace Interpreter.Runtime
             }
 
             stringBuilder.Append('}');
+
+            stringBuilder.Replace("\n", "\\n");
+            stringBuilder.Replace("\t", "\\t");
 
             return stringBuilder.ToString();
         }

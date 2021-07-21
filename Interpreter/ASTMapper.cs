@@ -590,6 +590,12 @@ namespace Interpreter
                         stringBuilder.Append(s[i]);
                 }
 
+                // Parse escape characters
+                stringBuilder.Replace("\\\"", "\"");
+                stringBuilder.Replace("\\\\", "\\");
+                stringBuilder.Replace("\\n", "\n");
+                stringBuilder.Replace("\\t", "\t");
+
                 return new LiteralExpressionModel
                 {
                     Value = stringBuilder.ToString()

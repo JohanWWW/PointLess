@@ -1,4 +1,60 @@
 ﻿
+// Warning: Modifying native functions in this file is not recommended
+//          and may lead to inconsistent results.
+
+// Dictionary natives
+__dict_allocate = native () => <@"std.__dict_allocate">;
+
+__dict_set = native (dictRef, key, value) => <@"std.__dict_set">;
+
+__dict_get = native (dictRef, key) => <@"std.__dict_get">;
+
+__dict_contains = native (dictRef, key) => <@"std.__dict_contains">;
+
+__dict_remove = native (dictRef, key) => <@"std.__dict_remove">;
+
+__dict_length = native (dictRef) => <@"std.__dict_length">;
+
+__dict_get_key_array = native (dictRef) => <@"std.__dict_get_key_array">;
+
+__dict_get_value_array = native (dictRef) => <@"std.__dict_get_value_array">;
+
+// Array natives
+__array_allocate = native (s) => <@"std.__array_allocate">;
+
+__array_length = native (ref) => <@"std.__array_length">;
+
+__array_get = native (ref, index) => <@"std.__array_get">;
+
+__array_set = native (ref, index, value) => <@"std.__array_set">;
+
+// String natives
+__string_array = native (s) => <@"std.String.__string_array">;
+
+// Type check natives
+__is_number = native (value) => <@"std.__is_number">;
+
+__is_integer = native (value) => <@"std.__is_integer">;
+
+__is_decimal = native (value) => <@"std.__is_decimal">;
+
+__is_string = native (value) => <@"std.__is_string">;
+
+__is_bool = native (value) => <@"std.__is_bool">;
+
+__is_object = native (value) => <@"std.__is_object">;
+
+__is_method = native (value) => <@"std.__is_method">;
+
+__is_action = native (value) => <@"std.__is_action">;
+
+__is_function = native (value) => <@"std.__is_function">;
+
+__is_provider = native (value) => <@"std.__is_provider">;
+
+__is_consumer = native (value) => <@"std.__is_consumer">;
+
+
 //
 //
 print = native (obj) => <@"std.print">;
@@ -20,28 +76,148 @@ number = native (s) => <@"std.number">;
 delay = native (millis) => <@"std.delay">;
 
 //
+// Returns milliseconds elapsed since system start
+//
+systemMillis = native () => <@"std.systemMillis">;
+
+//
+// Returns ticks elapsed since system start
+//
+systemTicks = () => {
+    return systemMillis() * 10000;
+};
+
+//
+// Returns elapsed time since 0001-01-01 00:00:00 in ticks.
+// 1 tick = 100 nanoseconds
+//
+ticks = native () => <@"std.ticks">;
+
+//
+// Returns elapsed time since the beginning of unix time (1970-01-01 00:00:00) in ticks.
+// 1 tick = 100 nanoseconds
+//
+ticksUnix = () => {
+    return ticks() - __ticksUntilUnixStart__;
+};
+
+//
+// A collection of common conversion functions
+//
+Convert = {
+    int = {
+        toDecimal = native (value) => <@"std.Convert.int.__to_decimal">,
+
+        toString = (value) => {
+            return value + "";
+        }
+    },
+    decimal = {
+        toInt = native (value) => <@"std.Convert.decimal.__to_int">,
+
+        toString = (value) => {
+            return value + "";
+        }
+    },
+    string = {
+        //
+        // Parses string to integer.
+        // s: native string to parse
+        //
+        toInt = (s) => {
+            return __parseInt__(s);
+        },
+
+        //
+        // Parses string to decimal
+        // s: native string to parse
+        //
+        toDecimal = (s) => {
+            return __parseDecimal__(s);
+        }
+    }
+};
+
+// Wrapper class for already allocated native arrays
+__ArrayInternal = (nativeArray) => {
+    _length = __array_length(nativeArray);
+
+    _isIndexOutOfBounds = (index) => {
+        return index < 0 || index > _length - 1;
+    };
+
+    _get = (index) => {
+        if (_isIndexOutOfBounds(index)) {
+            throw "__ArrayInternal._get: Index out of bounds";
+        }
+        return __array_get(nativeArray, index);
+    };
+
+    _set = (index, value) => {
+        if (_isIndexOutOfBounds(index)) {
+            throw "__ArrayInternal._set: Index out of bounds";
+        }
+        return __array_set(nativeArray, index, value);
+    };
+
+    _enumerator = () => {
+        return _Enumerator();
+    };
+
+    _Enumerator = () => {
+        i = 0 - 1;
+
+        return {
+            next = () => {
+                hasNext = null;
+                if (i >= _length - 1) {
+                    hasNext = false;
+                }
+                else {
+                    i += 1;
+                    hasNext = true;
+                }
+                return hasNext;
+            },
+            current = () => {
+                return _get(i);
+            }
+        };
+    };
+
+    return {
+        length = _length,
+        get = _get,
+        set = _set,
+        enumerator = _enumerator
+    };
+};
+
+//
 //
 Array = (size) => {
-    // Internal use only
-    __array_allocate = native (s) => <@"std.Array.__array_allocate">;
-    __array_length = native (ref) => <@"std.Array.__array_length">;
-    __array_get = native (ref, index) => <@"std.Array.__array_get">;
-    __array_set = native (ref, index, value) => <@"std.Array.__array_set">;
-
     _array = __array_allocate(size);
     _length = __array_length(_array);
 
+    _isIndexOutOfBounds = (index) => {
+        return index < 0 || index > _length - 1;
+    };
+
     _get = (index) => {
+        if (_isIndexOutOfBounds(index)) {
+            throw "Array._get: Index out of bounds";
+        }
         return __array_get(_array, index);
     };
 
     _set = (index, value) => {
+        if (_isIndexOutOfBounds(index)) {
+            throw "Array._set: Index out of bounds";
+        }
         return __array_set(_array, index, value);
     };
 
     _Enumerator = () => {
-        // TODO: Unary operator '-' is not supported at the moment
-        // The workaround is representing a negative number with (0 - x)
         i = 0 - 1;
 
         return {
@@ -66,15 +242,56 @@ Array = (size) => {
         return _Enumerator();
     };
 
+    _toString = () => {
+        sb = "[";
+        i = 0;
+        while (i < _length) {
+            e = _get(i);
+            if (e == null) {
+                sb += "null";
+            }
+            else if (__is_string(e)) {
+                raw = String(e);
+                raw = raw.replaceAll("\"", "\\\"");
+                raw = raw.replaceAll("\n", "\\n");
+                raw = raw.replaceAll("\t", "\\t");
+                raw = raw.replaceAll("\\", "\\\\");
+                sb += "\"" + raw.toString() + "\"";
+            }
+            else if (__is_decimal(e)) {
+                raw = String(e + "");
+                if (raw.containsChar(",")) {
+                    raw = raw.replaceAll(",", ".");
+                }
+                sb += raw.toString();
+            }
+            else {
+                sb += e;
+            }
+
+            // If last index
+            if (i != _length - 1) {
+                sb += ",";
+            }
+            i += 1;
+        }
+        sb += "]";
+        return sb;
+    };
+
     return {
         length = _length,
         get = _get,
         set = _set,
-        enumerator = _enumerator
+        enumerator = _enumerator,
+        toString = _toString
     };
 };
 
+//
 // ArrayList implementation.
+// Uses array internally and allocates new ones when needed.
+//  
 // TODO: Implement insertAt method
 //
 ArrayList = (size) => {
@@ -144,16 +361,12 @@ ArrayList = (size) => {
     };
 
     _set = (index, value) => {
-        isIndexOutOfBounds = false;
-
-        if (index > _length) {
-            isIndexOutOfBounds = true;
+        if (index < 0 || index > _length) {
+            throw "ArrayList._set: Index out of bounds";
         }
         else {
             _array.set(index, value);
         }
-
-        return isIndexOutOfBounds;
     };
 
     _get = (index) => {
@@ -161,18 +374,25 @@ ArrayList = (size) => {
     };
 
     _removeAt = (index) => {
+        if (index < 0 || index > _length - 1) {
+            throw "ArrayList._removeAt: Index out of bounds";
+        }
+        entry = null;
         if (index == _length - 1) {
+            entry = _array.get(_length - 1);
             _array.set(_length - 1, null);
             _length -= 1;
         }
         else {
             i = index + 1;
+            entry = _array.get(index);
             while (i < _length) {
                 _array.set(i - 1, _array.get(i));
                 i += 1;
             }
             _length -= 1;
         }
+        return entry;
     };
 
     _enumerator = () => {
@@ -191,23 +411,122 @@ ArrayList = (size) => {
     };
 };
 
-// Complex string implementation - turns simple string into complex string
+//
+//
+// TODO: enumerator
+Dictionary = () => {
+    _dict = __dict_allocate();
+
+    _throwIfKeyNull = (key, callerName) => {
+        if (key == null) {
+            throw callerName + ": Key cannot be null";
+        }
+    };
+
+    _set = (key, value) => {
+        _throwIfKeyNull(key, "Dictionary._set");
+        __dict_set(_dict, key, value);
+    };
+
+    _get = (key) => {
+        _throwIfKeyNull(key, "Dictionary._get");
+        return __dict_get(_dict, key);
+    };
+
+    _contains = (key) => {
+        _throwIfKeyNull(key, "Dictionary._contains");
+        return __dict_contains(_dict, key);
+    };
+
+    _remove = (key) => {
+        _throwIfKeyNull(key, "Dictionary._remove");
+        return __dict_remove(_dict, key);
+    };
+
+    _length = () => {
+        return __dict_length(_dict);
+    };
+
+    _keys = () => {
+        return __ArrayInternal(__dict_get_key_array(_dict));
+    };
+
+    _values = () => {
+        return __ArrayInternal(__dict_get_value_array(_dict));
+    };
+
+    _pairs = () => {
+        ks = _keys();
+        vs = _values();
+        pairs = Array(_length());
+        i = 0;
+        while (i < pairs.length) {
+            pairs.set(i, {
+                key = ks.get(i),
+                value = vs.get(i)
+            });
+            i += 1;
+        }
+        return pairs;
+    };
+
+    _enumerator = () => {
+        return _DictEnumerator();
+    };
+
+    _DictEnumerator = () => {
+        i = 0 - 1;
+        len = _length();
+        ks = _keys();
+        vs = _values();
+        return {
+            next = () => {
+                hasNext = null;
+                if (i >= len - 1) {
+                    hasNext = false;
+                }
+                else {
+                    i += 1;
+                    hasNext = true;
+                }
+                return hasNext;
+            },
+            current = () => {
+                // TODO: Cache
+                return {
+                    key = ks.get(i),
+                    value = vs.get(i)
+                };
+            }
+        };
+    };
+
+    return {
+        set = _set,
+        get = _get,
+        contains = _contains,
+        remove = _remove,
+        length = _length,
+        keys = _keys,
+        values = _values,
+        pairs = _pairs,
+        enumerator = _enumerator
+    };
+};
+
+//
+// Wrapper class for native strings
 //
 String = (s) => {
-    __array_length = native (ref) => <@"std.Array.__array_length">;
-    __array_get = native (ref, index) => <@"std.Array.__array_get">;
-    __string_array = native (s) => <@"std.String.__string_array">;
-
-    // Complex string
     _string_array = __string_array(s);
-
     _length = __array_length(_string_array);
 
-    _Enumerator = () => {
-        // TODO: Unary operator '-' is not supported at the moment
-        // The workaround is representing a negative number with (0 - x)
-        i = 0 - 1;
+    _isIndexOutOfBounds = (index) => {
+        return index < 0 || index > _length - 1;
+    };
 
+    _Enumerator = () => {
+        i = 0 - 1;
         return {
             next = () => {
                 hasNext = null;
@@ -227,6 +546,9 @@ String = (s) => {
     };
 
     _get = (index) => {
+        if (_isIndexOutOfBounds(index)) {
+            throw "String._get: Index out of bounds";
+        }
         return __array_get(_string_array, index);
     };
 
@@ -289,6 +611,30 @@ String = (s) => {
         }
 
         return stringSegments;
+    };
+
+    _containsChar = (char) => {
+        found = false;
+        i = 0;
+        while (i < _length && found != true) {
+            if (_get(i) == char) {
+                found = true;
+            }
+            i += 1;
+        }
+        return found;
+    };
+
+    _countChar = (char) => {
+        charCount = 0;
+        i = 0;
+        while (i < _length) {
+            if (_get(i) == char) {
+                charCount += 1;
+            }
+            i += 1;
+        }
+        return charCount;
     };
 
     _replaceAll = (oldString, newString) => {
@@ -362,6 +708,8 @@ String = (s) => {
         get = _get,
         length = _length,
         split = _split,
+        containsChar = _containsChar,
+        countChar = _countChar,
         replaceAll = _replaceAll,
         substring = _substring,
         enumerator = _enumerator,
@@ -369,3 +717,113 @@ String = (s) => {
         toArray = _toArray
     };
 };
+
+__intPow__ = (x, y) => {
+    if (y < 0) {
+        throw "std.__intPow__: Exponent was less than zero";
+    }
+    p = 1;
+    i = y;
+    while (i > 0) {
+        p *= x;
+        i -= 1;
+    }
+    return p;
+};
+
+__parseInt__ = (s) => {
+    s = String(s);
+    sum = 0;
+    signum = 1;
+    e = s.length - 1;
+    i = 0;
+    if (s.get(0) == __minusSign__) {
+        signum = 0 - 1;
+        e -= 1;
+        i += 1;
+    }
+    while (i < s.length) {
+        d = s.get(i);
+
+        if (__charToDigit__.contains(d)) {
+                sum += __charToDigit__.get(d) * __intPow__(10, e);
+        }
+        else {
+            throw "Found illegal character '" + d + "' at index " + i + " when parsing input string";
+        }
+        i += 1;
+        e -= 1;
+    }
+
+    return signum * sum;
+};
+
+// TODO: Maybe it should parse string as int and shift decimal point instead?
+__parseDecimal__ = (s) => {
+    chars = String(s);
+    dotSignCount = chars.countChar(__dotSign__);
+
+    if (dotSignCount > 1) {
+        throw "std.Convert.string.toDecimal: Illegal number format";
+    }
+
+    sum = .0;
+    hasDecimalPoint = (dotSignCount == 1);
+
+    if (hasDecimalPoint) {
+        segments = chars.split(__dotSign__);
+
+        integers = segments.get(0);
+        decimals = String(segments.get(1));
+
+        sum += __parseInt__(integers);
+        signum = 1;
+        if (sum < 0) {
+            signum *= 0 - 1;
+        }
+        decimalSum = .0;
+        e = 0;
+        while (e < decimals.length) {
+            d = decimals.get(e);
+            if (__charToDigit__.contains(d)) {
+                decimalSum += __charToDigit__.get(d) / (__intPow__(10, e) + .0);
+            }
+            else {
+                integerPartString = String(integers);
+                throw "Found illegal character '" + d + "' at index " + (integerPartString.length + e + 1) + " when parsing input string";
+            }
+            e += 1;
+        }
+
+        sum += signum * decimalSum / 10;
+    }
+    else {
+        sum += __parseInt__(s);
+    }
+
+    return sum;
+};
+
+// 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
+__ticksUntilUnixStart__ = 621355968000000000;
+
+// 0-9
+__digits__ = String("0123456789");
+
+__charToDigit__ = Dictionary();
+__charToDigit__.set("0", 0);
+__charToDigit__.set("1", 1);
+__charToDigit__.set("2", 2);
+__charToDigit__.set("3", 3);
+__charToDigit__.set("4", 4);
+__charToDigit__.set("5", 5);
+__charToDigit__.set("6", 6);
+__charToDigit__.set("7", 7);
+__charToDigit__.set("8", 8);
+__charToDigit__.set("9", 9);
+
+__minusSign__ = "-";
+__plusSign__ = "+";
+__dotSign__ = ".";
+__commaSign__ = ",";
+__emptyString__ = "";
