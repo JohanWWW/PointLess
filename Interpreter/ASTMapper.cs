@@ -41,8 +41,11 @@ namespace Interpreter
             ITokenStream tokenStream = new CommonTokenStream(tokenSource);
 
             var parser = new ZeroPointParser(tokenStream);
-            parser.BuildParseTree = true;
 
+            // Listen for syntax errors
+            var errorListener = new ParserErrorListener();
+            parser.AddErrorListener(errorListener);
+            
             return EnterRoot(parser.root());
         }
 

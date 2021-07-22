@@ -11,12 +11,14 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using NativeLibraries;
+using Interpreter.Models;
 
 namespace ZeroPointCLI
 {
     public class Program
     {
+        private static readonly string _projectDirectory = Environment.CurrentDirectory;
+
         public static void Main(string[] args)
         {
             if (args.Length is 0)
@@ -57,15 +59,56 @@ namespace ZeroPointCLI
             }
             else if (args[0] is "run")
             {
-                if (args.Length > 1 && args[1] is "-a")
+                try
                 {
-                    string[] programArgs = args[2..];
+                    string[] programArgs = (args.Length > 1 && args[1] is "-a") ? 
+                            args[2..] : 
+                            Array.Empty<string>();
                     Run(programArgs);
                 }
-                else
+                catch (SyntaxException e)
                 {
-                    string[] programArgs = Array.Empty<string>();
-                    Run(programArgs);
+                    int lineNumber = e.LanguageSyntaxException.Line;
+                    int startCol = e.LanguageSyntaxException.StartColumn;
+                    int endCol = e.LanguageSyntaxException.EndColumn;
+
+                    string title = e.ToString();
+                    title += "\n" + string.Concat(Enumerable.Repeat("-", title.Length)); // Underline
+
+                    Console.WriteLine(title);
+
+                    if (File.Exists(e.AffectedFilePath))
+                    {
+                        string affectedLine = GetLineFromFile(e.AffectedFilePath, lineNumber - 1);
+                        if (affectedLine.Length > 1)
+                        {
+                            for (int i = 0; i < affectedLine.Length; i++)
+                            {
+                                if (i >= startCol && i < endCol)
+                                {
+                                    var tmp = Console.ForegroundColor;
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Write(affectedLine[i]);
+                                    Console.ForegroundColor = tmp;
+                                    continue;
+                                }
+                                Console.Write(affectedLine[i]);
+                            }
+                            Console.WriteLine();
+                            string whitespace = string.Empty;
+                            for (int i = 0; i < startCol; i++)
+                            {
+                                if (affectedLine[i] is '\t')
+                                {
+                                    whitespace += '\t';
+                                    continue;
+                                }
+                                whitespace += ' ';
+                            }
+                            Console.WriteLine(whitespace + '^');
+                            Console.WriteLine(whitespace + "Unexpected proceeding token");
+                        }
+                    }
                 }
             }
             else
@@ -73,6 +116,8 @@ namespace ZeroPointCLI
                 Console.WriteLine($"Unknown command: {string.Concat(' ', args)}");
             }
         }
+
+        private static string GetLineFromFile(string path, int line) => File.ReadLines(path).ElementAt(line);
 
         /// <summary>
         /// Initializes a project directory
@@ -163,7 +208,9 @@ namespace ZeroPointCLI
             var implementations = GetImplementations();
 
             // Load system code
-            var libSources = new Dictionary<string, string>();
+            var libFiles = new Dictionary<string, string>();
+            var libFilePaths = new Dictionary<string, string>();
+            
             string[] libs = Directory.GetFiles("system", "*.0p");
 
             foreach (string lib in libs)
@@ -174,7 +221,8 @@ namespace ZeroPointCLI
                 var match = regex.Match(lib);
 
                 string name = match.Groups[2].Value;
-                libSources[name] = libSource;
+                libFiles.Add(name, libSource);
+                libFilePaths.Add(name, Path.Combine(_projectDirectory, lib));
             }
 
             string[] compileOrder = File.ReadAllLines(Path.Combine("system", "compile-order.txt"));
@@ -183,7 +231,16 @@ namespace ZeroPointCLI
             foreach (string lib in compileOrder)
             {
                 var compiler = new ASTMapper(implementations);
-                var compiledTree = compiler.ToAST(libSources[lib]);
+
+                RootModel compiledTree;
+                try
+                {
+                    compiledTree = compiler.ToAST(libFiles[lib]);
+                }
+                catch (LanguageSyntaxException e)
+                {
+                    throw new SyntaxException(Path.Combine(_projectDirectory, libFilePaths[lib]), e);
+                }
 
                 var libInterpreter = CreateInterpreter(lib, environment);
 
@@ -193,7 +250,8 @@ namespace ZeroPointCLI
 
             ProjectModel project = LoadProjectConfigurations("project.json");
 
-            var sources = new Dictionary<string, string>();
+            var sourceFiles = new Dictionary<string, string>();
+            var sourceFilePaths = new Dictionary<string, string>();
 
             foreach (string srcPath in project.Include)
             {
@@ -204,13 +262,23 @@ namespace ZeroPointCLI
 
                 string srcName = match.Groups[2].Value;
 
-                sources[srcName] = source;
+                sourceFiles.Add(srcName, source);
+                sourceFilePaths.Add(srcName, Path.Combine(_projectDirectory, srcPath));
             }
 
             foreach (string srcName in project.CompileOrder)
             {
                 var compiler = new ASTMapper();
-                var compiledTree = compiler.ToAST(sources[srcName]);
+
+                RootModel compiledTree;
+                try
+                {
+                    compiledTree = compiler.ToAST(sourceFiles[srcName]);
+                }
+                catch (LanguageSyntaxException e)
+                {
+                    throw new SyntaxException(Path.Combine(_projectDirectory, sourceFilePaths[srcName]), e);
+                }
 
                 var sourceInterpreter = CreateInterpreter(srcName, environment);
                 sourceInterpreter.Interpret(compiledTree);
