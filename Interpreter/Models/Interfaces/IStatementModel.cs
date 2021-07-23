@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models.Interfaces
 {
-    public interface IStatementModel
+    public interface IStatementModel : IModel
     {
     }
 }

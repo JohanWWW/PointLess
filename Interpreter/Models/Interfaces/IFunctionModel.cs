@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models.Interfaces
 {
-    public interface IFunctionModel : IExpressionModel
+    public interface IFunctionModel : IExpressionModel, IModel
     {
     }
 }

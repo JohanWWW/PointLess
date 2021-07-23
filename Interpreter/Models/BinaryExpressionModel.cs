@@ -1,4 +1,5 @@
-﻿using Interpreter.Models.Enums;
+﻿using Antlr4.Runtime;
+using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,5 +17,7 @@ namespace Interpreter.Models
         public BinaryOperator Operator { get; set; }
         public IExpressionModel LeftExpression { get; set; }
         public IExpressionModel RightExpression { get; set; }
+        public IToken StartToken { get; set; }
+        public IToken StopToken { get; set; }
     }
 }

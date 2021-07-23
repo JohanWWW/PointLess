@@ -1,4 +1,5 @@
-﻿using Interpreter.Models.Enums;
+﻿using Antlr4.Runtime;
+using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -13,5 +14,7 @@ namespace Interpreter.Models
         public string[] Identifier { get; set; }
         public AssignmentOperator OperatorCombination { get; set; }
         public IExpressionModel Assignee { get; set; }
+        public IToken StartToken { get; set; }
+        public IToken StopToken { get; set; }
     }
 }

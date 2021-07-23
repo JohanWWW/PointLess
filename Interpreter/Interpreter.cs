@@ -1,4 +1,5 @@
-﻿using Interpreter.Environment;
+﻿using Antlr4.Runtime;
+using Interpreter.Environment;
 using Interpreter.Models;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
@@ -16,13 +17,104 @@ namespace Interpreter
     {
         private readonly Namespace _namespace;
         private readonly RuntimeEnvironment _environment;
+        private readonly string _filePath;
+
+        private readonly IReadOnlyDictionary<AssignmentOperator, BinaryOperator> _ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT = new Dictionary<AssignmentOperator, BinaryOperator>
+        {
+            [AssignmentOperator.AddAssign] = BinaryOperator.Plus,
+            [AssignmentOperator.SubAssign] = BinaryOperator.Minus,
+            [AssignmentOperator.MultAssign] = BinaryOperator.Mult,
+            [AssignmentOperator.DivAssign] = BinaryOperator.Div,
+            [AssignmentOperator.ModAssign] = BinaryOperator.Mod,
+            [AssignmentOperator.AndAssign] = BinaryOperator.LogicalAnd,
+            [AssignmentOperator.BitwiseAndAssign] = BinaryOperator.BitwiseAnd,
+            [AssignmentOperator.OrAssign] = BinaryOperator.LogicalOr,
+            [AssignmentOperator.BitwiseOrAssign] = BinaryOperator.BitwiseOr,
+            [AssignmentOperator.XorAssign] = BinaryOperator.LogicalXOr,
+            [AssignmentOperator.BitwiseXorAssign] = BinaryOperator.BitwiseXOr,
+            [AssignmentOperator.ShiftLeftAssign] = BinaryOperator.ShiftLeft,
+            [AssignmentOperator.ShiftRightAssign] = BinaryOperator.ShiftRight
+        };
 
         public Namespace Namespace => _namespace;
+        public string FilePath => _filePath;
 
-        public Interpreter(Namespace ns, RuntimeEnvironment environment)
+        public Interpreter(Namespace ns, RuntimeEnvironment environment, string filePath)
         {
             _namespace = ns;
             _environment = environment;
+            _filePath = filePath;
+        }
+
+        /// <summary>
+        /// Evaluates a binary expression. The right operand should be provided as a lambda that returns dynamic.
+        /// This is so that logical expressions can be determined in advanced without the need to evaluate the right operand. <br></br>
+        /// For example:
+        /// <example>
+        /// <code>
+        /// // In this case the expression will evaluate to false and arbitraryOperation is never evaluated <br></br>
+        /// x = false &amp;&amp; arbitraryOperation()
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="op">The binary operator to use</param>
+        /// <param name="a">An evaluated operand</param>
+        /// <param name="b">An unevaluated operand</param>
+        /// <returns>Returns the evaluated result of the provided operands</returns>
+        /// <exception cref="RuntimeBinderException"></exception>
+        /// <exception cref="DivideByZeroException">If attempt to divide by zero</exception>
+        private static dynamic EvaluateBinaryExpression(BinaryOperator op, dynamic a, Func<dynamic> b) => op switch
+        {
+            BinaryOperator.Plus =>                  a + b(),
+            BinaryOperator.Minus =>                 a - b(),
+            BinaryOperator.Mult =>                  a * b(),
+            BinaryOperator.Div =>                   a / b(),
+            BinaryOperator.Mod =>                   a % b(),
+            BinaryOperator.Equal =>                 a == b(),
+            BinaryOperator.NotEqual =>              a != b(),
+            BinaryOperator.LessThan =>              a < b(),
+            BinaryOperator.LessThanOrEqual =>       a <= b(),
+            BinaryOperator.GreaterThan =>           a > b(),
+            BinaryOperator.GreaterThanOrEqual =>    a >= b(),
+            BinaryOperator.LogicalAnd =>            a && b(),
+            BinaryOperator.LogicalXOr =>            a ^ b(),
+            BinaryOperator.LogicalOr =>             a || b(),
+            BinaryOperator.BitwiseAnd =>            a & b(),
+            BinaryOperator.BitwiseXOr =>            a ^ b(),
+            BinaryOperator.BitwiseOr =>             a | b(),
+            BinaryOperator.ShiftLeft =>             a << (int)b(),
+            BinaryOperator.ShiftRight =>            a >> (int)b(),
+            _ =>                                    throw new NotImplementedException(),
+        };
+
+        private dynamic AttemptToEvaluateExpression(BinaryExpressionModel expression, Scoping scope)
+        {
+            BinaryOperator op = expression.Operator;
+
+            dynamic a = EnterExpression(expression.LeftExpression, scope);
+            
+            return AttemptToEvaluateExpression(op, a, (Func<dynamic>)(() => EnterExpression(expression.RightExpression, scope)), expression);
+        }
+
+        /// <summary>
+        /// Attempt to evaluate given expression. Throw exception if it fails.
+        /// </summary>
+        private dynamic AttemptToEvaluateExpression(BinaryOperator op, dynamic a, Func<dynamic> b, IModel runtimeModel)
+        {
+            dynamic bEval = null;
+            try
+            {
+                return bEval = EvaluateBinaryExpression(op, a, (Func<dynamic>)(() => bEval = b()));
+            }
+            catch (DivideByZeroException e)
+            {
+                throw new InterpreterRuntimeException(runtimeModel, _filePath, "Attempted to divide by zero", e);
+            }
+            catch (RuntimeBinderException e)
+            {
+                throw new InterpreterRuntimeException(runtimeModel, _filePath,
+                    $"Operator {op} cannot be applied on operands of type {((object)a).GetType()} and {((object)bEval).GetType()}", e);
+            }
         }
 
         public void Interpret(RootModel root)
@@ -109,67 +201,9 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        public dynamic EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope)
-        {
-            dynamic leftExpressionEval = EnterExpression(expression.LeftExpression, scope);
+        public dynamic EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
 
-            //
-            // Evaluate right expression later for performance when evaluating logical expressions.
-            // For example (a && b): if a = false then b should never be evaluated
-            // Also to avoid unexpected inconsistencies in a program.
-            //
-            dynamic getRightExpressionEval() =>
-                EnterExpression(expression.RightExpression, scope);
-
-            switch (expression.Operator)
-            {
-                case BinaryOperator.Plus:
-                    return leftExpressionEval + getRightExpressionEval();
-                case BinaryOperator.Minus:
-                    return leftExpressionEval - getRightExpressionEval();
-                case BinaryOperator.Mult:
-                    return leftExpressionEval * getRightExpressionEval();
-                case BinaryOperator.Div:
-                    return leftExpressionEval / getRightExpressionEval();
-                case BinaryOperator.Mod:
-                    return leftExpressionEval % getRightExpressionEval();
-                case BinaryOperator.Equal:
-                    return leftExpressionEval == getRightExpressionEval();
-                case BinaryOperator.NotEqual:
-                    return leftExpressionEval != getRightExpressionEval();
-                case BinaryOperator.LessThan:
-                    return leftExpressionEval < getRightExpressionEval();
-                case BinaryOperator.LessThanOrEqual:
-                    return leftExpressionEval <= getRightExpressionEval();
-                case BinaryOperator.GreaterThan:
-                    return leftExpressionEval > getRightExpressionEval();
-                case BinaryOperator.GreaterThanOrEqual:
-                    return leftExpressionEval >= getRightExpressionEval();
-                case BinaryOperator.LogicalAnd: 
-                    return leftExpressionEval && getRightExpressionEval();
-                case BinaryOperator.LogicalXOr:
-                    return leftExpressionEval ^ getRightExpressionEval();
-                case BinaryOperator.LogicalOr:
-                    return leftExpressionEval || getRightExpressionEval();
-                case BinaryOperator.BitwiseAnd:
-                    return leftExpressionEval & getRightExpressionEval();
-                case BinaryOperator.BitwiseXOr:
-                    return leftExpressionEval ^ getRightExpressionEval();
-                case BinaryOperator.BitwiseOr:
-                    return leftExpressionEval | getRightExpressionEval();
-                case BinaryOperator.ShiftLeft:
-                    return leftExpressionEval << (int)getRightExpressionEval();
-                case BinaryOperator.ShiftRight:
-                    return leftExpressionEval >> (int)getRightExpressionEval();
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        public dynamic EnterLiteralExpression(LiteralExpressionModel expression, Scoping scope)
-        {
-            return expression.Value;
-        }
+        public dynamic EnterLiteralExpression(LiteralExpressionModel expression, Scoping scope) => expression.Value;
 
         public dynamic EnterListInitializationExpression(ListInitializationExpressionModel expression, Scoping scope)
         {
@@ -185,19 +219,19 @@ namespace Interpreter
         {
             if (expression.Identifier.Length is 1)
             {
-                if (scope.ContainsBacktrack(expression.Identifier[0]))
-                    return scope.GetBacktrackedVariable(expression.Identifier[0]);
+                if (scope.ContainsGlobalBinding(expression.Identifier[0]))
+                    return scope.GetGlobalValue(expression.Identifier[0]);
                 else if (_namespace.GetImportedBindings().ContainsKey(expression.Identifier[0]))
-                    return _namespace.GetImportedBinding(expression.Identifier[0]);
+                    return _namespace.GetImportedValue(expression.Identifier[0]);
 
-                throw new KeyNotFoundException("Could not find variable named " + expression.Identifier[0]);
+                throw new InterpreterRuntimeException(expression, _filePath, $"${expression.Identifier[0]} is not defined in current scope");
             }
 
             RuntimeObject obj =
-                scope.ContainsBacktrack(expression.Identifier[0]) ?
-                    scope.GetBacktrackedVariable(expression.Identifier[0]) :
+                scope.ContainsGlobalBinding(expression.Identifier[0]) ?
+                    scope.GetGlobalValue(expression.Identifier[0]) :
                 _namespace.GetImportedBindings().ContainsKey(expression.Identifier[0]) ?
-                    _namespace.GetImportedBinding(expression.Identifier[0]) :
+                    _namespace.GetImportedValue(expression.Identifier[0]) :
                 null;
 
             if (obj != null)
@@ -207,16 +241,17 @@ namespace Interpreter
                     if (obj.TryGetMember(new RuntimeObject.GetterBinder(expression.Identifier[i]), out object prop))
                         obj = (RuntimeObject)prop;
                     else
-                        throw new KeyNotFoundException($"Could not find property '{expression.Identifier[i]}' in '{expression.Identifier[i - 1]}'");
+                        throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[i - 1]}->{expression.Identifier[i]} is not a defined");
                 }
 
                 if (obj.TryGetMember(new RuntimeObject.GetterBinder(expression.Identifier.Last()), out dynamic value))
                     return value;
 
-                throw new KeyNotFoundException($"Could not find property '{expression.Identifier.Last()}' in '{expression.Identifier[expression.Identifier.Length - 2]}'");
+                throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[expression.Identifier.Length - 2]}->{expression.Identifier.Last()} is not defined");
             }
 
-            throw new KeyNotFoundException("Could not find variable named " + string.Concat(expression.Identifier));
+            throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[0]} is not defined in current scope");
+
         }
 
         public dynamic EnterObjectInitializationExpression(ObjectInitializationExpressionModel expression, Scoping scope)
@@ -240,67 +275,91 @@ namespace Interpreter
             if (functionCall.IdentifierPath.Length > 1)
             {
                 RuntimeObject obj =
-                    scope.ContainsBacktrack(functionCall.IdentifierPath[0]) ?
-                        scope.GetBacktrackedVariable(functionCall.IdentifierPath[0]) :
+                    scope.ContainsGlobalBinding(functionCall.IdentifierPath[0]) ?
+                        scope.GetGlobalValue(functionCall.IdentifierPath[0]) :
                     _namespace.GetImportedBindings().ContainsKey(functionCall.IdentifierPath[0]) ?
-                        _namespace.GetImportedBinding(functionCall.IdentifierPath[0]) :
+                        _namespace.GetImportedValue(functionCall.IdentifierPath[0]) :
                     null;
+
+                if (obj is null)
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${string.Join("->", functionCall.IdentifierPath)} is not defined");
 
                 for (int i = 1; i < functionCall.IdentifierPath.Length - 1; i++)
                 {
                     if (obj.TryGetMember(new RuntimeObject.GetterBinder(functionCall.IdentifierPath[i]), out object prop))
                         obj = (RuntimeObject)prop;
                     else
-                        throw new KeyNotFoundException($"Could not find property '{functionCall.IdentifierPath[i]}' in '{functionCall.IdentifierPath[i - 1]}'");
+                        throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${string.Join("->", functionCall.IdentifierPath[0..(i - 1)])} is not defined");
                 }
 
                 if (obj.TryGetMember(new RuntimeObject.GetterBinder(functionCall.IdentifierPath.Last()), out method))
                 {
                 }
                 else
-                    throw new KeyNotFoundException($"Could not find property '{functionCall.IdentifierPath.Last()}' in '{functionCall.IdentifierPath[functionCall.IdentifierPath.Length - 2]}'");
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${string.Join("->", functionCall.IdentifierPath)} is not defined");
             }
             // Variable is single variable
-            else if (scope.ContainsBacktrack(functionCall.IdentifierPath[0]))
+            else if (scope.ContainsGlobalBinding(functionCall.IdentifierPath[0]))
             {
-                method = scope.GetBacktrackedVariable(functionCall.IdentifierPath[0]);
+                method = scope.GetGlobalValue(functionCall.IdentifierPath[0]);
             }
             else if (_namespace.GetImportedBindings().ContainsKey(functionCall.IdentifierPath[0]))
             {
-                method = _namespace.GetImportedBinding(functionCall.IdentifierPath[0]);
+                method = _namespace.GetImportedValue(functionCall.IdentifierPath[0]);
             }
 
             if (method is null)
-                throw new KeyNotFoundException($"The method type '{string.Join(".", functionCall.IdentifierPath)}' does not exist or it exists in another namespace");
+                throw new InterpreterRuntimeException(functionCall, _filePath, $"Method ${string.Join("->", functionCall.IdentifierPath)} is not defined in current scope");
 
-            if (functionCall.Arguments is null || functionCall.Arguments.Arguments is null)
+
+            ICollection<IExpressionModel> args = functionCall.Arguments?.Arguments;
+            int argumentCount = functionCall.Arguments?.Arguments?.Count ?? 0;
+            if (method is Action actionMethod)
             {
-                if (method is Action)
+                if (argumentCount != 0)
                 {
-                    method();
-                    return null; // An action does not return value
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Action methods do not accept arguments.");
                 }
-                else if (method is Func<dynamic>)
-                    return method();
-                else
-                    throw new NotImplementedException();
-            }
-
-            var args = new List<dynamic>();
-            foreach (IExpressionModel expression in functionCall.Arguments.Arguments)
-            {
-                args.Add(EnterExpression(expression, scope));
-            }
-
-            if (method is Func<IList<dynamic>, dynamic>)
-                return method(args);
-            else if (method is Action<IList<dynamic>>)
-            {
-                method(args);
+                actionMethod.Invoke();
                 return null;
             }
+            else if (method is Action<IList<dynamic>> consumerMethod)
+            {
+                if (argumentCount is 0)
+                {
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Consumer methods require at least one argument.");
+                }
+                dynamic[] evalArgs = new dynamic[argumentCount];
+                for (int i = 0; i < argumentCount; i++)
+                {
+                    evalArgs[i] = EnterExpression(args.ElementAt(i), scope);
+                }
+                consumerMethod.Invoke(evalArgs);
+                return null;
+            }
+            else if (method is Func<dynamic> providerMethod)
+            {
+                if (argumentCount != 0)
+                {
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Provider methods do not accept arguments.");
+                }
+                return providerMethod.Invoke();
+            }
+            else if (method is Func<IList<dynamic>, dynamic> functionMethod)
+            {
+                if (argumentCount is 0)
+                {
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Function methods require at least one argument.");
+                }
+                dynamic[] evalArgs = new dynamic[argumentCount];
+                for (int i = 0; i < argumentCount; i++)
+                {
+                    evalArgs[i] = EnterExpression(args.ElementAt(i), scope);
+                }
+                return functionMethod.Invoke(evalArgs);
+            }
 
-            throw new NotImplementedException();
+            throw new NotImplementedException("The provided method type is not implemented");
         }
 
         public dynamic EnterMethodStatement(IFunctionModel method, Scoping scope)
@@ -341,7 +400,7 @@ namespace Interpreter
                 var blockScope = new Scoping();
 
                 // Chain together with outer scope
-                blockScope.SetLeftScope(outerScope);
+                blockScope.SetOuterScope(outerScope);
 
                 // Evaluate block
                 EnterBlock(actionStatement.Body, blockScope);
@@ -359,7 +418,7 @@ namespace Interpreter
                 var blockScope = new Scoping();
 
                 // Chain together with outer scope
-                blockScope.SetLeftScope(outerScope);
+                blockScope.SetOuterScope(outerScope);
 
                 // Put the argument values in this local scope
                 for (int i = 0; i < parameters.Count; i++)
@@ -367,7 +426,7 @@ namespace Interpreter
                     string argIdentifier = parameters.ElementAt(i);
                     dynamic argValue = args[i];
 
-                    blockScope.AddLocalVariable(argIdentifier, argValue);
+                    blockScope.AddLocalBinding(argIdentifier, argValue);
                 }
 
                 // Execute the block
@@ -387,7 +446,7 @@ namespace Interpreter
                 var blockScope = new Scoping();
 
                 // Chain together with outer scope
-                blockScope.SetLeftScope(outerScope);
+                blockScope.SetOuterScope(outerScope);
 
                 // Execute the block
                 EnterBlock(providerStatement.Body, blockScope);
@@ -408,7 +467,7 @@ namespace Interpreter
                 var localScope = new Scoping();
 
                 // Chain together with outer scope
-                localScope.SetLeftScope(outerScope);
+                localScope.SetOuterScope(outerScope);
 
                 // Put argument values in this local scope
                 for (int i = 0; i < parameters.Count; i++)
@@ -416,7 +475,7 @@ namespace Interpreter
                     string argIdentifier = parameters.ElementAt(i);
                     dynamic argValue = args[i];
 
-                    localScope.AddLocalVariable(argIdentifier, argValue);
+                    localScope.AddLocalBinding(argIdentifier, argValue);
                 }
 
                 // Evaluate function body
@@ -430,7 +489,7 @@ namespace Interpreter
             {
                 var parameters = consumerStatement.Parameters.Parameters;
                 var localScope = new Scoping();
-                localScope.SetLeftScope(outerScope);
+                localScope.SetOuterScope(outerScope);
 
                 // Put argument values in this local scope
                 for (int i = 0; i < parameters.Count; i++)
@@ -438,7 +497,7 @@ namespace Interpreter
                     string argIdentifier = parameters.ElementAt(i);
                     dynamic argValue = args[i];
 
-                    localScope.AddLocalVariable(argIdentifier, argValue);
+                    localScope.AddLocalBinding(argIdentifier, argValue);
                 }
 
                 consumerStatement.NativeImplementation(args);
@@ -450,7 +509,7 @@ namespace Interpreter
             return new Func<dynamic>(() =>
             {
                 var localScope = new Scoping();
-                localScope.SetLeftScope(outerScope);
+                localScope.SetOuterScope(outerScope);
 
                 return providerStatement.NativeImplementation();
             });
@@ -462,7 +521,7 @@ namespace Interpreter
             {
                 var parameters = functionStatement.Parameters.Parameters;
                 var localScope = new Scoping();
-                localScope.SetLeftScope(outerScope);
+                localScope.SetOuterScope(outerScope);
 
                 // Put argument values in this local scope
                 for (int i = 0; i < parameters.Count; i++)
@@ -470,7 +529,7 @@ namespace Interpreter
                     string argIdentifier = parameters.ElementAt(i);
                     dynamic argValue = args[i];
 
-                    localScope.AddLocalVariable(argIdentifier, argValue);
+                    localScope.AddLocalBinding(argIdentifier, argValue);
                 }
 
                 return functionStatement.NativeImplementation(args);
@@ -505,7 +564,7 @@ namespace Interpreter
         public void EnterWhileLoopStatement(WhileLoopStatement loop, Scoping outerScope)
         {
             var loopScope = new Scoping();
-            loopScope.SetLeftScope(outerScope);
+            loopScope.SetOuterScope(outerScope);
 
             while (EnterExpression(loop.Condition, loopScope))
             {
@@ -516,7 +575,7 @@ namespace Interpreter
         public void EnterConditionalStatement(ConditionalStatementModel conditionalStatement, Scoping outerScope)
         {
             var conditionalScope = new Scoping();
-            conditionalScope.SetLeftScope(outerScope);
+            conditionalScope.SetOuterScope(outerScope);
 
             if (EnterIfStatement(conditionalStatement.If, conditionalScope))
                 return;
@@ -558,200 +617,104 @@ namespace Interpreter
             EnterBlock(elseStatement.Body, scope);
         }
 
-        private void UpdateBinding(string identifier, AssignmentOperator operatorCombination, dynamic value, Scoping scope)
-        {
-            switch (operatorCombination)
-            {
-                case AssignmentOperator.Assign:
-                    scope.SetBacktrackedVariable(identifier, value);
-                    break;
-                case AssignmentOperator.AddAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) + value);
-                    break;
-                case AssignmentOperator.SubAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) - value);
-                    break;
-                case AssignmentOperator.MultAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) * value);
-                    break;
-                case AssignmentOperator.DivAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) / value);
-                    break;
-                case AssignmentOperator.ModAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) % value);
-                    break;
-                case AssignmentOperator.AndAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) && value);
-                    break;
-                case AssignmentOperator.XorAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) ^ value);
-                    break;
-                case AssignmentOperator.OrAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) || value);
-                    break;
-                case AssignmentOperator.BitwiseAndAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) & value);
-                    break;
-                case AssignmentOperator.BitwiseXorAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) ^ value);
-                    break;
-                case AssignmentOperator.BitwiseOrAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) | value);
-                    break;
-                case AssignmentOperator.ShiftLeftAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) << (int)value);
-                    break;
-                case AssignmentOperator.ShiftRightAssign:
-                    scope.SetBacktrackedVariable(identifier, scope.GetBacktrackedVariable(identifier) >> (int)value);
-                    break;
-                default:
-                    throw new NotImplementedException("Operator combination not implemented.");
-            }
-        }
-
-        private void UpdateImportedBinding(string identifier, AssignmentOperator operatorCombination, dynamic value, Namespace ns)
-        {
-            IDictionary<string, dynamic> bindings = ns.GetImportedBindings();
-            switch (operatorCombination)
-            {
-                case AssignmentOperator.Assign:
-                    bindings[identifier] = value;
-                    break;
-                case AssignmentOperator.AddAssign:
-                    bindings[identifier] += value;
-                    break;
-                case AssignmentOperator.SubAssign:
-                    bindings[identifier] -= value;
-                    break;
-                case AssignmentOperator.MultAssign:
-                    bindings[identifier] *= value;
-                    break;
-                case AssignmentOperator.DivAssign:
-                    bindings[identifier] /= value;
-                    break;
-                case AssignmentOperator.ModAssign:
-                    bindings[identifier] %= value;
-                    break;
-                case AssignmentOperator.AndAssign:
-                    bindings[identifier] &= value;
-                    break;
-                case AssignmentOperator.XorAssign:
-                    bindings[identifier] ^= value;
-                    break;
-                case AssignmentOperator.OrAssign:
-                    bindings[identifier] |= value;
-                    break;
-                case AssignmentOperator.BitwiseAndAssign:
-                    bindings[identifier] &= value;
-                    break;
-                case AssignmentOperator.BitwiseXorAssign:
-                    bindings[identifier] ^= value;
-                    break;
-                case AssignmentOperator.BitwiseOrAssign:
-                    bindings[identifier] |= value;
-                    break;
-                case AssignmentOperator.ShiftLeftAssign:
-                    bindings[identifier] <<= (int)value;
-                    break;
-                case AssignmentOperator.ShiftRightAssign:
-                    bindings[identifier] >>= (int)value;
-                    break;
-                default:
-                    throw new NotImplementedException("Operator combination not implemented.");
-            }
-        }
-
-        private bool TryUpdateOrSetRuntimeObjectMember(RuntimeObject obj, string identifier, AssignmentOperator operatorCombination, dynamic value)
-        {
-            if (!obj.TryGetMember(new RuntimeObject.GetterBinder(identifier), out object o) && operatorCombination == AssignmentOperator.Assign)
-                return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), value);
-
-            var binder = new RuntimeObject.SetterBinder(identifier);
-
-            return operatorCombination switch
-            {
-                AssignmentOperator.Assign => obj.TrySetMember(binder, value),
-                AssignmentOperator.AddAssign => obj.TrySetMember(binder, (dynamic)o + value),
-                AssignmentOperator.SubAssign => obj.TrySetMember(binder, (dynamic)o - value),
-                AssignmentOperator.MultAssign => obj.TrySetMember(binder, (dynamic)o * value),
-                AssignmentOperator.DivAssign => obj.TrySetMember(binder, (dynamic)o / value),
-                AssignmentOperator.ModAssign => obj.TrySetMember(binder, (dynamic)o % value),
-                AssignmentOperator.AndAssign => obj.TrySetMember(binder, (dynamic)o && value),
-                AssignmentOperator.XorAssign => obj.TrySetMember(binder, (dynamic)o ^ value),
-                AssignmentOperator.OrAssign => obj.TrySetMember(binder, (dynamic)o || value),
-                AssignmentOperator.BitwiseAndAssign => obj.TrySetMember(binder, (dynamic)o & value),
-                AssignmentOperator.BitwiseXorAssign => obj.TrySetMember(binder, (dynamic)o ^ value),
-                AssignmentOperator.BitwiseOrAssign => obj.TrySetMember(binder, (dynamic)o | value),
-                AssignmentOperator.ShiftLeftAssign => obj.TrySetMember(binder, (dynamic)o << value),
-                AssignmentOperator.ShiftRightAssign => obj.TrySetMember(binder, (dynamic)o >> value),
-                _ => throw new NotImplementedException($"{nameof(TryUpdateOrSetRuntimeObjectMember)}: That operator combination is not implemented."),
-            };
-        }
-
         public void EnterAssignStatement(AssignStatementModel assignStatement, Scoping scope)
         {
             IExpressionModel expression = assignStatement.Assignee;
             AssignmentOperator operatorCombination = assignStatement.OperatorCombination;
-            dynamic result = EnterExpression(expression, scope);
+            dynamic rightOperand = EnterExpression(expression, scope);
 
             // Standalone identifier
             if (assignStatement.Identifier.Length is 1)
             {
                 string identifier = assignStatement.Identifier[0];
 
-                if (scope.ContainsBacktrack(identifier))
+                if (scope.ContainsGlobalBinding(identifier))
                 {
-                    UpdateBinding(identifier, operatorCombination, result, scope);
+                    if (operatorCombination == AssignmentOperator.Assign)
+                    {
+                        scope.SetGlobalBinding(identifier, rightOperand);
+                    }
+                    else
+                    {
+                        dynamic evaluatedResult =
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], scope.GetGlobalValue(identifier), (Func<dynamic>)(() => rightOperand), assignStatement);
+
+                        scope.SetGlobalBinding(identifier, evaluatedResult);
+                    }
                 }
                 else if (_namespace.GetImportedBindings().ContainsKey(identifier))
                 {
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
-                        _namespace.GetImportedBindings().Add(identifier, result);
+                        _namespace.GetImportedBindings().Add(identifier, rightOperand);
                     }
                     else
                     {
-                        UpdateImportedBinding(identifier, operatorCombination, result, _namespace);
+                        dynamic evaluatedResult =
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], scope.GetGlobalValue(identifier), (Func<dynamic>)(() => rightOperand), assignStatement);
+
+                        _namespace.AddOrUpdateBinding(identifier, evaluatedResult);
                     }
                 }
                 else
                 {
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
-                        scope.AddLocalVariable(identifier, result);
+                        scope.AddLocalBinding(identifier, rightOperand);
                     }
-                    else throw new KeyNotFoundException($"Cannot use operator '{operatorCombination}' with the undefined variable '{identifier}'.".Replace('\'', '"'));
+                    else throw new InterpreterRuntimeException(assignStatement, _filePath, $"Tried to use assignment operator {operatorCombination} on an undefined variable");
                 }
 
                 return;
             }
 
             RuntimeObject obj =
-                    scope.ContainsBacktrack(assignStatement.Identifier[0]) ?
-                        scope.GetBacktrackedVariable(assignStatement.Identifier[0]) :
+                    scope.ContainsGlobalBinding(assignStatement.Identifier[0]) ?
+                        scope.GetGlobalValue(assignStatement.Identifier[0]) :
                     _namespace.GetImportedBindings().ContainsKey(assignStatement.Identifier[0]) ?
-                        _namespace.GetImportedBinding(assignStatement.Identifier[0]) :
+                        _namespace.GetImportedValue(assignStatement.Identifier[0]) :
                     null;
 
             if (obj != null)
             {
+                // Traverse through the identifier path
                 for (int i = 1; i < assignStatement.Identifier.Length - 1; i++)
                 {
                     if (obj.TryGetMember(new RuntimeObject.GetterBinder(assignStatement.Identifier[i]), out object prop))
                         obj = (RuntimeObject)prop;
                     else
-                        throw new KeyNotFoundException($"Could not find property '{assignStatement.Identifier[i]}' in '{assignStatement.Identifier[i - 1]}'");
+                        throw new InterpreterRuntimeException(assignStatement, _filePath, $"Member ${string.Join("->", assignStatement.Identifier[0..(i + 1)])} is not defined");
                 }
 
-                //if (obj.TrySetMember(new RuntimeObject.SetterBinder(assignStatement.Identifier.Last()), result))
-                if (TryUpdateOrSetRuntimeObjectMember(obj, assignStatement.Identifier.Last(), operatorCombination, result))
-                    return;
-                else
-                    throw new KeyNotFoundException($"Could not find property '{assignStatement.Identifier.Last()}' in '{assignStatement.Identifier[assignStatement.Identifier.Length - 2]}'");
+                // If the member does not exist, add new binding
+                string idLast = assignStatement.Identifier.Last();
+                if (!obj.TryGetMember(new RuntimeObject.GetterBinder(idLast), out object member))
+                {
+                    if (operatorCombination != AssignmentOperator.Assign)
+                        throw new InterpreterRuntimeException(assignStatement, _filePath, $"Tried to use operator {operatorCombination} on undefined member ${string.Join("->", assignStatement.Identifier)}");
 
+                    obj.TrySetMember(new RuntimeObject.SetterBinder(idLast), rightOperand);
+                    return;
+                }
+                // Otherwise overwrite or update the member
+                else
+                {
+                    var setterBinder = new RuntimeObject.SetterBinder(idLast);
+                    if (operatorCombination == AssignmentOperator.Assign)
+                    {
+                        obj.TrySetMember(setterBinder, rightOperand);
+                        return;
+                    }
+                    else
+                    {
+                        dynamic evaluatedResult = AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], member, (Func<dynamic>)(() => rightOperand), assignStatement);
+                        obj.TrySetMember(setterBinder, evaluatedResult);
+                        return;
+                    }
+                }
             }
 
-            throw new KeyNotFoundException("Could not find variable named " + assignStatement.Identifier[0]);
+            throw new InterpreterRuntimeException(assignStatement, _filePath, $"${assignStatement.Identifier[0]} is not defined in current scope");
         }
 
         public void EnterUseStatementModel(UseStatementModel statement, Scoping scope)
@@ -764,7 +727,7 @@ namespace Interpreter
             }
             catch (KeyNotFoundException e)
             {
-                throw new KeyNotFoundException($"Could not find namespace '{nsPath}' in current environment", e);
+                throw new InterpreterRuntimeException(statement, _filePath, $"Could not find namespace '{nsPath}' in current environment", e);
             }
 
         }
@@ -774,32 +737,33 @@ namespace Interpreter
             try
             {
                 var tryBlockScope = new Scoping();
-                tryBlockScope.SetLeftScope(scope);
+                tryBlockScope.SetOuterScope(scope);
                 EnterBlock(statement.Try.Body, tryBlockScope);
             }
             catch (LanguageException le) // Catches exceptions thrown by language interpreter
             {
                 var catchBlockScope = new Scoping();
-                catchBlockScope.SetLeftScope(scope);
-                catchBlockScope.AddLocalVariable(statement.Catch.ArgumentName, le.Argument);
+                catchBlockScope.SetOuterScope(scope);
+                catchBlockScope.AddLocalBinding(statement.Catch.ArgumentName, le.Argument);
                 EnterBlock(statement.Catch.Body, catchBlockScope);
             }
             catch (Exception e) // Catches exceptions thrown by .NET
             {
                 var catchBlockScope = new Scoping();
-                catchBlockScope.SetLeftScope(scope);
+                catchBlockScope.SetOuterScope(scope);
 
                 // Map the .NET exception to an object readable by the interpreter
                 var dotnetExceptionRuntimeObject = new RuntimeObject();
                 dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("message"), $"Core exception: {e.Message}");
                 dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("messageFull"), $"Core exception: {e}");
 
-                catchBlockScope.AddLocalVariable(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject);
+                catchBlockScope.AddLocalBinding(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject);
 
                 EnterBlock(statement.Catch.Body, catchBlockScope);
             }
         }
 
-        public void EnterThrowStatement(ThrowStatement statement, Scoping scope) => throw new LanguageException(EnterExpression(statement.Expression, scope));
+        public void EnterThrowStatement(ThrowStatement statement, Scoping scope) =>
+            throw new LanguageException(EnterExpression(statement.Expression, scope), statement, _filePath);
     }
 }

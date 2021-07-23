@@ -59,7 +59,9 @@ namespace Interpreter
                 {
                     statements.Add(new UseStatementModel
                     {
-                        PathToNamespace = new[] { s.IDENTIFIER()[0].GetText() }
+                        PathToNamespace = new[] { s.IDENTIFIER()[0].GetText() },
+                        StartToken = s.Start,
+                        StopToken = s.Stop
                     });
                 }
             }
@@ -119,7 +121,9 @@ namespace Interpreter
                 {
                     Identifier = new[] { context.IDENTIFIER().GetText() },
                     OperatorCombination = EnterAssignmentOperator(context.assignment_operator()),
-                    Assignee = EnterExpression(context.expression())
+                    Assignee = EnterExpression(context.expression()),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
 
@@ -128,7 +132,9 @@ namespace Interpreter
             {
                 Identifier = context.identifier_access().IDENTIFIER().Select(i => i.GetText()).ToArray(),
                 OperatorCombination = EnterAssignmentOperator(context.assignment_operator()),
-                Assignee = EnterExpression(context.expression())
+                Assignee = EnterExpression(context.expression()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -186,7 +192,7 @@ namespace Interpreter
             var ifStatement = new IfStatementModel
             {
                 Condition = EnterExpression(context.if_statement().expression()),
-                Body = EnterBlock(context.if_statement().block())
+                Body = EnterBlock(context.if_statement().block()),
             };
 
             List<ElseIfStatementModel> elseIfStatement = null;
@@ -217,7 +223,9 @@ namespace Interpreter
             {
                 If = ifStatement,
                 ElseIf = elseIfStatement,
-                Else = elseStatement
+                Else = elseStatement,
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -236,7 +244,9 @@ namespace Interpreter
             return new WhileLoopStatement
             {
                 Condition = EnterExpression(context.expression()),
-                Body = EnterBlock(context.block())
+                Body = EnterBlock(context.block()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -248,7 +258,9 @@ namespace Interpreter
             return new TryCatchStatementModel
             {
                 Try = tryStatement,
-                Catch = catchStatement
+                Catch = catchStatement,
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -273,7 +285,9 @@ namespace Interpreter
         {
             return new ThrowStatement
             {
-                Expression = EnterExpression(context.expression())
+                Expression = EnterExpression(context.expression()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -293,7 +307,9 @@ namespace Interpreter
             {
                 return new IdentifierExpressionModel
                 {
-                    Identifier = new[] { context.IDENTIFIER().GetText() }
+                    Identifier = new[] { context.IDENTIFIER().GetText() },
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
 
@@ -301,7 +317,9 @@ namespace Interpreter
             {
                 return new IdentifierExpressionModel
                 {
-                    Identifier = context.identifier_access().IDENTIFIER().Select(i => i.GetText()).ToArray()
+                    Identifier = context.identifier_access().IDENTIFIER().Select(i => i.GetText()).ToArray(),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
 
@@ -339,7 +357,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.LogicalAnd,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.BITWISE_AND() != null)
@@ -348,7 +368,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.BitwiseAnd,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.BITWISE_OR() != null)
@@ -357,7 +379,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.BitwiseOr,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.BITWISE_XOR() != null)
@@ -366,7 +390,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.BitwiseXOr,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.DIV() != null)
@@ -375,7 +401,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.Div,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.EQUAL() != null)
@@ -384,7 +412,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.Equal,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.GREATER_THAN() != null)
@@ -393,7 +423,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.GreaterThan,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.GREATER_THAN_OR_EQUAL() != null)
@@ -402,7 +434,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.GreaterThanOrEqual,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.LESS_THAN() != null)
@@ -411,7 +445,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.LessThan,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.LESS_THAN_OR_EQUAL() != null)
@@ -420,7 +456,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.LessThanOrEqual,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.MINUS() != null)
@@ -429,7 +467,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.Minus,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.MOD() != null)
@@ -438,7 +478,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.Mod,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.MULT() != null)
@@ -447,7 +489,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.Mult,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.NOTEQUAL() != null)
@@ -456,7 +500,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.NotEqual,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.OR() != null)
@@ -465,7 +511,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.LogicalOr,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.PLUS() != null)
@@ -474,7 +522,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.Plus,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.SHIFT_LEFT() != null)
@@ -483,7 +533,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.ShiftLeft,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else if (context.SHIFT_RIGHT() != null)
@@ -492,7 +544,9 @@ namespace Interpreter
                 {
                     Operator = BinaryOperator.ShiftRight,
                     LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right)
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
             else
@@ -541,20 +595,22 @@ namespace Interpreter
 
         private LiteralExpressionModel EnterLiteral(ZeroPointParser.LiteralContext context)
         {
+            var literalExpression = new LiteralExpressionModel
+            {
+                StartToken = context.Start,
+                StopToken = context.Stop
+            };
+
             if (context.BOOLEAN() != null)
             {
-                return new LiteralExpressionModel
-                {
-                    Value = bool.Parse(context.BOOLEAN().GetText())
-                };
+                literalExpression.Value = bool.Parse(context.BOOLEAN().GetText());
+                return literalExpression;
             }
 
             if (context.NULL() != null)
             {
-                return new LiteralExpressionModel
-                {
-                    Value = null
-                };
+                literalExpression.Value = null;
+                return literalExpression;
             }
 
             if (context.NUMBER() != null)
@@ -564,17 +620,13 @@ namespace Interpreter
                 // Order might be important!
                 if (_decimalNumberPattern.IsMatch(numberText))
                 {
-                    return new LiteralExpressionModel
-                    {
-                        Value = BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture)
-                    };
+                    literalExpression.Value = BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture);
+                    return literalExpression;
                 }
                 else if (_integerNumberPattern.IsMatch(numberText))
                 {
-                    return new LiteralExpressionModel
-                    {
-                        Value = BigInteger.Parse(numberText)
-                    };
+                    literalExpression.Value = BigInteger.Parse(numberText);
+                    return literalExpression;
                 }
                 else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
             }
@@ -599,10 +651,8 @@ namespace Interpreter
                 stringBuilder.Replace("\\n", "\n");
                 stringBuilder.Replace("\\t", "\t");
 
-                return new LiteralExpressionModel
-                {
-                    Value = stringBuilder.ToString()
-                };
+                literalExpression.Value = stringBuilder.ToString();
+                return literalExpression;
             }
 
             throw new NotImplementedException();
@@ -614,7 +664,9 @@ namespace Interpreter
             {
                 Parameters = new ParameterListModel { Parameters = context.parameter_list().IDENTIFIER().Select(i => i.GetText()).ToArray() },
                 Body = EnterBlock(context.block()),
-                Return = EnterExpression(context.expression())
+                Return = EnterExpression(context.expression()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -622,7 +674,9 @@ namespace Interpreter
         {
             return new ActionStatementModel
             {
-                Body = EnterBlock(context.block())
+                Body = EnterBlock(context.block()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -631,7 +685,9 @@ namespace Interpreter
             return new ConsumerStatementModel
             {
                 Parameters = new ParameterListModel { Parameters = context.parameter_list().IDENTIFIER().Select(i => i.GetText()).ToArray() },
-                Body = EnterBlock(context.block())
+                Body = EnterBlock(context.block()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -640,22 +696,28 @@ namespace Interpreter
             return new ProviderStatementModel
             {
                 Body = EnterBlock(context.block()),
-                Return = EnterExpression(context.expression())
+                Return = EnterExpression(context.expression()),
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
         private NativeProviderStatementModel EnterNativeProviderStatement(ZeroPointParser.Native_provider_statementContext context)
         {
             string implementationIdentifier = EnterInjectStatement(context.inject_statement());
-
-            return _nativeImplementations[implementationIdentifier] as NativeProviderStatementModel;
+            var np = _nativeImplementations[implementationIdentifier] as NativeProviderStatementModel;
+            np.StartToken = context.Start;
+            np.StopToken = context.Stop;
+            return np;
         }
 
         private NativeFunctionStatementModel EnterNativeFunctionStatement(ZeroPointParser.Native_function_statementContext context)
         {
             string implementationIdentifier = EnterInjectStatement(context.inject_statement());
-
-            return _nativeImplementations[implementationIdentifier] as NativeFunctionStatementModel;
+            var nf = _nativeImplementations[implementationIdentifier] as NativeFunctionStatementModel;
+            nf.StartToken = context.Start;
+            nf.StopToken = context.Stop;
+            return nf;
         }
 
         private string EnterInjectStatement(ZeroPointParser.Inject_statementContext context)
@@ -691,14 +753,18 @@ namespace Interpreter
                 return new FunctionCallStatement
                 {
                     IdentifierPath = new[] { context.IDENTIFIER().GetText() },
-                    Arguments = context.argument_list() != null ? EnterArgumentList(context.argument_list()) : null
+                    Arguments = context.argument_list() != null ? EnterArgumentList(context.argument_list()) : null,
+                    StartToken = context.Start,
+                    StopToken = context.Stop
                 };
             }
 
             return new FunctionCallStatement
             {
                 IdentifierPath = EnterIdentifierAccess(context.identifier_access()),
-                Arguments = context.argument_list() != null ? EnterArgumentList(context.argument_list()) : null
+                Arguments = context.argument_list() != null ? EnterArgumentList(context.argument_list()) : null,
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
 
@@ -721,7 +787,11 @@ namespace Interpreter
         {
             if (context.assign_statement() is null)
             {
-                return new ObjectInitializationExpressionModel();
+                return new ObjectInitializationExpressionModel
+                {
+                    StartToken = context.Start,
+                    StopToken = context.Stop
+                };
             }
 
             var properties = new List<ObjectPropertyExpressionModel>();
@@ -737,7 +807,9 @@ namespace Interpreter
 
             return new ObjectInitializationExpressionModel
             {
-                Properties = properties
+                Properties = properties,
+                StartToken = context.Start,
+                StopToken = context.Stop
             };
         }
     }

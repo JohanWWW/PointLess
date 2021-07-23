@@ -41,7 +41,9 @@ namespace Interpreter.Environment
 
         public IDictionary<string, dynamic> GetImportedBindings() => _importedBindings;
 
-        public dynamic GetImportedBinding(string identifier) => _importedBindings[identifier];
+        public dynamic GetImportedValue(string identifier) => _importedBindings[identifier];
+
+        public void AddOrUpdateBinding(string identifier, dynamic value) => _importedBindings[identifier] = value;
 
         public override string ToString() => $"{nameof(Namespace)}(\"{Name}\")";
     }

@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Interpreter.Models;
+using Interpreter.Runtime;
 
 namespace ZeroPointCLI
 {
@@ -109,6 +110,53 @@ namespace ZeroPointCLI
                             Console.WriteLine(whitespace + "Unexpected proceeding token");
                         }
                     }
+                }
+                catch (InterpreterRuntimeException e)
+                {
+                    int lineNumber = e.LineNumber;
+                    int startCol = e.StartColumn;
+                    int endCol = e.StopColumn;
+
+                    Console.WriteLine("Unhandled runtime exception");
+                    Console.WriteLine("---------------------------");
+
+                    if (File.Exists(e.AffectedFilePath))
+                    {
+                        string affectedLine = GetLineFromFile(e.AffectedFilePath, lineNumber - 1);
+                        if (affectedLine.Length > 1)
+                        {
+                            for (int i = 0; i < affectedLine.Length; i++)
+                            {
+                                if (i >= startCol && i < endCol)
+                                {
+                                    var tmp = Console.ForegroundColor;
+                                    Console.ForegroundColor = ConsoleColor.Red;
+                                    Console.Write(affectedLine[i]);
+                                    Console.ForegroundColor = tmp;
+                                    continue;
+                                }
+                                Console.Write(affectedLine[i]);
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+
+                    Console.WriteLine(e);
+
+                    if (e.CausedBy != null)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Inner exception");
+                        Console.WriteLine("---------------");
+                        Console.WriteLine(e.CausedBy);
+                    }
+                }
+                catch (LanguageException e)
+                {
+                    Console.WriteLine("Unhandled exception");
+                    Console.WriteLine("-------------------");
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine($"at {e.FilePath}:{e.LineNumber}:{e.StartColumn}");
                 }
             }
             else
@@ -242,7 +290,7 @@ namespace ZeroPointCLI
                     throw new SyntaxException(Path.Combine(_projectDirectory, libFilePaths[lib]), e);
                 }
 
-                var libInterpreter = CreateInterpreter(lib, environment);
+                var libInterpreter = CreateInterpreter(lib, libFilePaths[lib], environment);
 
                 // Interpret and add bindings to environment
                 libInterpreter.Interpret(compiledTree);
@@ -280,13 +328,13 @@ namespace ZeroPointCLI
                     throw new SyntaxException(Path.Combine(_projectDirectory, sourceFilePaths[srcName]), e);
                 }
 
-                var sourceInterpreter = CreateInterpreter(srcName, environment);
+                var sourceInterpreter = CreateInterpreter(srcName, sourceFilePaths[srcName], environment);
                 sourceInterpreter.Interpret(compiledTree);
             }
 
             var entryPoint = environment
                 .GetNamespace(project.EntryPoint.Namespace)
-                    .Scope.GetLocalVariable(project.EntryPoint.Method) as Action<IList<dynamic>>;
+                    .Scope.GetLocalValue(project.EntryPoint.Method) as Action<IList<dynamic>>;
 
             if (args.Length is 0)
                 entryPoint.Invoke(new List<dynamic> { null });
@@ -317,11 +365,11 @@ namespace ZeroPointCLI
             return projectModel;
         }
 
-        private static Interpreter.Interpreter CreateInterpreter(string filename, RuntimeEnvironment environment)
+        private static Interpreter.Interpreter CreateInterpreter(string fileName, string filePath, RuntimeEnvironment environment)
         {
-            var ns = new Namespace(filename);
+            var ns = new Namespace(fileName);
             environment.AddNamespace(ns);
-            return new Interpreter.Interpreter(ns, environment);
+            return new Interpreter.Interpreter(ns, environment, filePath);
         }
     }
 }

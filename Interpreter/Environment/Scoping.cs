@@ -8,79 +8,82 @@ namespace Interpreter.Environment
 {
     public class Scoping
     {
-        private readonly IDictionary<string, dynamic> _variables;
+        private readonly IDictionary<string, dynamic> _bindings;
 
-        private Scoping _previous = null;
+        private Scoping _outer = null;
 
         public Scoping() =>
-            _variables = new Dictionary<string, dynamic>();
+            _bindings = new Dictionary<string, dynamic>();
 
-        public bool ContainsLocal(string identifier) => _variables.ContainsKey(identifier);
+        public bool ContainsLocalBinding(string identifier) => _bindings.ContainsKey(identifier);
 
-        public bool ContainsBacktrack(string identifier)
+        public bool ContainsGlobalBinding(string identifier)
         {
             Scoping currentScope = this;
             while (currentScope != null)
             {
-                if (currentScope.ContainsLocal(identifier))
+                if (currentScope.ContainsLocalBinding(identifier))
                     return true;
 
-                currentScope = currentScope._previous;
+                currentScope = currentScope._outer;
             }
             return false;
         }
 
-        public dynamic GetLocalVariable(string identifier) => _variables[identifier];
+        public dynamic GetLocalValue(string identifier) => _bindings[identifier];
 
-        public dynamic GetBacktrackedVariable(string identifier)
+        public dynamic GetGlobalValue(string identifier)
         {
             Scoping currentScope = this;
             while (currentScope != null)
             {
-                if (currentScope.ContainsLocal(identifier))
-                    return currentScope.GetLocalVariable(identifier);
+                if (currentScope.ContainsLocalBinding(identifier))
+                    return currentScope.GetLocalValue(identifier);
 
-                currentScope = currentScope._previous;
+                currentScope = currentScope._outer;
             }
 
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
         }
 
-        public void SetBacktrackedVariable(string identifier, dynamic value)
+        public void SetGlobalBinding(string identifier, dynamic value)
         {
             Scoping currentScope = this;
             while (currentScope != null)
             {
-                if (currentScope.ContainsLocal(identifier))
+                if (currentScope.ContainsLocalBinding(identifier))
                 {
-                    currentScope._variables[identifier] = value;
+                    currentScope._bindings[identifier] = value;
                     return;
                 }
 
-                currentScope = currentScope._previous;
+                currentScope = currentScope._outer;
             }
 
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
         }
 
-        public void AddLocalVariable(string identifier, dynamic value)
+        public void AddLocalBinding(string identifier, dynamic value)
         {
-            _variables.Add(identifier, value);
+            _bindings.Add(identifier, value);
         }
 
         public void ConsumeScope(Scoping scope)
         {
             foreach (var kvp in scope.GetBindings())
             {
-                AddLocalVariable(kvp.Key, kvp.Value);
+                AddLocalBinding(kvp.Key, kvp.Value);
             }
         }
 
-        public void SetLeftScope(Scoping scope)
+        /// <summary>
+        /// Sets the outer/parent scope of current scope
+        /// </summary>
+        public void SetOuterScope(Scoping scope)
         {
-            _previous = scope;
+            _outer = scope;
         }
 
-        public IDictionary<string, dynamic> GetBindings() => _variables;
+        public IDictionary<string, dynamic> GetBindings() => _bindings;
     }
 }
