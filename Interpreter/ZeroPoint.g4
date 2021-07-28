@@ -83,13 +83,17 @@ anonymous_function_definition_statement
 	| action_statement
 	| consumer_statement
 	| provider_statement
+	| lambda_function_statement
 	| native_function_statement
 	| native_provider_statement
 	;
 
 	// Accepts parameters and returns
 	function_statement
-		: '(' parameter_list ')' LAMBDA '{'
+		: (
+			('(' parameter_list ')') |
+			IDENTIFIER
+		  ) LAMBDA '{'
 			block
 			RETURN expression SEMICOLON
 		  '}'
@@ -104,7 +108,10 @@ anonymous_function_definition_statement
 
 	// Only accepts parameters
 	consumer_statement
-		: '(' parameter_list ')' LAMBDA '{'
+		: (
+			('(' parameter_list ')') |
+			IDENTIFIER
+		  ) LAMBDA '{'
 			block
 		  '}'
 		;
@@ -116,6 +123,15 @@ anonymous_function_definition_statement
 			RETURN expression SEMICOLON
 		  '}'
 		;
+
+	//
+	lambda_function_statement
+		: (
+			('(' ')') |
+			('(' parameter_list ')') |
+			IDENTIFIER
+		  ) LAMBDA (expression|assign_statement)
+		;
 	
 	// Accepts parameters, returns a value from backend referenced by inject statement
 	native_function_statement
@@ -126,6 +142,7 @@ anonymous_function_definition_statement
 	native_provider_statement
 		: NATIVE '(' ')' LAMBDA inject_statement
 		;
+
 
 inject_statement
 	: '<' '@' STRING '>'
@@ -155,6 +172,7 @@ expression
 	| expression BITWISE_OR expression
 	| expression AND expression
 	| expression OR expression
+	| <assoc=right> expression QUESTION_MARK expression COLON expression	// Conditional ternary expression
 	| literal
 	| IDENTIFIER
 	| identifier_access
@@ -297,4 +315,6 @@ IDENTIFIER
 	;
 
 LAMBDA: '=>';
+QUESTION_MARK: '?';
+COLON: ':';
 SEMICOLON: ';';

@@ -10,7 +10,7 @@ namespace Interpreter.Models
 {
     public class NativeFunctionStatementModel : IFunctionModel
     {
-        public ParameterListModel Parameters { get; set; }
+        public string[] Parameters { get; set; }
         public Func<IList<dynamic>, dynamic> NativeImplementation { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
@@ -19,12 +19,6 @@ namespace Interpreter.Models
         {
         }
 
-        public NativeFunctionStatementModel(params string[] parameters)
-        {
-            Parameters = new ParameterListModel
-            {
-                Parameters = parameters.ToList()
-            };
-        }
+        public NativeFunctionStatementModel(params string[] parameters) => Parameters = parameters;
     }
 }

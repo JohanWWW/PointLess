@@ -10,7 +10,7 @@ namespace Interpreter.Models
 {
     public class FunctionStatementModel : IFunctionModel
     {
-        public ParameterListModel Parameters { get; set; }
+        public string[] Parameters { get; set; }
         public BlockModel Body { get; set; }
         public IExpressionModel Return { get; set; }
         public IToken StartToken { get; set; }

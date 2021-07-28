@@ -11,7 +11,7 @@ namespace Interpreter.Models
     public class FunctionCallStatement : IExpressionModel, IStatementModel
     {
         public string[] IdentifierPath { get; set; }
-        public ArgumentListModel Arguments { get; set; }
+        public IExpressionModel[] Arguments { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
     }

@@ -10,7 +10,7 @@ namespace Interpreter.Models
 {
     public class ConsumerStatementModel : IFunctionModel
     {
-        public ParameterListModel Parameters { get; set; }
+        public string[] Parameters { get; set; }
         public BlockModel Body { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }

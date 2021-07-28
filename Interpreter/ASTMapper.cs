@@ -337,14 +337,32 @@ namespace Interpreter
         }
 
         /// <summary>
-        /// Unary or binary expression
+        /// Compiles an n:ary expression
         /// </summary>
         private IExpressionModel EnterExpressionExpression(ZeroPointParser.ExpressionContext context)
         {
-            if (context.expression().Length is 1)
+            int expressionCount = context.expression().Length;
+
+            if (expressionCount is 1)
             {
                 var e = context.expression()[0];
                 return EnterExpression(e);
+            }
+
+            // Ternary expression (conditional expression)
+            if (expressionCount is 3)
+            {
+                var conditionalExpression = context.expression()[0];
+                var trueExpression = context.expression()[1];
+                var falseExpression = context.expression()[2];
+                return new ConditionalTernaryExpressionModel
+                {
+                    ConditionExpression = EnterExpression(conditionalExpression),
+                    TrueExpression = EnterExpression(trueExpression),
+                    FalseExpression = EnterExpression(falseExpression),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
+                };
             }
 
             // Binary expression
@@ -577,6 +595,11 @@ namespace Interpreter
                 return EnterProviderStatement(context.provider_statement());
             }
 
+            if (context.lambda_function_statement() != null)
+            {
+                return EnterLambdaFunctionStatement(context.lambda_function_statement());
+            }
+
             if (context.native_function_statement() != null)
             {
                 return EnterNativeFunctionStatement(context.native_function_statement());
@@ -662,7 +685,7 @@ namespace Interpreter
         {
             return new FunctionStatementModel
             {
-                Parameters = new ParameterListModel { Parameters = context.parameter_list().IDENTIFIER().Select(i => i.GetText()).ToArray() },
+                Parameters = context.parameter_list() != null ? EnterParameterList(context.parameter_list()) : new[] { context.IDENTIFIER().GetText() },
                 Body = EnterBlock(context.block()),
                 Return = EnterExpression(context.expression()),
                 StartToken = context.Start,
@@ -684,7 +707,7 @@ namespace Interpreter
         {
             return new ConsumerStatementModel
             {
-                Parameters = new ParameterListModel { Parameters = context.parameter_list().IDENTIFIER().Select(i => i.GetText()).ToArray() },
+                Parameters = context.parameter_list() != null ? EnterParameterList(context.parameter_list()) : new[] { context.IDENTIFIER().GetText() },
                 Body = EnterBlock(context.block()),
                 StartToken = context.Start,
                 StopToken = context.Stop
@@ -700,6 +723,47 @@ namespace Interpreter
                 StartToken = context.Start,
                 StopToken = context.Stop
             };
+        }
+
+        private LambdaFunctionStatementModel EnterLambdaFunctionStatement(ZeroPointParser.Lambda_function_statementContext context)
+        {
+            string[] parameters;
+
+            if (context.parameter_list() is null && context.IDENTIFIER() is null) // No arguments
+            {
+                parameters = null;
+            }
+            else if (context.parameter_list() != null) // Lambda has a list of parameters
+            {
+                parameters = EnterParameterList(context.parameter_list());
+            }
+            else if (context.IDENTIFIER() != null) // Lambda has a single parameter
+            {
+                parameters = new[] { context.IDENTIFIER().GetText() };
+            }
+            else throw new NotImplementedException("Not a valid syntax parameter type");
+
+            if (context.expression() != null) // Is lambda mode return?
+            {
+                return new LambdaFunctionStatementModel
+                {
+                    Parameters = parameters,
+                    Return = EnterExpression(context.expression()),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
+                };
+            }
+            else if (context.assign_statement() != null) // Is lambda mode assign?
+            {
+                return new LambdaFunctionStatementModel
+                {
+                    Parameters = parameters,
+                    AssignStatement = (AssignStatementModel)EnterAssignStatement(context.assign_statement()),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
+                };
+            }
+            else throw new NotImplementedException("Not a valid lambda mode");
         }
 
         private NativeProviderStatementModel EnterNativeProviderStatement(ZeroPointParser.Native_provider_statementContext context)
@@ -768,19 +832,28 @@ namespace Interpreter
             };
         }
 
-        private ArgumentListModel EnterArgumentList(ZeroPointParser.Argument_listContext context)
+        private string[] EnterParameterList(ZeroPointParser.Parameter_listContext context)
         {
-            var expressions = new List<IExpressionModel>();
+            Antlr4.Runtime.Tree.ITerminalNode[] parameters = context.IDENTIFIER();
 
-            foreach (var e in context.expression())
+            if (parameters is null || parameters.Length is 0)
+                throw new InvalidOperationException("No parameters were present");
+
+            return parameters.Select(p => p.GetText()).ToArray();
+        }
+
+        private IExpressionModel[] EnterArgumentList(ZeroPointParser.Argument_listContext context)
+        {
+            ZeroPointParser.ExpressionContext[] expressionCtxs = context.expression();
+
+            IExpressionModel[] expressions = new IExpressionModel[expressionCtxs.Length];
+
+            for (int i = 0; i < expressions.Length; i++)
             {
-                expressions.Add(EnterExpression(e));
+                expressions[i] = EnterExpression(expressionCtxs[i]);
             }
 
-            return new ArgumentListModel
-            {
-                Arguments = expressions
-            };
+            return expressions;
         }
 
         private ObjectInitializationExpressionModel EnterObjectInitialization(ZeroPointParser.Object_initialization_expressionContext context)

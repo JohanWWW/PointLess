@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class NativeConsumerStatementModel : IFunctionModel
+    public class ConditionalTernaryExpressionModel : ITernaryExpressionModel
     {
-        public string[] Parameters { get; set; }
-        public Action<IList<dynamic>> NativeImplementation { get; set; }
+        public IExpressionModel ConditionExpression { get; set; }
+        public IExpressionModel TrueExpression { get; set; }
+        public IExpressionModel FalseExpression { get; set; }
+
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
     }

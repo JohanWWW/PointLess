@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Interpreter.Models
+namespace Interpreter.Models.Interfaces
 {
-    public class ParameterListModel
+    public interface ITernaryExpressionModel : IExpressionModel
     {
-        public ICollection<string> Parameters { get; set; }
     }
 }
