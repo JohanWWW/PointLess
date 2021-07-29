@@ -1,5 +1,7 @@
 ﻿using Interpreter;
+using Interpreter.Environment;
 using Interpreter.Models;
+using Interpreter.Models.Delegates;
 using Interpreter.Runtime;
 using Singulink.Numerics;
 using System;
@@ -21,9 +23,9 @@ namespace NativeLibraries
                 var rtObject = obj as RuntimeObject;
 
                 if (rtObject.TryGetMember(new RuntimeObject.GetterBinder("toString"), out object objectMember)
-                    && objectMember is Func<dynamic> objectToStringFunction
-                    && objectToStringFunction.Method.GetParameters().Length is 0)
-                    return (string)objectToStringFunction();
+                    && objectMember is MethodData objectToStringFunction
+                    && objectToStringFunction.GetOverload(0).ParameterCount is 0)
+                    return (string)objectToStringFunction.GetOverload(0).GetProvider().Invoke();
                 else
                     return rtObject.ToString();
             }
@@ -173,35 +175,8 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 dynamic value = args[0];
-                return value is Action                          // Action
-                    || value is Func<IList<dynamic>, dynamic>   // Function
-                    || value is Func<dynamic>                   // Provider
-                    || value is Action<IList<dynamic>>;         // Consumer
+                return value is MethodData || value is Method;
             }
-        };
-
-        [ImplementationIdentifier("std.__is_action")]
-        public static readonly NativeFunctionStatementModel IsAction = new NativeFunctionStatementModel("value")
-        {
-            NativeImplementation = args => args[0] is Action
-        };
-
-        [ImplementationIdentifier("std.__is_function")]
-        public static readonly NativeFunctionStatementModel IsFunction = new NativeFunctionStatementModel("value")
-        {
-            NativeImplementation = args => args[0] is Func<IList<dynamic>, dynamic>
-        };
-
-        [ImplementationIdentifier("std.__is_provider")]
-        public static readonly NativeFunctionStatementModel IsProvider = new NativeFunctionStatementModel("value")
-        {
-            NativeImplementation = args => args[0] is Func<dynamic>
-        };
-
-        [ImplementationIdentifier("std.__is_consumer")]
-        public static readonly NativeFunctionStatementModel IsConsumer = new NativeFunctionStatementModel("value")
-        {
-            NativeImplementation = args => args[0] is Action<IList<dynamic>>
         };
 
         [ImplementationIdentifier("std.delay")]

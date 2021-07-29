@@ -332,14 +332,14 @@ namespace ZeroPointCLI
                 sourceInterpreter.Interpret(compiledTree);
             }
 
-            var entryPoint = environment
+            var entryPointMethod = environment
                 .GetNamespace(project.EntryPoint.Namespace)
-                    .Scope.GetLocalValue(project.EntryPoint.Method) as Action<IList<dynamic>>;
+                    .Scope.GetLocalValue(project.EntryPoint.Method) as MethodData;
 
             if (args.Length is 0)
-                entryPoint.Invoke(new List<dynamic> { null });
+                entryPointMethod.GetOverload(1).GetConsumer().Invoke(new dynamic[] { null });
             else
-                entryPoint.Invoke(args.Select(a => (dynamic)a).ToList());
+                entryPointMethod.GetOverload(1).GetConsumer().Invoke(args.Select(a => (dynamic)a).ToArray());
         }
 
         private static NativeImplementationBase[] GetImplementations()

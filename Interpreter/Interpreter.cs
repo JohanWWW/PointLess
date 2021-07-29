@@ -1,6 +1,8 @@
 ﻿using Antlr4.Runtime;
 using Interpreter.Environment;
+using Interpreter.Environment.Exceptions;
 using Interpreter.Models;
+using Interpreter.Models.Delegates;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
 using Interpreter.Runtime;
@@ -87,6 +89,26 @@ namespace Interpreter
             _ =>                                    throw new NotImplementedException(),
         };
 
+        private static void AddLocalBinding(string identifier, object value, Scoping scope)
+        {
+            if (value is Method method)
+            {
+                scope.AddLocalBinding(identifier, new MethodData(method));
+                return;
+            }
+            scope.AddLocalBinding(identifier, value);
+        }
+
+        private static void AddGlobalBinding(string identifier, object value, Scoping scope)
+        {
+            if (value is Method method)
+            {
+                scope.SetGlobalBinding(identifier, new MethodData(method));
+                return;
+            }
+            scope.SetGlobalBinding(identifier, value);
+        }
+
         private dynamic AttemptToEvaluateExpression(BinaryExpressionModel expression, Scoping scope)
         {
             BinaryOperator op = expression.Operator;
@@ -114,6 +136,10 @@ namespace Interpreter
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath,
                     $"Operator {op} cannot be applied on operands of type {((object)a).GetType()} and {((object)bEval).GetType()}", e);
+            }
+            catch (MethodOverloadException e)
+            {
+                throw new InterpreterRuntimeException(runtimeModel, _filePath, e.Message, e);
             }
         }
 
@@ -195,9 +221,6 @@ namespace Interpreter
             if (expression is FunctionCallStatement)
                 return EnterFunctionCallStatement(expression as FunctionCallStatement, scope);
 
-            if (expression is ListInitializationExpressionModel)
-                return EnterListInitializationExpression(expression as ListInitializationExpressionModel, scope);
-
             if (expression is ObjectInitializationExpressionModel)
                 return EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope);
 
@@ -234,16 +257,6 @@ namespace Interpreter
         }
 
         public dynamic EnterLiteralExpression(LiteralExpressionModel expression, Scoping scope) => expression.Value;
-
-        public dynamic EnterListInitializationExpression(ListInitializationExpressionModel expression, Scoping scope)
-        {
-            var list = new List<dynamic>();
-            foreach (IExpressionModel elementExpression in expression.Elements)
-            {
-                list.Add(EnterExpression(elementExpression, scope));
-            }
-            return list;
-        }
 
         public dynamic EnterIdentifierExpression(IdentifierExpressionModel expression, Scoping scope)
         {
@@ -344,49 +357,75 @@ namespace Interpreter
 
             IExpressionModel[] args = functionCall.Arguments;
             int argumentCount = functionCall.Arguments?.Length ?? 0;
-            if (method is Action actionMethod)
+            
+            if (method is MethodData md)
             {
-                if (argumentCount != 0)
+                if (!md.ContainsOverload(argumentCount))
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Could not find suitable overload with parameter count {argumentCount}.");
+
+                Method overload = md.GetOverload(argumentCount);
+
+                switch (overload.MethodType)
                 {
-                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Action methods do not accept arguments.");
+                    case MethodType.Function:
+                        {
+                            dynamic[] evalArgs = new dynamic[argumentCount];
+                            for (int i = 0; i < argumentCount; i++)
+                            {
+                                evalArgs[i] = EnterExpression(args[i], scope);
+                            }
+                            return overload.GetFunction().Invoke(evalArgs);
+                        }
+                    case MethodType.Action:
+                        overload.GetAction().Invoke();
+                        return null;
+                    case MethodType.Consumer:
+                        {
+                            dynamic[] evalArgs = new dynamic[argumentCount];
+                            for (int i = 0; i < argumentCount; i++)
+                            {
+                                evalArgs[i] = EnterExpression(args[i], scope);
+                            }
+                            overload.GetConsumer().Invoke(evalArgs);
+                            return null;
+                        }
+                    case MethodType.Provider:
+                        return overload.GetProvider().Invoke();
+                    default:
+                        throw new NotImplementedException("Method type not implemented");
                 }
-                actionMethod.Invoke();
-                return null;
             }
-            else if (method is Action<IList<dynamic>> consumerMethod)
+            else if (method is Method overload)
             {
-                if (argumentCount is 0)
+                switch (overload.MethodType)
                 {
-                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Consumer methods require at least one argument.");
+                    case MethodType.Function:
+                        {
+                            dynamic[] evalArgs = new dynamic[argumentCount];
+                            for (int i = 0; i < argumentCount; i++)
+                            {
+                                evalArgs[i] = EnterExpression(args[i], scope);
+                            }
+                            return overload.GetFunction().Invoke(evalArgs);
+                        }
+                    case MethodType.Action:
+                        overload.GetAction().Invoke();
+                        return null;
+                    case MethodType.Consumer:
+                        {
+                            dynamic[] evalArgs = new dynamic[argumentCount];
+                            for (int i = 0; i < argumentCount; i++)
+                            {
+                                evalArgs[i] = EnterExpression(args[i], scope);
+                            }
+                            overload.GetConsumer().Invoke(evalArgs);
+                            return null;
+                        }
+                    case MethodType.Provider:
+                        return overload.GetProvider().Invoke();
+                    default:
+                        throw new NotImplementedException("Method type not implemented");
                 }
-                dynamic[] evalArgs = new dynamic[argumentCount];
-                for (int i = 0; i < argumentCount; i++)
-                {
-                    evalArgs[i] = EnterExpression(args.ElementAt(i), scope);
-                }
-                consumerMethod.Invoke(evalArgs);
-                return null;
-            }
-            else if (method is Func<dynamic> providerMethod)
-            {
-                if (argumentCount != 0)
-                {
-                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Provider methods do not accept arguments.");
-                }
-                return providerMethod.Invoke();
-            }
-            else if (method is Func<IList<dynamic>, dynamic> functionMethod)
-            {
-                if (argumentCount is 0)
-                {
-                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Function methods require at least one argument.");
-                }
-                dynamic[] evalArgs = new dynamic[argumentCount];
-                for (int i = 0; i < argumentCount; i++)
-                {
-                    evalArgs[i] = EnterExpression(args.ElementAt(i), scope);
-                }
-                return functionMethod.Invoke(evalArgs);
             }
 
             throw new NotImplementedException("The provided method type is not implemented");
@@ -426,94 +465,106 @@ namespace Interpreter
 
         public dynamic EnterActionStatement(ActionStatementModel actionStatement, Scoping outerScope)
         {
-            // Late evaluation
-            return new Action(() =>
-            {
-                // Create scope for function body
-                var blockScope = new Scoping();
+            return new Method(
+                parameterCount: 0,
+                type: MethodType.Action,
+                method: new ActionMethod(() =>
+                {
+                    // Create scope for function body
+                    var blockScope = new Scoping();
 
-                // Chain together with outer scope
-                blockScope.SetOuterScope(outerScope);
+                    // Chain together with outer scope
+                    blockScope.SetOuterScope(outerScope);
 
-                // Evaluate block
-                EnterBlock(actionStatement.Body, blockScope);
-            });
+                    // Evaluate block
+                    EnterBlock(actionStatement.Body, blockScope);
+                })
+            );
         }
 
         public dynamic EnterFunctionStatement(FunctionStatementModel functionStatement, Scoping outerScope)
         {
-            // Create a late evaluation
-            return new Func<IList<dynamic>, dynamic>(args =>
-            {
-                string[] parameters = functionStatement.Parameters;
-
-                // Create scope for function body
-                var blockScope = new Scoping();
-
-                // Chain together with outer scope
-                blockScope.SetOuterScope(outerScope);
-
-                // Put the argument values in this local scope
-                for (int i = 0; i < parameters.Length; i++)
+            return new Method(
+                parameterCount: functionStatement.Parameters.Length,
+                type: MethodType.Function,
+                method: new FunctionMethod(args =>
                 {
-                    string argIdentifier = parameters[i];
-                    dynamic argValue = args[i];
+                    string[] parameters = functionStatement.Parameters;
 
-                    blockScope.AddLocalBinding(argIdentifier, argValue);
-                }
+                    // Create scope for function body
+                    var blockScope = new Scoping();
 
-                // Execute the block
-                EnterBlock(functionStatement.Body, blockScope);
+                    // Chain together with outer scope
+                    blockScope.SetOuterScope(outerScope);
 
-                // Evaluate return expression
-                return EnterExpression(functionStatement.Return, blockScope);
-            });
+                    // Put the argument values in this local scope
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        string argIdentifier = parameters[i];
+                        dynamic argValue = args[i];
+
+                        AddLocalBinding(argIdentifier, argValue, blockScope);
+                    }
+
+                    // Execute the block
+                    EnterBlock(functionStatement.Body, blockScope);
+
+                    // Evaluate return expression
+                    return EnterExpression(functionStatement.Return, blockScope);
+                })
+            );
         }
 
         public dynamic EnterProviderStatement(ProviderStatementModel providerStatement, Scoping outerScope)
         {
-            // Create late evaluation
-            return new Func<dynamic>(() =>
-            {
-                // Create scope for function body
-                var blockScope = new Scoping();
+            return new Method(
+                parameterCount: 0,
+                type: MethodType.Provider,
+                method: new ProviderMethod(() =>
+                {
+                    // Create scope for function body
+                    var blockScope = new Scoping();
 
-                // Chain together with outer scope
-                blockScope.SetOuterScope(outerScope);
+                    // Chain together with outer scope
+                    blockScope.SetOuterScope(outerScope);
 
-                // Execute the block
-                EnterBlock(providerStatement.Body, blockScope);
+                    // Execute the block
+                    EnterBlock(providerStatement.Body, blockScope);
 
-                // Evaluate return expression
-                return EnterExpression(providerStatement.Return, blockScope);
-            });
+                    // Evaluate return expression
+                    return EnterExpression(providerStatement.Return, blockScope);
+                })
+            );
         }
 
         public dynamic EnterConsumerStatement(ConsumerStatementModel consumerStatement, Scoping outerScope)
         {
-            // Create late evaluation
-            return new Action<IList<dynamic>>(args =>
-            {
-                string[] parameters = consumerStatement.Parameters;
-
-                // Create local scope for function body
-                var localScope = new Scoping();
-
-                // Chain together with outer scope
-                localScope.SetOuterScope(outerScope);
-
-                // Put argument values in this local scope
-                for (int i = 0; i < parameters.Length; i++)
+            return new Method(
+                parameterCount: consumerStatement.Parameters.Length,
+                type: MethodType.Consumer,
+                method: new ConsumerMethod(args =>
                 {
-                    string argIdentifier = parameters[i];
-                    dynamic argValue = args[i];
+                    string[] parameters = consumerStatement.Parameters;
 
-                    localScope.AddLocalBinding(argIdentifier, argValue);
-                }
+                    // Create local scope for function body
+                    var localScope = new Scoping();
 
-                // Evaluate function body
-                EnterBlock(consumerStatement.Body, localScope);
-            });
+                    // Chain together with outer scope
+                    localScope.SetOuterScope(outerScope);
+
+                    // Put argument values in this local scope
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        string argIdentifier = parameters[i];
+                        dynamic argValue = args[i];
+
+                        AddLocalBinding(argIdentifier, argValue, localScope);
+                    }
+
+                    // Evaluate function body
+                    EnterBlock(consumerStatement.Body, localScope);
+                })
+            );
         }
 
         public dynamic EnterLambdaStatement(LambdaFunctionStatementModel lambdaStatement, Scoping outerScope)
@@ -524,110 +575,142 @@ namespace Interpreter
             {
                 if (lambdaStatement.IsModeReturn)
                 {
-                    return new Func<dynamic>(() => EnterExpression(lambdaStatement.Mode as IExpressionModel, outerScope));
+                    return new Method(
+                        parameterCount: 0,
+                        type: MethodType.Provider,
+                        method: new ProviderMethod(() => EnterExpression(lambdaStatement.Mode as IExpressionModel, outerScope))
+                    );
                 }
                 else
                 {
-                    return new Action(() => EnterAssignStatement(lambdaStatement.Mode as AssignStatementModel, outerScope));
+                    return new Method(
+                        parameterCount: 0,
+                        type: MethodType.Action,
+                        method: new ActionMethod(() => EnterAssignStatement(lambdaStatement.Mode as AssignStatementModel, outerScope))
+                    );
                 }
             }
             else
             {
                 if (lambdaStatement.IsModeReturn)
                 {
-                    return new Func<IList<dynamic>, dynamic>(args =>
-                    {
-                        var localScope = new Scoping();
-                        localScope.SetOuterScope(outerScope);
-
-                        for (int i = 0; i < parameters.Length; i++)
+                    return new Method(
+                        parameterCount: parameters.Length,
+                        type: MethodType.Function,
+                        method: new FunctionMethod(args =>
                         {
-                            string argId = parameters[i];
-                            dynamic argVal = args[i];
+                            var localScope = new Scoping();
+                            localScope.SetOuterScope(outerScope);
 
-                            localScope.AddLocalBinding(argId, argVal);
-                        }
+                            for (int i = 0; i < parameters.Length; i++)
+                            {
+                                string argId = parameters[i];
+                                dynamic argVal = args[i];
 
-                        return EnterExpression(lambdaStatement.Mode as IExpressionModel, localScope);
-                    });
+                                AddLocalBinding(argId, argVal, localScope);
+                            }
+
+                            return EnterExpression(lambdaStatement.Mode as IExpressionModel, localScope);
+                        })
+                    );
                 }
                 else
                 {
-                    return new Action<IList<dynamic>>(args =>
-                    {
-                        var localScope = new Scoping();
-                        localScope.SetOuterScope(outerScope);
-
-                        for (int i = 0; i < parameters.Length; i++)
+                    return new Method(
+                        parameterCount: parameters.Length,
+                        type: MethodType.Consumer,
+                        method: new ConsumerMethod(args =>
                         {
-                            string argId = parameters[i];
-                            dynamic argVal = args[i];
+                            var localScope = new Scoping();
+                            localScope.SetOuterScope(outerScope);
 
-                            localScope.AddLocalBinding(argId, argVal);
-                        }
+                            for (int i = 0; i < parameters.Length; i++)
+                            {
+                                string argId = parameters[i];
+                                dynamic argVal = args[i];
 
-                        EnterAssignStatement(lambdaStatement.Mode as AssignStatementModel, localScope);
-                    });
+                                AddLocalBinding(argId, argVal, localScope);
+                            }
+
+                            EnterAssignStatement(lambdaStatement.Mode as AssignStatementModel, localScope);
+                        })
+                    );
                 }
             }
         }
 
         public dynamic EnterNativeConsumerStatement(NativeConsumerStatementModel consumerStatement, Scoping outerScope)
         {
-            return new Action<IList<dynamic>>(args =>
-            {
-                string[] parameters = consumerStatement.Parameters;
-                var localScope = new Scoping();
-                localScope.SetOuterScope(outerScope);
-
-                // Put argument values in this local scope
-                for (int i = 0; i < parameters.Length; i++)
+            return new Method(
+                parameterCount: consumerStatement.Parameters.Length,
+                type: MethodType.Consumer,
+                method: new ConsumerMethod(args =>
                 {
-                    string argIdentifier = parameters[i];
-                    dynamic argValue = args[i];
+                    string[] parameters = consumerStatement.Parameters;
+                    var localScope = new Scoping();
+                    localScope.SetOuterScope(outerScope);
 
-                    localScope.AddLocalBinding(argIdentifier, argValue);
-                }
+                    // Put argument values in this local scope
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        string argIdentifier = parameters[i];
+                        dynamic argValue = args[i];
 
-                consumerStatement.NativeImplementation(args);
-            });
+                        AddLocalBinding(argIdentifier, argValue, localScope);
+                    }
+
+                    consumerStatement.NativeImplementation(args);
+                })
+            );
         }
 
         public dynamic EnterNativeProviderStatement(NativeProviderStatementModel providerStatement, Scoping outerScope)
         {
-            return new Func<dynamic>(() =>
-            {
-                var localScope = new Scoping();
-                localScope.SetOuterScope(outerScope);
+            return new Method(
+                parameterCount: 0,
+                type: MethodType.Provider,
+                method: new ProviderMethod(() =>
+                {
+                    var localScope = new Scoping();
+                    localScope.SetOuterScope(outerScope);
 
-                return providerStatement.NativeImplementation();
-            });
+                    return providerStatement.NativeImplementation();
+                })
+            );
         }
 
         public dynamic EnterNativeFunctionStatement(NativeFunctionStatementModel functionStatement, Scoping outerScope)
         {
-            return new Func<IList<dynamic>, dynamic>(args =>
-            {
-                string[] parameters = functionStatement.Parameters;
-                var localScope = new Scoping();
-                localScope.SetOuterScope(outerScope);
-
-                // Put argument values in this local scope
-                for (int i = 0; i < parameters.Length; i++)
+            return new Method(
+                parameterCount: functionStatement.Parameters.Length,
+                type: MethodType.Function,
+                method: new FunctionMethod(args =>
                 {
-                    string argIdentifier = parameters[i];
-                    dynamic argValue = args[i];
+                    string[] parameters = functionStatement.Parameters;
+                    var localScope = new Scoping();
+                    localScope.SetOuterScope(outerScope);
 
-                    localScope.AddLocalBinding(argIdentifier, argValue);
-                }
+                    // Put argument values in this local scope
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        string argIdentifier = parameters[i];
+                        dynamic argValue = args[i];
 
-                return functionStatement.NativeImplementation(args);
-            });
+                        AddLocalBinding(argIdentifier, argValue, localScope);
+                    }
+
+                    return functionStatement.NativeImplementation(args);
+                })
+            );
         }
 
         public dynamic EnterNativeActionStatement(NativeActionStatementModel actionStatement, Scoping outerScope)
         {
-            return new Action(() => actionStatement.NativeImplementation());
+            return new Method(
+                parameterCount: 0,
+                type: MethodType.Action,
+                method: new ActionMethod(() => actionStatement.NativeImplementation())
+            );
         }
 
         public void EnterBlock(BlockModel block, Scoping scope)
@@ -721,14 +804,14 @@ namespace Interpreter
                 {
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
-                        scope.SetGlobalBinding(identifier, rightOperand);
+                        AddGlobalBinding(identifier, rightOperand, scope);
                     }
                     else
                     {
                         dynamic evaluatedResult =
                                 AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], scope.GetGlobalValue(identifier), (Func<dynamic>)(() => rightOperand), assignStatement);
 
-                        scope.SetGlobalBinding(identifier, evaluatedResult);
+                        AddGlobalBinding(identifier, evaluatedResult, scope);
                     }
                 }
                 else if (_namespace.GetImportedBindings().ContainsKey(identifier))
@@ -740,7 +823,7 @@ namespace Interpreter
                     else
                     {
                         dynamic evaluatedResult =
-                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], scope.GetGlobalValue(identifier), (Func<dynamic>)(() => rightOperand), assignStatement);
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], _namespace.GetImportedValue(identifier), (Func<dynamic>)(() => rightOperand), assignStatement);
 
                         _namespace.AddOrUpdateBinding(identifier, evaluatedResult);
                     }
@@ -749,7 +832,7 @@ namespace Interpreter
                 {
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
-                        scope.AddLocalBinding(identifier, rightOperand);
+                        AddLocalBinding(identifier, rightOperand, scope);
                     }
                     else throw new InterpreterRuntimeException(assignStatement, _filePath, $"Tried to use assignment operator {operatorCombination} on an undefined variable");
                 }
@@ -833,7 +916,7 @@ namespace Interpreter
             {
                 var catchBlockScope = new Scoping();
                 catchBlockScope.SetOuterScope(scope);
-                catchBlockScope.AddLocalBinding(statement.Catch.ArgumentName, le.Argument);
+                AddLocalBinding(statement.Catch.ArgumentName, le.Argument, catchBlockScope);
                 EnterBlock(statement.Catch.Body, catchBlockScope);
             }
             catch (Exception e) // Catches exceptions thrown by .NET
@@ -846,7 +929,7 @@ namespace Interpreter
                 dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("message"), $"Core exception: {e.Message}");
                 dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("messageFull"), $"Core exception: {e}");
 
-                catchBlockScope.AddLocalBinding(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject);
+                AddLocalBinding(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject, catchBlockScope);
 
                 EnterBlock(statement.Catch.Body, catchBlockScope);
             }

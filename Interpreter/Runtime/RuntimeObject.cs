@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Interpreter.Environment;
+using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -51,23 +52,47 @@ namespace Interpreter.Runtime
                     string tree = GetTree(memberValue as RuntimeObject);
                     stringBuilder.Append(memberName).Append('=').Append(tree);
                 }
-                else if (memberValue is Func<IList<dynamic>, dynamic>)
+                else if (memberValue is Method m)
                 {
-                    string[] parameters = (memberValue as Func<IList<dynamic>, dynamic>).Method.GetParameters().Select(p => p.Name).ToArray();
-                    stringBuilder.Append(memberName).Append('=').Append($"({string.Join(",", parameters)})=>*");
+                    stringBuilder.Append(memberName).Append('=');
+                    switch (m.MethodType)
+                    {
+                        case MethodType.Function:
+                            stringBuilder.Append($"([{m.ParameterCount}])=>*");
+                            break;
+                        case MethodType.Action:
+                            stringBuilder.Append("()=>{}");
+                            break;
+                        case MethodType.Consumer:
+                            stringBuilder.Append($"([{m.ParameterCount}])=>{{}}");
+                            break;
+                        case MethodType.Provider:
+                            stringBuilder.Append("()=>*");
+                            break;
+                    }
                 }
-                else if (memberValue is Func<dynamic>)
+                else if (memberValue is MethodData md)
                 {
-                    stringBuilder.Append(memberName).Append('=').Append("()=>*");
-                }
-                else if (memberValue is Action)
-                {
-                    stringBuilder.Append(memberName).Append('=').Append("()=>{}");
-                }
-                else if (memberValue is Action<IList<dynamic>>)
-                {
-                    string[] parameters = (memberValue as Action<IList<dynamic>>).Method.GetParameters().Select(p => p.Name).ToArray();
-                    stringBuilder.Append(memberName).Append('=').Append($"({string.Join(",", parameters)})=>{{}}");
+                    if (md.OverloadCount is 1)
+                    {
+                        Method mtd = md.GetSingle();
+                        stringBuilder.Append(memberName).Append('=');
+                        switch (mtd.MethodType)
+                        {
+                            case MethodType.Function:
+                                stringBuilder.Append($"([{mtd.ParameterCount}])=>*");
+                                break;
+                            case MethodType.Action:
+                                stringBuilder.Append("()=>{}");
+                                break;
+                            case MethodType.Consumer:
+                                stringBuilder.Append($"([{mtd.ParameterCount}])=>{{}}");
+                                break;
+                            case MethodType.Provider:
+                                stringBuilder.Append("()=>*");
+                                break;
+                        }
+                    }
                 }
                 else if (memberValue is string s)
                 {
