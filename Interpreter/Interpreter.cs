@@ -109,6 +109,19 @@ namespace Interpreter
             scope.SetGlobalBinding(identifier, value);
         }
 
+        private static bool TrySetRuntimeObjectMember(RuntimeObject obj, string identifier, object value)
+        {
+            if (value is Method m)
+            {
+                return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), new MethodData(m));
+            }
+
+            return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), value);
+        }
+
+        private static bool TryGetRuntimeObjectMember(RuntimeObject obj, string identifier, out object value) => 
+            obj.TryGetMember(new RuntimeObject.GetterBinder(identifier), out value);
+
         private dynamic AttemptToEvaluateExpression(BinaryExpressionModel expression, Scoping scope)
         {
             BinaryOperator op = expression.Operator;
@@ -281,13 +294,13 @@ namespace Interpreter
             {
                 for (int i = 1; i < expression.Identifier.Length - 1; i++)
                 {
-                    if (obj.TryGetMember(new RuntimeObject.GetterBinder(expression.Identifier[i]), out object prop))
+                    if (TryGetRuntimeObjectMember(obj, expression.Identifier[i], out object prop))
                         obj = (RuntimeObject)prop;
                     else
                         throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[i - 1]}->{expression.Identifier[i]} is not a defined");
                 }
 
-                if (obj.TryGetMember(new RuntimeObject.GetterBinder(expression.Identifier.Last()), out dynamic value))
+                if (TryGetRuntimeObjectMember(obj, expression.Identifier.Last(), out dynamic value))
                     return value;
 
                 throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[expression.Identifier.Length - 2]}->{expression.Identifier.Last()} is not defined");
@@ -304,7 +317,8 @@ namespace Interpreter
             foreach (ObjectPropertyExpressionModel property in expression.Properties)
             {
                 dynamic value = EnterExpression(property.Value, scope);
-                runtimeObject.TrySetMember(new RuntimeObject.SetterBinder(property.Identifier), value);
+                TrySetRuntimeObjectMember(runtimeObject, property.Identifier, value);
+
             }
 
             return runtimeObject;
@@ -329,13 +343,13 @@ namespace Interpreter
 
                 for (int i = 1; i < functionCall.IdentifierPath.Length - 1; i++)
                 {
-                    if (obj.TryGetMember(new RuntimeObject.GetterBinder(functionCall.IdentifierPath[i]), out object prop))
+                    if (TryGetRuntimeObjectMember(obj, functionCall.IdentifierPath[i], out object prop))
                         obj = (RuntimeObject)prop;
                     else
                         throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${string.Join("->", functionCall.IdentifierPath[0..(i - 1)])} is not defined");
                 }
 
-                if (obj.TryGetMember(new RuntimeObject.GetterBinder(functionCall.IdentifierPath.Last()), out method))
+                if (TryGetRuntimeObjectMember(obj, functionCall.IdentifierPath.Last(), out method))
                 {
                 }
                 else
@@ -852,7 +866,7 @@ namespace Interpreter
                 // Traverse through the identifier path
                 for (int i = 1; i < assignStatement.Identifier.Length - 1; i++)
                 {
-                    if (obj.TryGetMember(new RuntimeObject.GetterBinder(assignStatement.Identifier[i]), out object prop))
+                    if (TryGetRuntimeObjectMember(obj, assignStatement.Identifier[i], out object prop))
                         obj = (RuntimeObject)prop;
                     else
                         throw new InterpreterRuntimeException(assignStatement, _filePath, $"Member ${string.Join("->", assignStatement.Identifier[0..(i + 1)])} is not defined");
@@ -860,27 +874,26 @@ namespace Interpreter
 
                 // If the member does not exist, add new binding
                 string idLast = assignStatement.Identifier.Last();
-                if (!obj.TryGetMember(new RuntimeObject.GetterBinder(idLast), out object member))
+                if (!TryGetRuntimeObjectMember(obj, idLast, out object member))
                 {
                     if (operatorCombination != AssignmentOperator.Assign)
                         throw new InterpreterRuntimeException(assignStatement, _filePath, $"Tried to use operator {operatorCombination} on undefined member ${string.Join("->", assignStatement.Identifier)}");
 
-                    obj.TrySetMember(new RuntimeObject.SetterBinder(idLast), rightOperand);
+                    TrySetRuntimeObjectMember(obj, idLast, rightOperand);
                     return;
                 }
                 // Otherwise overwrite or update the member
                 else
                 {
-                    var setterBinder = new RuntimeObject.SetterBinder(idLast);
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
-                        obj.TrySetMember(setterBinder, rightOperand);
+                        TrySetRuntimeObjectMember(obj, idLast, rightOperand);
                         return;
                     }
                     else
                     {
                         dynamic evaluatedResult = AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], member, (Func<dynamic>)(() => rightOperand), assignStatement);
-                        obj.TrySetMember(setterBinder, evaluatedResult);
+                        TrySetRuntimeObjectMember(obj, idLast, evaluatedResult);
                         return;
                     }
                 }
@@ -926,8 +939,8 @@ namespace Interpreter
 
                 // Map the .NET exception to an object readable by the interpreter
                 var dotnetExceptionRuntimeObject = new RuntimeObject();
-                dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("message"), $"Core exception: {e.Message}");
-                dotnetExceptionRuntimeObject.TrySetMember(new RuntimeObject.SetterBinder("messageFull"), $"Core exception: {e}");
+                TrySetRuntimeObjectMember(dotnetExceptionRuntimeObject, "message", $"Core exception: {e.Message}");
+                TrySetRuntimeObjectMember(dotnetExceptionRuntimeObject, "messageFull", $"Core exception: {e}");
 
                 AddLocalBinding(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject, catchBlockScope);
 

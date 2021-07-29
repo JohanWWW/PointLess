@@ -40,5 +40,14 @@ namespace Interpreter.Environment
         {
             return (ProviderMethod)_method;
         }
+
+        public static MethodData JoinMethods(Method a, Method b)
+        {
+            var md = new MethodData(a);
+            md.AddOverload(b);
+            return md;
+        }
+
+        public static MethodData operator +(Method a, Method b) => JoinMethods(a, b);
     }
 }
