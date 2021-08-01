@@ -1,0 +1,149 @@
+﻿use std;
+use math;
+
+__COMPLEX_MATH_IMPL__ = () => {
+
+    // Private
+    IM_SUFFIX = "í";
+    PLUS_SYM = "+";
+    MINUS_SYM = "-";
+
+    // Public
+    conjugate = x => Complex(x.getReal(), Math.negate(x.getImaginary()));
+
+    reciprocal = x => ((x.getReal() == 0) && (x.getImaginary() == 0)) ? 
+        (__is_decimal(x) ? Complex(.0, .0) : Complex(0, 0)) : 
+        (__is_decimal(x) ? (Complex(1.0, .0) / x) : (Complex(1, 0) / x));
+
+    abs = x => {
+        c = Math.abs(x.getReal());
+        d = Math.abs(x.getImaginary());
+
+        val = null;
+        if (c > d) {
+            r = d / c;
+            val = c * Math.sqrt(1.0 + r * r);
+        }
+        else if (d == .0) {
+            val = c;
+        }
+        else {
+            r = c / d;
+            val = d * Math.sqrt(1.0 + r * r);
+        }
+
+        return val;
+    };
+
+    round = (x, precision) => Complex(Math.round(x.getReal(), precision), Math.round(x.getImaginary(), precision));
+
+    round += x => round(x, 0);
+
+    negate = (x) => Complex(Math.negate(x.getReal()), Math.negate(x.getImaginary()));
+
+    //
+    // Represents a complex number (a+bí)
+    // parameters:
+    //  real:       The real part of the complex number
+    //  imaginary:  The imaginary (í) part of the complex number which 
+    //              represents a number times the square root of -1
+    //
+    Complex = (real, imaginary) => {
+
+        if (__is_number(real) != true) {
+            throw "Real part of complex must be a number";
+        }
+        if (__is_number(imaginary) != true) {
+            throw "Imaginary part of complex must be a number";
+        }
+
+        toString = () => {
+            sb = "(";
+            if (real == 0 && imaginary == 0) {
+                sb += "0";
+            }
+            else {
+                hasRe = real != 0;
+                hasIm = imaginary != 0;
+                if (hasRe) {
+                    sb += real + "";
+                    if (hasIm) {
+                        sb += imaginary < 0 ? MINUS_SYM : PLUS_SYM;
+                        sb += (imaginary == 1 || imaginary == Math.negate(1)) ? 
+                            IM_SUFFIX : 
+                            Math.abs(imaginary) + IM_SUFFIX;
+                    }
+                }
+                // !hasRe && hasIm
+                else {
+                    if (imaginary < 0) {
+                        sb += MINUS_SYM;
+                    }
+                    sb += (imaginary == 1 || imaginary == Math.negate(1)) ? 
+                        IM_SUFFIX : 
+                        Math.abs(imaginary) + IM_SUFFIX;
+                }
+            }
+            sb += ")";
+            return sb;
+        };
+
+        this = {
+            getReal = () => real,
+            getImaginary = () => imaginary,
+            conjugate = conjugate,
+            toString = toString,
+
+            // Operator overloads
+            __operator_add__ = (left, right) => Complex(left.getReal() + right.getReal(), left.getImaginary() + right.getImaginary()),
+
+            __operator_sub__ = (left, right) => Complex(left.getReal() - right.getReal(), left.getImaginary() - right.getImaginary()),
+
+            __operator_mult__ = (left, right) => {
+                reProd = (left.getReal() * right.getReal()) - (left.getImaginary() * right.getImaginary());
+                imProd = (left.getImaginary() * right.getReal()) + (left.getReal() * right.getImaginary());
+                return Complex(reProd, imProd);
+            },
+
+            __operator_div__ = (left, right) => {
+                a = left.getReal();
+                b = left.getImaginary();
+                c = right.getReal();
+                d = right.getImaginary();
+
+                complex = null;
+                if (Math.abs(d) < Math.abs(c)) {
+                    dcQuot = d / c;
+                    complex = Complex((a + b * dcQuot) / (c + d * dcQuot), (b - a * dcQuot) / (c + d * dcQuot));
+                }
+                else {
+                    cdQuot = c / d;
+                    complex = Complex((b + a * cdQuot) / (d + c * cdQuot), (Math.negate(a) + b * cdQuot) / (d + c * cdQuot));
+                }
+
+                return complex;
+            }
+        };
+
+        return this;
+    };
+
+    Complex += real => {
+        if (__is_number(real) != true) {
+            throw "Real part of complex must be a number";
+        }
+
+        return __is_decimal(real) ? Complex(real, .0) : Complex(real, 0);
+    };
+
+    return {
+        Complex = Complex,
+        conjugate = conjugate,
+        reciprocal = reciprocal,
+        abs = abs,
+        round = round,
+        negate = negate
+    };
+};
+
+ComplexMath = __COMPLEX_MATH_IMPL__();

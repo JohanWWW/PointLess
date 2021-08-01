@@ -1,0 +1,162 @@
+﻿use std;
+
+__MATH_IMPL__ = () => {
+
+    // Private
+
+    _decimal_to_int = native (value) => <@"std.Convert.decimal.__to_int">;
+    _int_to_decimal = native (value) => <@"std.Convert.int.__to_decimal">;
+
+    _minus_one = 0 - 1;
+
+    _pi = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196;
+    _e = 2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642749193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383;
+
+    _primitive_pow = (x, n) => {
+        p = 1;
+        if (n >= 0) {
+            i = n;
+            while (i > 0) {
+                p *= x;
+                i -= 1;
+            }
+        }
+        else {
+            p = signum(x) * (1.0 / _primitive_pow(abs(x), abs(n)));
+        }
+        return p;
+    };
+
+    // Public
+
+    coef = n => {
+        t = null;
+        if (n == 0) {
+            t = 0;
+        }
+        else {
+            t = 1.0 / n;
+            if (n % 2 == 0) {
+                t = negate(t);
+            }
+        }
+        return t;
+    };
+
+    horner = (x) => {
+        N = 100;
+        u = coef(N);
+        i = N - 1;
+        while (i >= 0) {
+            u = u * x + coef(i);
+            i -= 1;
+        }
+        return u;
+    };
+
+    factorial = x => {
+        if (x < 0) {
+            throw "Attempted to factorialize a negative number";
+        }
+        p = 1;
+        i = x;
+        while (i > 0) {
+            p *= i;
+            i -= 1;
+        }
+        return p;
+    };
+
+    sqrt = x => {
+        r = null;
+        if (x < 0) {
+            throw "Attempted to square a negative number which gives a complex solution";
+        }
+        else {
+            if (x == 0) {
+                r = 0;
+            }
+            else {
+                r = x * .5;
+                i = 0;
+                while (i < 10) {
+                    r = (r + x / r) * .5;
+                    i += 1;
+                }
+            }
+        }
+        return r;
+    };
+
+    negate = x => _minus_one * x;
+
+    signum = x => x < 0 ? _minus_one : 1;
+
+    abs = x => x < 0 ? negate(x) : x;
+
+    floor = x => x - (x % 1);
+
+    ceiling = x => 
+        x % 1 == 0 ? x : x + (1 - (x % 1));
+
+    max = (a, b) => a >= b ? a : b;
+
+    min = (a, b) => a <= b ? a : b;
+
+    round = (x, precision) => {
+        if (precision < 0 || __is_integer(precision) != true) {
+            throw "Precision must be a non negative integer";
+        }
+        p = pow(10, precision);
+        return floor(x * p + .5) / p;
+    };
+
+    round += x => round(x, 0);
+
+    truncate = (x, precision) => {
+        if (precision < 0 || __is_integer(precision) != true) {
+            throw "Precision must be a non negative integer";
+        }
+        s = 1;
+        if (x < 0) {
+            s = signum(x);
+            x = abs(x);
+        }
+        p = pow(10, precision);
+        return s * floor(x * p) / p;
+    };
+
+    truncate += x => truncate(x, 0);
+
+    pow = (x, n) => {
+        p = null;
+        if (__is_integer(n)) {
+            p = _primitive_pow(x, n);
+        }
+        else {
+            throw "Number raised to the power of a decimal is not yet supported";
+        }
+        return p;
+    };
+
+    return {
+        pi = _pi,
+        e = _e,
+        negate = negate,
+        signum = signum,
+        abs = abs,
+        floor = floor,
+        ceiling = ceiling,
+        max = max,
+        min = min,
+        factorial = factorial,
+        sqrt = sqrt,
+        coef = coef,
+        horner = horner,
+        pow = pow,
+        round = round,
+        truncate = truncate
+    };
+};
+
+Math = __MATH_IMPL__();

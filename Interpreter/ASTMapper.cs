@@ -483,7 +483,7 @@ namespace Interpreter
             {
                 return new BinaryExpressionModel
                 {
-                    Operator = BinaryOperator.Minus,
+                    Operator = BinaryOperator.Sub,
                     LeftExpression = EnterExpression(left),
                     RightExpression = EnterExpression(right),
                     StartToken = context.Start,
@@ -538,7 +538,7 @@ namespace Interpreter
             {
                 return new BinaryExpressionModel
                 {
-                    Operator = BinaryOperator.Plus,
+                    Operator = BinaryOperator.Add,
                     LeftExpression = EnterExpression(left),
                     RightExpression = EnterExpression(right),
                     StartToken = context.Start,
@@ -658,23 +658,57 @@ namespace Interpreter
             {
                 string s = context.STRING().GetText();
 
-                var stringBuilder = new StringBuilder();
-
-                if (s.Length is 2) // is empty string: ""
-                    stringBuilder.Append(string.Empty);
-                else
+                if (s.Length is 2)
                 {
-                    for (int i = 1; i < s.Length - 1; i++)
-                        stringBuilder.Append(s[i]);
+                    s = string.Empty;
+                    literalExpression.Value = s;
+                    return literalExpression;
                 }
+                else
+                    s = s[1..^1];
 
-                // Parse escape characters
-                stringBuilder.Replace("\\\"", "\"");
-                stringBuilder.Replace("\\\\", "\\");
-                stringBuilder.Replace("\\n", "\n");
-                stringBuilder.Replace("\\t", "\t");
+                s = s.Replace("\\\"", "\"");
 
-                literalExpression.Value = stringBuilder.ToString();
+                // Ugly but working solution
+                // TODO: Beautify
+                s = Regex.Replace(s,
+                    @"\\n", m =>
+                    {
+                        int index = m.Index;
+                        if (index is 0)
+                        {
+                            return "\n";
+                        }
+                        else if (s[index - 1] is '\\')
+                        {
+                            return m.Value; // do nothing
+                        }
+                        else
+                        {
+                            return "\n";
+                        }
+                    });
+
+                s = Regex.Replace(s, @"\\t", m =>
+                {
+                    int index = m.Index;
+                    if (index is 0)
+                    {
+                        return "\t";
+                    }
+                    else if (s[index - 1] is '\\')
+                    {
+                        return m.Value; // do nothing
+                    }
+                    else
+                    {
+                        return "\t";
+                    }
+                });
+
+                s = s.Replace("\\\\", "\\");
+
+                literalExpression.Value = s;
                 return literalExpression;
             }
 

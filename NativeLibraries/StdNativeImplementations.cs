@@ -18,18 +18,6 @@ namespace NativeLibraries
     {
         private static string FormatPrintText(object obj)
         {
-            if (obj is RuntimeObject)
-            {
-                var rtObject = obj as RuntimeObject;
-
-                if (rtObject.TryGetMember(new RuntimeObject.GetterBinder("toString"), out object objectMember)
-                    && objectMember is MethodData objectToStringFunction
-                    && objectToStringFunction.GetOverload(0).ParameterCount is 0)
-                    return (string)objectToStringFunction.GetOverload(0).GetProvider().Invoke();
-                else
-                    return rtObject.ToString();
-            }
-            else
                 return obj.ToString();
         }
     

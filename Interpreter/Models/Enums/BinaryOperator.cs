@@ -8,8 +8,8 @@ namespace Interpreter.Models.Enums
 {
     public enum BinaryOperator
     {
-        Plus,
-        Minus,
+        Add,
+        Sub,
         Mult,
         Div,
         Mod,

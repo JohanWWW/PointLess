@@ -1,4 +1,5 @@
-﻿
+﻿use std;
+
 // Linked list implementation
 //
 LinkedList = () => {
@@ -217,7 +218,7 @@ LinkedList = () => {
 	};
 
 	_toList = () => {
-		return __ls;
+		return this;
 	};
 
 	_toString = () => {
@@ -227,7 +228,28 @@ LinkedList = () => {
 			e = _Enumerator(__root);
 			i = 0;
 			while (e.next()) {
-				sb.add(e.current());
+				current = e.current();
+				if (__is_string(current)) {
+					s = String(current);
+					s = s.replaceAll("\\", "\\\\");
+					s = s.replaceAll("\"", "\\\"");
+					s = s.replaceAll("\n", "\\n");
+					s = s.replaceAll("\t", "\\t");
+					sb += ("\"" + s.toString() + "\"");
+				}
+				else if (__is_decimal(current)) {
+					s = String("" + current);
+					s = s.replaceAll(",", ".");
+					sb += s;
+				}
+				// Do not toString self reference to avoid infinite loop
+				else if (__is_object(current) && current == this) {
+					sb += "{this}";
+				}
+				else {
+					sb += current;
+				}
+
 				if (i != __length - 1) {
 					sb.add(",");
 				}
@@ -243,7 +265,12 @@ LinkedList = () => {
 		return s;
 	};
 
-	__ls = {
+	__operator_add__ = (left, right) => {
+		left.add(right);
+		return this;
+	};
+
+	this = {
 		add = _add,
 		insertAt = _insertAt,
 		removeAt = _removeAt,
@@ -253,10 +280,14 @@ LinkedList = () => {
 		length = _length,
 		enumerator = _enumerator,
 		toList = _toList,
-		toString = _toString
+
+		// Overloads
+		toString = _toString,
+
+		__operator_add__ = __operator_add__
 	};
 
-	return __ls;
+	return this;
 };
 
 
@@ -299,15 +330,26 @@ Stack = () => {
 		return __list.toString();
 	};
 
-	return { 
+	__operator_add__ = (left, right) => {
+		left.push(right);
+		return this;
+	};
+
+	this = { 
 		push = _push,
 		pop = _pop,
 		peek = _peek,
 		length = _length,
 		enumerator = _enumerator,
 		toList = _toList,
-		toString = _toString
+
+		// Overloads
+		toString = _toString,
+
+		__operator_add__ = __operator_add__
 	};
+
+	return this;
 };
 
 
@@ -350,15 +392,26 @@ Queue = () => {
 		return __list.toString();
 	};
 
-	return {
+	__operator_add__ = (left, right) => {
+		left.enqueue(right);
+		return this;
+	};
+
+	this = {
 		enqueue = _enqueue,
 		dequeue = _dequeue,
 		peek = _peek,
 		length = _length,
 		enumerator = _enumerator,
 		toList = _toList,
-		toString = _toString
+
+		// Overloads
+		toString = _toString,
+
+		__operator_add__ = __operator_add__
 	};
+
+	return this;
 };
 
 foreachin = (list, consumer) => {

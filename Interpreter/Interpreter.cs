@@ -23,8 +23,8 @@ namespace Interpreter
 
         private readonly IReadOnlyDictionary<AssignmentOperator, BinaryOperator> _ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT = new Dictionary<AssignmentOperator, BinaryOperator>
         {
-            [AssignmentOperator.AddAssign] = BinaryOperator.Plus,
-            [AssignmentOperator.SubAssign] = BinaryOperator.Minus,
+            [AssignmentOperator.AddAssign] = BinaryOperator.Add,
+            [AssignmentOperator.SubAssign] = BinaryOperator.Sub,
             [AssignmentOperator.MultAssign] = BinaryOperator.Mult,
             [AssignmentOperator.DivAssign] = BinaryOperator.Div,
             [AssignmentOperator.ModAssign] = BinaryOperator.Mod,
@@ -67,8 +67,8 @@ namespace Interpreter
         /// <exception cref="DivideByZeroException">If attempt to divide by zero</exception>
         private static dynamic EvaluateBinaryExpression(BinaryOperator op, dynamic a, Func<dynamic> b) => op switch
         {
-            BinaryOperator.Plus =>                  a + b(),
-            BinaryOperator.Minus =>                 a - b(),
+            BinaryOperator.Add =>                  a + b(),
+            BinaryOperator.Sub =>                 a - b(),
             BinaryOperator.Mult =>                  a * b(),
             BinaryOperator.Div =>                   a / b(),
             BinaryOperator.Mod =>                   a % b(),
@@ -148,7 +148,7 @@ namespace Interpreter
             catch (RuntimeBinderException e)
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath,
-                    $"Operator {op} cannot be applied on operands of type {((object)a).GetType()} and {((object)bEval).GetType()}", e);
+                    $"Operator {op} cannot be applied on operands of type {((object)a).GetType()} and {(bEval is null ? "null" : ((object)bEval).GetType())}", e);
             }
             catch (MethodOverloadException e)
             {

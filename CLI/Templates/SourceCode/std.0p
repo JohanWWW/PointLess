@@ -46,14 +46,6 @@ __is_object = native (value) => <@"std.__is_object">;
 
 __is_method = native (value) => <@"std.__is_method">;
 
-__is_action = native (value) => <@"std.__is_action">;
-
-__is_function = native (value) => <@"std.__is_function">;
-
-__is_provider = native (value) => <@"std.__is_provider">;
-
-__is_consumer = native (value) => <@"std.__is_consumer">;
-
 
 //
 //
@@ -252,10 +244,10 @@ Array = (size) => {
             }
             else if (__is_string(e)) {
                 raw = String(e);
+                raw = raw.replaceAll("\\", "\\\\");
                 raw = raw.replaceAll("\"", "\\\"");
                 raw = raw.replaceAll("\n", "\\n");
                 raw = raw.replaceAll("\t", "\\t");
-                raw = raw.replaceAll("\\", "\\\\");
                 sb += "\"" + raw.toString() + "\"";
             }
             else if (__is_decimal(e)) {
@@ -265,11 +257,13 @@ Array = (size) => {
                 }
                 sb += raw.toString();
             }
+            else if (__is_object(e)) {
+                sb += e.toString();
+            }
             else {
                 sb += e;
             }
 
-            // If last index
             if (i != _length - 1) {
                 sb += ",";
             }
@@ -286,6 +280,55 @@ Array = (size) => {
         enumerator = _enumerator,
         toString = _toString
     };
+};
+
+Arrays = {
+
+    //
+    // Allocates storage for a new array and populates it 
+    // with the elements from the input enumerable
+    //
+    from = enumerable => {
+        length = enumerable.length();
+        array = Array(length);
+
+        e = enumerable.enumerator();
+        i = 0;
+        while (e.next()) {
+            array.set(i, e.current());
+            i += 1;
+        }
+
+        return array;
+    },
+
+    //
+    // Allocates storage for a new array
+    // Parameters:
+    //  size: The size of the array
+    //
+    allocate =  (size => Array(size)) 
+                +
+
+                //
+                // Parameters:
+                //  size: The size of the array
+                //  generator: A provider that returns an initial value to populate the array with
+                //
+                ((size, generator) => {
+                    array = Arrays.allocate(size);
+                    i = 0;
+                    while (i < size) {
+                        array.set(i, generator());
+                        i += 1;
+                    }
+                    return array;
+                }),
+
+    //
+    // Allocates storage for new array with zero index positions
+    //
+    empty = () => Array(0)
 };
 
 //
@@ -413,7 +456,6 @@ ArrayList = (size) => {
 
 //
 //
-// TODO: enumerator
 Dictionary = () => {
     _dict = __dict_allocate();
 
@@ -426,6 +468,10 @@ Dictionary = () => {
     _set = (key, value) => {
         _throwIfKeyNull(key, "Dictionary._set");
         __dict_set(_dict, key, value);
+    };
+
+    _set += keyValuePair => {
+        _set(keyValuePair.key, keyValuePair.value);
     };
 
     _get = (key) => {
@@ -501,7 +547,7 @@ Dictionary = () => {
         };
     };
 
-    return {
+    this = {
         set = _set,
         get = _get,
         contains = _contains,
@@ -510,8 +556,15 @@ Dictionary = () => {
         keys = _keys,
         values = _values,
         pairs = _pairs,
-        enumerator = _enumerator
+        enumerator = _enumerator,
+
+        __operator_add__ = (left, right) => {
+            left.set(right);
+            return this;
+        }
     };
+
+    return this;
 };
 
 //
@@ -648,7 +701,7 @@ String = (s) => {
         while (i < _length) {
             j = 0;
             continiousCharOccurrences = 0;
-            while (j < xOldString.length) {
+            while (j < xOldString.length()) {
                 if (i + j < _length) {
                     if (xOldString.get(j) == _get(i + j)) {
                         continiousCharOccurrences += 1;
@@ -657,7 +710,7 @@ String = (s) => {
                 j += 1;
             }
 
-            if (continiousCharOccurrences == xOldString.length) {
+            if (continiousCharOccurrences == xOldString.length()) {
                 occurrenceIndices.add(i);
             }
 
@@ -682,7 +735,7 @@ String = (s) => {
                 sb += newStringEnumerator.current();
             }
 
-            cursor += xOldString.length;
+            cursor += xOldString.length();
         }
 
         // Add remaining characters
@@ -706,7 +759,7 @@ String = (s) => {
 
     return {
         get = _get,
-        length = _length,
+        length = () => _length,
         split = _split,
         containsChar = _containsChar,
         countChar = _countChar,
@@ -718,6 +771,7 @@ String = (s) => {
     };
 };
 
+// Not recommended for regular math operations
 __intPow__ = (x, y) => {
     if (y < 0) {
         throw "std.__intPow__: Exponent was less than zero";
