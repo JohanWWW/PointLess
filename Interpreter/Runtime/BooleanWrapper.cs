@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Interpreter.Models.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,126 +7,89 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class BooleanWrapper : IBinaryOperable<bool> // TODO: Implement BooleanWrapper
+    public class BooleanWrapper : WrapperBase<bool>
     {
-        public bool Value
+        private const string TRUE_SYMBOL = "true";
+        private const string FALSE_SYMBOL = "false";
+
+        public static readonly BooleanWrapper True = new(true);
+        public static readonly BooleanWrapper False = new(false);
+
+        private BooleanWrapper(bool value) : base(value, ObjectType.Boolean)
         {
-            get => (bool)(this as IBinaryOperable).Value;
-            set => (this as IBinaryOperable).Value = value;
         }
 
-        public ObjectType OperableType => ObjectType.Boolean;
+        public static BooleanWrapper FromBool(bool value) => value ? True : False;
 
-        object IBinaryOperable.Value { get; set; }
+        public override IBinaryOperable BitwiseAnd(IBinaryOperable operand) => LogicalAnd(operand);
 
-        public BooleanWrapper(bool value) => Value = value;
+        public override IBinaryOperable BitwiseOr(IBinaryOperable operand) => LogicalOr(operand);
 
-        public IBinaryOperable Add(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
+        public override IBinaryOperable BitwiseXOr(IBinaryOperable operand) => LogicalXOr(operand);
 
-        public IBinaryOperable BitwiseAnd(IBinaryOperable operand) => LogicalAnd(operand);
-
-        public IBinaryOperable BitwiseOr(IBinaryOperable operand) => LogicalOr(operand);
-
-        public IBinaryOperable BitwiseXOr(IBinaryOperable operand) => LogicalXOr(operand);
-
-        public IBinaryOperable Divide(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable Equal(IBinaryOperable operand)
+        public override IBinaryOperable Equal(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => new BooleanWrapper(Value == (operand as IBinaryOperable<bool>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                ObjectType.Boolean => FromBool(Value == (operand as IBinaryOperable<bool>).Value),
+                ObjectType.NullReference => False,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
         }
 
-        public IBinaryOperable GreaterThan(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LessThan(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LessThanOrEqual(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LogicalAnd(IBinaryOperable operand)
+        public override IBinaryOperable LogicalAnd(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => new BooleanWrapper(Value && (operand as IBinaryOperable<bool>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                ObjectType.Boolean => FromBool(Value && (operand as IBinaryOperable<bool>).Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalAnd)
             };
         }
 
-        public IBinaryOperable LogicalOr(IBinaryOperable operand)
+        public override IBinaryOperable LogicalOr(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => new BooleanWrapper(Value || (operand as IBinaryOperable<bool>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                ObjectType.Boolean => FromBool(Value || (operand as IBinaryOperable<bool>).Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalOr)
             };
         }
 
-        public IBinaryOperable LogicalXOr(IBinaryOperable operand)
+        public override IBinaryOperable LogicalXOr(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => new BooleanWrapper(Value ^ (operand as IBinaryOperable<bool>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                ObjectType.Boolean => FromBool(Value ^ (operand as IBinaryOperable<bool>).Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalXOr)
             };
         }
 
-        public IBinaryOperable Mod(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable Multiply(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable NotEqual(IBinaryOperable operand)
+        public override IBinaryOperable NotEqual(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => new BooleanWrapper(Value != (operand as IBinaryOperable<bool>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                ObjectType.Boolean => FromBool(Value != (operand as IBinaryOperable<bool>).Value),
+                ObjectType.NullReference => True,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
         }
 
-        public IBinaryOperable ShiftLeft(IBinaryOperable operand)
+        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
         {
-            throw new NotImplementedException();
+            if (OperableType != operand.OperableType)
+                return False;
+
+            return FromBool(Value == (bool)operand.Value);
         }
 
-        public IBinaryOperable ShiftRight(IBinaryOperable operand)
+        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
         {
-            throw new NotImplementedException();
+            if (OperableType != operand.OperableType)
+                return True;
+
+            return FromBool(Value != (bool)operand.Value);
         }
 
-        public IBinaryOperable Subtract(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string ToString() => Value.ToString();
+        public override string ToString() => Value ? TRUE_SYMBOL : FALSE_SYMBOL;
     }
 }

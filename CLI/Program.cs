@@ -334,12 +334,12 @@ namespace ZeroPointCLI
 
             var entryPointMethod = environment
                 .GetNamespace(project.EntryPoint.Namespace)
-                    .Scope.GetLocalValue(project.EntryPoint.Method) as MethodData;
+                    .Scope.GetLocalValue(project.EntryPoint.Method) as IBinaryOperable<MethodData>;
 
             if (args.Length is 0)
-                entryPointMethod.GetOverload(1).GetConsumer().Invoke(new dynamic[] { null });
+                entryPointMethod.Value.GetOverload(1).GetConsumer().Invoke(new IBinaryOperable[] { NullReferenceWrapper.Null });
             else
-                entryPointMethod.GetOverload(1).GetConsumer().Invoke(args.Select(a => (dynamic)a).ToArray());
+                entryPointMethod.Value.GetOverload(1).GetConsumer().Invoke(args.Select(a => new StringWrapper(a)).ToArray());
         }
 
         private static NativeImplementationBase[] GetImplementations()

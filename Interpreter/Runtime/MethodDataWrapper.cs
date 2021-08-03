@@ -1,4 +1,5 @@
 ﻿using Interpreter.Environment;
+using Interpreter.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,21 +8,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class MethodDataWrapper : IBinaryOperable<MethodData> // TODO: Implement MethodDataWrapper
+    public class MethodDataWrapper : WrapperBase<MethodData>
     {
-        public MethodData Value
+        public MethodDataWrapper(MethodData value) : base(value, ObjectType.MethodData)
         {
-            get => (MethodData)(this as IBinaryOperable).Value;
-            set => (this as IBinaryOperable).Value = value;
         }
 
-        public ObjectType OperableType => ObjectType.MethodData;
-
-        object IBinaryOperable.Value { get; set; }
-
-        public MethodDataWrapper(MethodData value) => Value = value;
-
-        public IBinaryOperable Add(IBinaryOperable operand)
+        public override IBinaryOperable Add(IBinaryOperable operand)
         {
             if (operand.OperableType == ObjectType.Method)
             {
@@ -30,97 +23,43 @@ namespace Interpreter.Runtime
                 return new MethodDataWrapper(Value);
             }
 
-            throw new MissingBinaryOperatorOverrideException();
+            throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
         }
 
-        public IBinaryOperable BitwiseAnd(IBinaryOperable operand)
+        public override IBinaryOperable Equal(IBinaryOperable operand)
         {
-            throw new NotImplementedException();
+            return operand.OperableType switch
+            {
+                ObjectType.MethodData => BooleanWrapper.FromBool(Value == operand.Value),
+                ObjectType.NullReference => BooleanWrapper.False,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
+            };
         }
 
-        public IBinaryOperable BitwiseOr(IBinaryOperable operand)
+        public override IBinaryOperable NotEqual(IBinaryOperable operand)
         {
-            throw new NotImplementedException();
+            return operand.OperableType switch
+            {
+                ObjectType.MethodData => BooleanWrapper.FromBool(Value != operand.Value),
+                ObjectType.NullReference => BooleanWrapper.True,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
+            };
         }
 
-        public IBinaryOperable BitwiseXOr(IBinaryOperable operand)
+        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
         {
-            throw new NotImplementedException();
+            if (OperableType != operand.OperableType)
+                return BooleanWrapper.False;
+
+            return BooleanWrapper.FromBool(Value == operand.Value);
         }
 
-        public IBinaryOperable Divide(IBinaryOperable operand)
+        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
         {
-            throw new NotImplementedException();
-        }
+            if (OperableType != operand.OperableType)
+                return BooleanWrapper.True;
 
-        public IBinaryOperable Equal(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable GreaterThan(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LessThan(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LessThanOrEqual(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LogicalAnd(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LogicalOr(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable LogicalXOr(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable Mod(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable Multiply(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable NotEqual(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable ShiftLeft(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable ShiftRight(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IBinaryOperable Subtract(IBinaryOperable operand)
-        {
-            throw new NotImplementedException();
+            return BooleanWrapper.FromBool(Value != operand.Value);
         }
 
         public override string ToString() => Value.ToString();

@@ -95,7 +95,10 @@ __COMPLEX_MATH_IMPL__ = () => {
             toString = toString,
 
             // Operator overloads
-            __operator_add__ = (left, right) => Complex(left.getReal() + right.getReal(), left.getImaginary() + right.getImaginary()),
+            __operator_add__ = (left, right) => // Returns either complex or string
+                __is_string(right) ? 
+                    (left.toString() + right) : 
+                    Complex(left.getReal() + right.getReal(), left.getImaginary() + right.getImaginary()),
 
             __operator_sub__ = (left, right) => Complex(left.getReal() - right.getReal(), left.getImaginary() - right.getImaginary()),
 
@@ -122,6 +125,20 @@ __COMPLEX_MATH_IMPL__ = () => {
                 }
 
                 return complex;
+            },
+
+            __operator_equals__ = (left, right) => {
+                return right == null ? 
+                    false : 
+                    (left.getReal() == right.getReal()) && 
+                        (left.getImaginary() == right.getImaginary());
+            },
+
+            __operator_not_equals__ = (left, right) => {
+                return right == null ?
+                    true :
+                    (left.getReal() != right.getReal()) ||
+                        (left.getImaginary() != right.getImaginary());
             }
         };
 

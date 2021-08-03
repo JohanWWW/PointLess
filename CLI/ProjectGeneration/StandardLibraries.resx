@@ -124,10 +124,10 @@
   <data name="CompileOrder" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Templates\ProjectFiles\compile-order.txt;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
-  <data name="complexMath" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="complexMathSource" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Templates\SourceCode\complexMath.0p;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="math" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="mathSource" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Templates\SourceCode\math.0p;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="stdSource" type="System.Resources.ResXFileRef, System.Windows.Forms">

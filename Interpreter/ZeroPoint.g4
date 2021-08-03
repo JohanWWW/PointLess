@@ -166,7 +166,7 @@ expression
 	| expression (PLUS|MINUS) expression
 	| expression (SHIFT_LEFT|SHIFT_RIGHT) expression
 	| expression (LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL) expression
-	| expression (EQUAL|NOTEQUAL) expression
+	| expression (EQUAL|NOTEQUAL|STRICT_EQUAL|STRICT_NOTEQUAL) expression
 	| expression BITWISE_AND expression
 	| expression BITWISE_XOR expression
 	| expression BITWISE_OR expression
@@ -233,7 +233,9 @@ DIV: '/';
 MOD: '%';
 
 EQUAL: '==';
+STRICT_EQUAL: '===';
 NOTEQUAL: '!=';
+STRICT_NOTEQUAL: '!==';
 LESS_THAN: '<';
 LESS_THAN_OR_EQUAL: '<=';
 GREATER_THAN: '>';

@@ -1,5 +1,6 @@
 ﻿using Antlr4.Runtime;
 using Interpreter.Models.Interfaces;
+using Interpreter.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace Interpreter.Models
     /// </summary>
     public class LiteralExpressionModel : IExpressionModel
     {
-        public dynamic Value { get; set; }
+        public IBinaryOperable Value { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
 
@@ -21,8 +22,8 @@ namespace Interpreter.Models
         {
         }
 
-        public LiteralExpressionModel(dynamic value) => Value = value;
+        public LiteralExpressionModel(IBinaryOperable value) => Value = value;
 
-        public override string ToString() => Value;
+        public override string ToString() => Value.Value.ToString();
     }
 }

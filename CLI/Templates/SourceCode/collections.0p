@@ -164,7 +164,7 @@ LinkedList = () => {
 
 	_get = (index) => {
 		e = null;
-
+		
 		if (index == 0) {
 			e = __root.value;
 		}
@@ -221,49 +221,36 @@ LinkedList = () => {
 		return this;
 	};
 
-	_toString = () => {
-		sb = LinkedList();
-		sb.add("[");
+	// This overload should be called by classes that implement LinkedList
+	_toString = callerList => {
+		sb = "[";
 		if (__length > 0) {
 			e = _Enumerator(__root);
 			i = 0;
 			while (e.next()) {
 				current = e.current();
 				if (__is_string(current)) {
-					s = String(current);
-					s = s.replaceAll("\\", "\\\\");
-					s = s.replaceAll("\"", "\\\"");
-					s = s.replaceAll("\n", "\\n");
-					s = s.replaceAll("\t", "\\t");
-					sb += ("\"" + s.toString() + "\"");
-				}
-				else if (__is_decimal(current)) {
-					s = String("" + current);
-					s = s.replaceAll(",", ".");
-					sb += s;
+					sb += ("\"" + __escapeSpecialChars__(current) + "\"");
 				}
 				// Do not toString self reference to avoid infinite loop
-				else if (__is_object(current) && current == this) {
-					sb += "{this}";
+				else if (current === callerList) {
+					sb += "<this list>";
 				}
 				else {
 					sb += current;
 				}
 
 				if (i != __length - 1) {
-					sb.add(",");
+					sb += ",";
 				}
 				i += 1;
 			}
 		}
-		sb.add("]");
-		s = "";
-		se = sb.enumerator();
-		while (se.next()) {
-			s += se.current();
-		}
-		return s;
+		sb += "]";
+		return sb;
 	};
+
+	_toString += () => _toString(this);
 
 	__operator_add__ = (left, right) => {
 		left.add(right);
@@ -326,10 +313,6 @@ Stack = () => {
 		return __list;
 	};
 
-	_toString = () => {
-		return __list.toString();
-	};
-
 	__operator_add__ = (left, right) => {
 		left.push(right);
 		return this;
@@ -343,8 +326,8 @@ Stack = () => {
 		enumerator = _enumerator,
 		toList = _toList,
 
-		// Overloads
-		toString = _toString,
+		// Overrides
+		toString = () => __list.toString(this),
 
 		__operator_add__ = __operator_add__
 	};
@@ -388,10 +371,6 @@ Queue = () => {
 		return __list;
 	};
 
-	_toString = () => {
-		return __list.toString();
-	};
-
 	__operator_add__ = (left, right) => {
 		left.enqueue(right);
 		return this;
@@ -405,8 +384,8 @@ Queue = () => {
 		enumerator = _enumerator,
 		toList = _toList,
 
-		// Overloads
-		toString = _toString,
+		// Overrides
+		toString = () => __list.toString(this),
 
 		__operator_add__ = __operator_add__
 	};

@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Singulink.Numerics;
+using Interpreter.Runtime;
 
 namespace Interpreter
 {
@@ -567,6 +568,28 @@ namespace Interpreter
                     StopToken = context.Stop
                 };
             }
+            else if (context.STRICT_EQUAL() != null)
+            {
+                return new BinaryExpressionModel
+                {
+                    Operator = BinaryOperator.StrictEqual,
+                    LeftExpression = EnterExpression(left),
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
+                };
+            }
+            else if (context.STRICT_NOTEQUAL() != null)
+            {
+                return new BinaryExpressionModel
+                {
+                    Operator = BinaryOperator.StrictNotEqual,
+                    LeftExpression = EnterExpression(left),
+                    RightExpression = EnterExpression(right),
+                    StartToken = context.Start,
+                    StopToken = context.Stop
+                };
+            }
             else
             {
                 throw new NotImplementedException();
@@ -626,13 +649,13 @@ namespace Interpreter
 
             if (context.BOOLEAN() != null)
             {
-                literalExpression.Value = bool.Parse(context.BOOLEAN().GetText());
+                literalExpression.Value = BooleanWrapper.FromBool(bool.Parse(context.BOOLEAN().GetText()));
                 return literalExpression;
             }
 
             if (context.NULL() != null)
             {
-                literalExpression.Value = null;
+                literalExpression.Value = NullReferenceWrapper.Null;
                 return literalExpression;
             }
 
@@ -643,12 +666,12 @@ namespace Interpreter
                 // Order might be important!
                 if (_decimalNumberPattern.IsMatch(numberText))
                 {
-                    literalExpression.Value = BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture);
+                    literalExpression.Value = new ArbitraryPrecisionDecimalWrapper(BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture));
                     return literalExpression;
                 }
                 else if (_integerNumberPattern.IsMatch(numberText))
                 {
-                    literalExpression.Value = BigInteger.Parse(numberText);
+                    literalExpression.Value = new ArbitraryBitIntegerWrapper(BigInteger.Parse(numberText));
                     return literalExpression;
                 }
                 else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
@@ -661,7 +684,7 @@ namespace Interpreter
                 if (s.Length is 2)
                 {
                     s = string.Empty;
-                    literalExpression.Value = s;
+                    literalExpression.Value = new StringWrapper(s);
                     return literalExpression;
                 }
                 else
@@ -708,7 +731,7 @@ namespace Interpreter
 
                 s = s.Replace("\\\\", "\\");
 
-                literalExpression.Value = s;
+                literalExpression.Value = new StringWrapper(s);
                 return literalExpression;
             }
 

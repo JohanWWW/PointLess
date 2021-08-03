@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Interpreter.Runtime;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Environment
 {
+    // TODO: Implement TryGet
     public class Namespace
     {
-        private IDictionary<string, dynamic> _importedBindings;
+        private IDictionary<string, IBinaryOperable> _importedBindings;
 
         public string Name { get; private set; }
         public Scoping Scope { get; private set; }
@@ -17,14 +19,14 @@ namespace Interpreter.Environment
         {
             Name = name;
             Scope = new Scoping();
-            _importedBindings = new Dictionary<string, dynamic>();
+            _importedBindings = new Dictionary<string, IBinaryOperable>();
         }
 
         public Namespace(string name, Namespace importNs)
         {
             Name = name;
             Scope = new Scoping();
-            _importedBindings = new Dictionary<string, dynamic>();
+            _importedBindings = new Dictionary<string, IBinaryOperable>();
             foreach (var kvp in importNs.Scope.GetBindings())
             {
                 _importedBindings.Add(kvp);
@@ -39,11 +41,11 @@ namespace Interpreter.Environment
             }
         }
 
-        public IDictionary<string, dynamic> GetImportedBindings() => _importedBindings;
+        public IDictionary<string, IBinaryOperable> GetImportedBindings() => _importedBindings;
 
-        public dynamic GetImportedValue(string identifier) => _importedBindings[identifier];
+        public IBinaryOperable GetImportedValue(string identifier) => _importedBindings[identifier];
 
-        public void AddOrUpdateBinding(string identifier, dynamic value) => _importedBindings[identifier] = value;
+        public void AddOrUpdateBinding(string identifier, IBinaryOperable value) => _importedBindings[identifier] = value;
 
         public override string ToString() => $"{nameof(Namespace)}(\"{Name}\")";
     }

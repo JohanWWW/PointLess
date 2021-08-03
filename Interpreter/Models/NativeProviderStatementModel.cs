@@ -1,5 +1,6 @@
 ﻿using Antlr4.Runtime;
 using Interpreter.Models.Interfaces;
+using Interpreter.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Interpreter.Models
 {
     public class NativeProviderStatementModel : IFunctionModel
     {
-        public Func<dynamic> NativeImplementation { get; set; }
+        public Func<IBinaryOperable> NativeImplementation { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
     }

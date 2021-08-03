@@ -30,9 +30,9 @@ namespace NativeLibraries
                 if (args.Count is 0)
                     return null; // Do nothing
 
-                dynamic obj = args[0];
+                IBinaryOperable obj = args[0];
 
-                if (obj is null)
+                if (obj.OperableType == ObjectType.NullReference)
                 {
                     Console.Write("null");
                     return null;
@@ -52,9 +52,9 @@ namespace NativeLibraries
                 if (args.Count is 0)
                     Console.WriteLine();
 
-                dynamic obj = args[0];
+                IBinaryOperable obj = args[0];
                 
-                if (obj is null)
+                if (obj.OperableType == ObjectType.NullReference)
                 {
                     Console.WriteLine("null");
                     return null;
@@ -69,7 +69,11 @@ namespace NativeLibraries
         [ImplementationIdentifier("std.readln")]
         public static readonly NativeProviderStatementModel Readln = new NativeProviderStatementModel
         {
-            NativeImplementation = () => Console.ReadLine()
+            NativeImplementation = () =>
+            {
+                string input = Console.ReadLine();
+                return new StringWrapper(input);
+            }
         };
 
         [ImplementationIdentifier("std.number")]
@@ -77,10 +81,10 @@ namespace NativeLibraries
         {
             NativeImplementation = s =>
             {
-                dynamic v = s[0];
-                if (v is string)
+                IBinaryOperable v = s[0];
+                if (v.OperableType == ObjectType.String)
                 {
-                    return BigInteger.Parse(v as string);
+                    return new ArbitraryBitIntegerWrapper(BigInteger.Parse((v as IBinaryOperable<string>).Value));
                 }
                 else
                 {
@@ -94,12 +98,12 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                dynamic value = args[0];
+                IBinaryOperable value = args[0];
 
-                if (value is BigInteger)
+                if (value.OperableType == ObjectType.ArbitraryBitInteger)
                     return value;
 
-                return new BigDecimal(value, 0);
+                return new ArbitraryPrecisionDecimalWrapper(new BigDecimal((value as IBinaryOperable<BigInteger>).Value, 0));
             }
         };
 
@@ -108,12 +112,12 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                dynamic value = args[0];
+                IBinaryOperable value = args[0];
 
-                if (value is BigInteger)
+                if (value.OperableType == ObjectType.ArbitraryBitInteger)
                     return value;
 
-                return (BigInteger)value;
+                return new ArbitraryBitIntegerWrapper((BigInteger)(value as IBinaryOperable<BigDecimal>).Value);
             }
         };
 
@@ -122,39 +126,39 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                dynamic value = args[0];
-                return value is BigInteger || value is BigDecimal;
+                IBinaryOperable value = args[0];
+                return BooleanWrapper.FromBool(value.OperableType == ObjectType.ArbitraryBitInteger || value.OperableType == ObjectType.ArbitraryPrecisionDecimal);
             }
         };
 
         [ImplementationIdentifier("std.__is_integer")]
         public static readonly NativeFunctionStatementModel IsInteger = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => args[0] is BigInteger
+            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.ArbitraryBitInteger)
         };
 
         [ImplementationIdentifier("std.__is_decimal")]
         public static readonly NativeFunctionStatementModel IsDecimal = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => args[0] is BigDecimal
+            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.ArbitraryPrecisionDecimal)
         };
 
         [ImplementationIdentifier("std.__is_string")]
         public static readonly NativeFunctionStatementModel IsString = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => args[0] is string
+            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.String)
         };
 
         [ImplementationIdentifier("std.__is_bool")]
         public static readonly NativeFunctionStatementModel IsBool = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => args[0] is bool
+            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.Boolean)
         };
 
         [ImplementationIdentifier("std.__is_object")]
         public static readonly NativeFunctionStatementModel IsObject = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => args[0] is RuntimeObject
+            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.Object)
         };
 
         [ImplementationIdentifier("std.__is_method")]
@@ -162,8 +166,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                dynamic value = args[0];
-                return value is MethodData || value is Method;
+                IBinaryOperable value = args[0];
+                return BooleanWrapper.FromBool(value.OperableType == ObjectType.MethodData || value.OperableType == ObjectType.Method);
             }
         };
 
@@ -172,7 +176,7 @@ namespace NativeLibraries
         {
             NativeImplementation = millis =>
             {
-                Thread.Sleep((int)millis[0]);
+                Thread.Sleep((int)(millis[0] as IBinaryOperable<BigInteger>).Value);
                 return null;
             }
         };
@@ -180,13 +184,13 @@ namespace NativeLibraries
         [ImplementationIdentifier("std.systemMillis")]
         public static readonly NativeProviderStatementModel MillisecondsSinceSystemStart = new NativeProviderStatementModel
         {
-            NativeImplementation = () => new BigInteger(Environment.TickCount64)
+            NativeImplementation = () => new ArbitraryBitIntegerWrapper(new BigInteger(Environment.TickCount64))
         };
 
         [ImplementationIdentifier("std.ticks")]
         public static readonly NativeProviderStatementModel TicksSinceUnixStart = new NativeProviderStatementModel
         {
-            NativeImplementation = () => new BigInteger(DateTime.UtcNow.Ticks)
+            NativeImplementation = () => new ArbitraryBitIntegerWrapper(new BigInteger(DateTime.UtcNow.Ticks))
         };
 
         [ImplementationIdentifier("std.__array_allocate")]
@@ -194,9 +198,9 @@ namespace NativeLibraries
         {
             NativeImplementation = size =>
             {
-                int s = (int)size[0];
-                dynamic[] array = new dynamic[s];
-                return array;
+                int s = (int)(BigInteger)size[0].Value;
+                IBinaryOperable[] array = Enumerable.Repeat(NullReferenceWrapper.Null, s).ToArray<IBinaryOperable>();
+                return new ArrayWrapper(array);
             }
         };
 
@@ -205,8 +209,8 @@ namespace NativeLibraries
         {
             NativeImplementation = arrayRef =>
             {
-                dynamic[] arr = (dynamic[])arrayRef[0];
-                return new BigInteger(arr.Length);
+                IBinaryOperable[] arr = (arrayRef[0] as IBinaryOperable<IBinaryOperable[]>).Value;
+                return new ArbitraryBitIntegerWrapper(new BigInteger(arr.Length));
             }
         };
 
@@ -215,8 +219,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                dynamic[] arr = (dynamic[])args[0];
-                return arr[(int)args[1]];
+                IBinaryOperable[] arr = (args[0] as IBinaryOperable<IBinaryOperable[]>).Value;
+                return arr[(int)(BigInteger)args[1].Value];
             }
         };
 
@@ -225,8 +229,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                dynamic[] arr = (dynamic[])args[0];
-                int index = (int)args[1];
+                IBinaryOperable[] arr = (args[0] as IBinaryOperable<IBinaryOperable[]>).Value;
+                int index = (int)(BigInteger)args[1].Value;
                 arr[index] = args[2];
                 return null;
             }
@@ -237,16 +241,16 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                string s = (string)args[0];
-                dynamic[] sCharArray = s.Select(c => c.ToString()).ToArray();
-                return sCharArray;
+                string s = (string)args[0].Value;
+                IBinaryOperable[] sCharArray = s.Select(c => new StringWrapper(c.ToString())).ToArray();
+                return new ArrayWrapper(sCharArray);
             }
         };
 
         [ImplementationIdentifier("std.__dict_allocate")]
         public static readonly NativeProviderStatementModel DictionaryCreate = new NativeProviderStatementModel
         {
-            NativeImplementation = () => new Dictionary<dynamic, dynamic>()
+            NativeImplementation = () => new DictionaryWrapper(new Dictionary<IBinaryOperable, IBinaryOperable>())
         };
 
         [ImplementationIdentifier("std.__dict_set")]
@@ -254,11 +258,11 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                dynamic key = args[1];
-                dynamic value = args[2];
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                IBinaryOperable key = args[1];
+                IBinaryOperable value = args[2];
                 dictRef[key] = value;
-                return null;
+                return NullReferenceWrapper.Null;
             }
         };
 
@@ -267,8 +271,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                dynamic key = args[1];
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                IBinaryOperable key = args[1];
                 return dictRef[key];
             }
         };
@@ -278,9 +282,9 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                dynamic key = args[1];
-                return dictRef.ContainsKey(key);
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                IBinaryOperable key = args[1];
+                return BooleanWrapper.FromBool(dictRef.ContainsKey(key));
             }
         };
 
@@ -289,9 +293,9 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                dynamic key = args[1];
-                return dictRef.Remove(key);
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                IBinaryOperable key = args[1];
+                return BooleanWrapper.FromBool(dictRef.Remove(key));
             }
         };
 
@@ -300,8 +304,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                return new BigInteger(dictRef.Count);
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                return new ArbitraryBitIntegerWrapper(new BigInteger(dictRef.Count));
             }
         };
 
@@ -310,8 +314,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                return dictRef.Keys.ToArray();
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                return new ArrayWrapper(dictRef.Keys.ToArray());
             }
         };
 
@@ -320,8 +324,8 @@ namespace NativeLibraries
         {
             NativeImplementation = args =>
             {
-                var dictRef = (Dictionary<dynamic, dynamic>)args[0];
-                return dictRef.Values.ToArray();
+                var dictRef = (IDictionary<IBinaryOperable, IBinaryOperable>)args[0].Value;
+                return new ArrayWrapper(dictRef.Values.ToArray());
             }
         };
     }

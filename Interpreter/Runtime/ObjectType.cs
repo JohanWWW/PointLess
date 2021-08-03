@@ -14,6 +14,9 @@ namespace Interpreter.Runtime
         String,
         ArbitraryBitInteger,
         ArbitraryPrecisionDecimal,
-        Boolean
+        Boolean,
+        NullReference,
+        Array,
+        Dictionary
     }
 }

@@ -1,4 +1,5 @@
-﻿using Singulink.Numerics;
+﻿using Interpreter.Models.Enums;
+using Singulink.Numerics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,20 +9,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class ArbitraryBitIntegerWrapper : IBinaryOperable<BigInteger> // TODO: Implement ArbitraryBitIntegerWrapper
+    public class ArbitraryBitIntegerWrapper : WrapperBase<BigInteger>
     {
-        object IBinaryOperable.Value { get; set; }
-        public BigInteger Value
+        public ArbitraryBitIntegerWrapper(BigInteger value) : base(value, ObjectType.ArbitraryBitInteger)
         {
-            get => (BigInteger)(this as IBinaryOperable).Value;
-            set => (this as IBinaryOperable).Value = value;
         }
 
-        public ObjectType OperableType => ObjectType.ArbitraryBitInteger;
-
-        public ArbitraryBitIntegerWrapper(BigInteger value) => Value = value;
-
-        public IBinaryOperable Add(IBinaryOperable operand)
+        public override IBinaryOperable Add(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -32,7 +26,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable BitwiseAnd(IBinaryOperable operand)
+        public override IBinaryOperable BitwiseAnd(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -41,7 +35,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable BitwiseOr(IBinaryOperable operand)
+        public override IBinaryOperable BitwiseOr(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -50,7 +44,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable BitwiseXOr(IBinaryOperable operand)
+        public override IBinaryOperable BitwiseXOr(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -59,7 +53,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable Divide(IBinaryOperable operand)
+        public override IBinaryOperable Divide(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -69,63 +63,65 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable Equal(IBinaryOperable operand)
+        public override IBinaryOperable Equal(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryBitInteger => new BooleanWrapper(Value == (operand as IBinaryOperable<BigInteger>).Value),
-                ObjectType.ArbitraryPrecisionDecimal => new BooleanWrapper(Value == (operand as IBinaryOperable<BigDecimal>).Value),
-                _ => new BooleanWrapper(false)
-            };
-        }
-
-        public IBinaryOperable GreaterThan(IBinaryOperable operand)
-        {
-            return operand.OperableType switch
-            {
-                ObjectType.ArbitraryBitInteger => new BooleanWrapper(Value > (operand as IBinaryOperable<BigInteger>).Value),
-                ObjectType.ArbitraryPrecisionDecimal => new BooleanWrapper(Value > (operand as IBinaryOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value == (operand as IBinaryOperable<BigInteger>).Value),
+                ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value == (operand as IBinaryOperable<BigDecimal>).Value),
+                ObjectType.NullReference => BooleanWrapper.False,
+                //_ => new BooleanWrapper(false)
                 _ => throw new MissingBinaryOperatorOverrideException()
             };
         }
 
-        public IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand)
+        public override IBinaryOperable GreaterThan(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryBitInteger => new BooleanWrapper(Value >= (operand as IBinaryOperable<BigInteger>).Value),
-                ObjectType.ArbitraryPrecisionDecimal => new BooleanWrapper(Value >= (operand as IBinaryOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value > (operand as IBinaryOperable<BigInteger>).Value),
+                ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value > (operand as IBinaryOperable<BigDecimal>).Value),
                 _ => throw new MissingBinaryOperatorOverrideException()
             };
         }
 
-        public IBinaryOperable LessThan(IBinaryOperable operand)
+        public override IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryBitInteger => new BooleanWrapper(Value < (operand as IBinaryOperable<BigInteger>).Value),
-                ObjectType.ArbitraryPrecisionDecimal => new BooleanWrapper(Value < (operand as IBinaryOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value >= (operand as IBinaryOperable<BigInteger>).Value),
+                ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value >= (operand as IBinaryOperable<BigDecimal>).Value),
                 _ => throw new MissingBinaryOperatorOverrideException()
             };
         }
 
-        public IBinaryOperable LessThanOrEqual(IBinaryOperable operand)
+        public override IBinaryOperable LessThan(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryBitInteger => new BooleanWrapper(Value <= (operand as IBinaryOperable<BigInteger>).Value),
-                ObjectType.ArbitraryPrecisionDecimal => new BooleanWrapper(Value <= (operand as IBinaryOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value < (operand as IBinaryOperable<BigInteger>).Value),
+                ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value < (operand as IBinaryOperable<BigDecimal>).Value),
                 _ => throw new MissingBinaryOperatorOverrideException()
             };
         }
 
-        public IBinaryOperable LogicalAnd(IBinaryOperable operand) => BitwiseAnd(operand);
+        public override IBinaryOperable LessThanOrEqual(IBinaryOperable operand)
+        {
+            return operand.OperableType switch
+            {
+                ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value <= (operand as IBinaryOperable<BigInteger>).Value),
+                ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value <= (operand as IBinaryOperable<BigDecimal>).Value),
+                _ => throw new MissingBinaryOperatorOverrideException()
+            };
+        }
 
-        public IBinaryOperable LogicalOr(IBinaryOperable operand) => BitwiseOr(operand);
+        public override IBinaryOperable LogicalAnd(IBinaryOperable operand) => BitwiseAnd(operand);
 
-        public IBinaryOperable LogicalXOr(IBinaryOperable operand) => BitwiseXOr(operand);
+        public override IBinaryOperable LogicalOr(IBinaryOperable operand) => BitwiseOr(operand);
 
-        public IBinaryOperable Mod(IBinaryOperable operand)
+        public override IBinaryOperable LogicalXOr(IBinaryOperable operand) => BitwiseXOr(operand);
+
+        public override IBinaryOperable Mod(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -135,7 +131,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable Multiply(IBinaryOperable operand)
+        public override IBinaryOperable Multiply(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -145,17 +141,19 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable NotEqual(IBinaryOperable operand)
+        public override IBinaryOperable NotEqual(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryBitInteger => new BooleanWrapper(Value != (operand as IBinaryOperable<BigInteger>).Value),
-                ObjectType.ArbitraryPrecisionDecimal => new BooleanWrapper(Value == (operand as IBinaryOperable<BigDecimal>).Value),
-                _ => new BooleanWrapper(true)
+                ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value != (operand as IBinaryOperable<BigInteger>).Value),
+                ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value == (operand as IBinaryOperable<BigDecimal>).Value),
+                ObjectType.NullReference => BooleanWrapper.True,
+                //_ => new BooleanWrapper(true)
+                _ => throw new MissingBinaryOperatorOverrideException()
             };
         }
 
-        public IBinaryOperable ShiftLeft(IBinaryOperable operand)
+        public override IBinaryOperable ShiftLeft(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -164,7 +162,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable ShiftRight(IBinaryOperable operand)
+        public override IBinaryOperable ShiftRight(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -173,7 +171,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public IBinaryOperable Subtract(IBinaryOperable operand)
+        public override IBinaryOperable Subtract(IBinaryOperable operand)
         {
             return operand.OperableType switch
             {
@@ -184,5 +182,21 @@ namespace Interpreter.Runtime
         }
 
         public override string ToString() => Value.ToString();
+
+        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        {
+            if (OperableType != operand.OperableType)
+                return BooleanWrapper.False;
+
+            return BooleanWrapper.FromBool(Value == (BigInteger)operand.Value);
+        }
+
+        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        {
+            if (OperableType != operand.OperableType)
+                return BooleanWrapper.True;
+
+            return BooleanWrapper.FromBool(Value != (BigInteger)operand.Value);
+        }
     }
 }

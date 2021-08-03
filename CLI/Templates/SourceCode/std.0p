@@ -55,12 +55,14 @@ print = native (obj) => <@"std.print">;
 //
 println = native (obj) => <@"std.println">;
 
+println += () => println("");
+
 //
 //
 readln = native () => <@"std.readln">;
 
 //
-//
+// DEPRECATED
 number = native (s) => <@"std.number">;
 
 //
@@ -234,37 +236,26 @@ Array = (size) => {
         return _Enumerator();
     };
 
-    _toString = () => {
+    // Creates a string of this array from given range
+    _toString = (start, end) => {
         sb = "[";
-        i = 0;
-        while (i < _length) {
+        i = start;
+        while (i < end) {
             e = _get(i);
-            if (e == null) {
+            if (e === null) {
                 sb += "null";
             }
+            else if (e === this) {
+                sb += "<this array>";
+            }
             else if (__is_string(e)) {
-                raw = String(e);
-                raw = raw.replaceAll("\\", "\\\\");
-                raw = raw.replaceAll("\"", "\\\"");
-                raw = raw.replaceAll("\n", "\\n");
-                raw = raw.replaceAll("\t", "\\t");
-                sb += "\"" + raw.toString() + "\"";
-            }
-            else if (__is_decimal(e)) {
-                raw = String(e + "");
-                if (raw.containsChar(",")) {
-                    raw = raw.replaceAll(",", ".");
-                }
-                sb += raw.toString();
-            }
-            else if (__is_object(e)) {
-                sb += e.toString();
+                sb += "\"" + __escapeSpecialChars__(e) + "\"";
             }
             else {
                 sb += e;
             }
 
-            if (i != _length - 1) {
+            if (i != end - 1) {
                 sb += ",";
             }
             i += 1;
@@ -273,13 +264,17 @@ Array = (size) => {
         return sb;
     };
 
-    return {
-        length = _length,
+    _toString += () => _toString(0, _length);
+
+    this = {
+        length = () => _length,
         get = _get,
         set = _set,
         enumerator = _enumerator,
         toString = _toString
     };
+
+    return this;
 };
 
 Arrays = {
@@ -304,10 +299,13 @@ Arrays = {
 
     //
     // Allocates storage for a new array
-    // Parameters:
-    //  size: The size of the array
     //
-    allocate =  (size => Array(size)) 
+    allocate =  
+                //
+                // Parameters:
+                //  size: The size of the array
+                //
+                (size => Array(size)) 
                 +
 
                 //
@@ -338,16 +336,9 @@ Arrays = {
 // TODO: Implement insertAt method
 //
 ArrayList = (size) => {
-    _array = null;
+    _array = Array(size);
     _length = 0;
 
-    // Allocate array
-    if (size == null) {
-        _array = Array(10);
-    }
-    else {
-        _array = Array(size);
-    }
 
     _increase_size = (increment) => {
         tmp = Array(_length + increment);
@@ -363,7 +354,7 @@ ArrayList = (size) => {
 
     _copy_array = (src, dst) => {
         i = 0;
-        while (i < src.length) {
+        while (i < src.length()) {
             dst.set(i, src.get(i));
             i += 1;
         }
@@ -395,7 +386,7 @@ ArrayList = (size) => {
     };
 
     _add = (value) => {
-        if (_length > _array.length - 1) {
+        if (_length > _array.length() - 1) {
             _increase_size(10);
         }
 
@@ -442,7 +433,53 @@ ArrayList = (size) => {
         return _Enumerator();  
     };
 
-    return {
+    _toArray = () => {
+        arr = null;
+        if (_array.length() == this.length()) {
+            arr = _array;
+        }
+        else {
+            newlen = this.length();
+            arr = Array(newlen);
+            i = 0;
+            while (i < newlen) {
+                arr.set(i, _array.get(i));
+                i += 1;
+            }
+        }
+        return arr;
+    };
+
+    _toString = () => {
+        sb = "[";
+        i = 0;
+        en = _enumerator();
+        while (en.next()) {
+            e = en.current();
+            if (e === null) {
+                sb += "null";
+            }
+            else if (e === this) {
+                sb += "<this list>";
+            }
+            else if (__is_string(e)) {
+                sb += "\"" + __escapeSpecialChars__(e) + "\"";
+            }
+            else {
+                sb += e;
+            }
+
+            if (i != _length - 1) {
+                sb += ",";
+            }
+
+            i += 1;
+        }
+        sb += "]";
+        return sb;
+    };
+
+    this = {
         length = () => {
             return _length;
         },
@@ -450,9 +487,20 @@ ArrayList = (size) => {
         set = _set,
         get = _get,
         removeAt = _removeAt,
-        enumerator = _enumerator
+        enumerator = _enumerator,
+        toArray = _toArray,
+        toString = _toString,
+
+        __operator_add__ = (ref, element) => {
+            ref.add(element);
+            return ref;
+        }
     };
+
+    return this;
 };
+
+ArrayList += () => ArrayList(10);
 
 //
 //
@@ -460,7 +508,7 @@ Dictionary = () => {
     _dict = __dict_allocate();
 
     _throwIfKeyNull = (key, callerName) => {
-        if (key == null) {
+        if (key === null) {
             throw callerName + ": Key cannot be null";
         }
     };
@@ -547,6 +595,46 @@ Dictionary = () => {
         };
     };
 
+    _toString = () => {
+        len = _length();
+        sb = "[";
+        i = 0;
+        e = _enumerator();
+        while (e.next()) {
+            kvp = e.current();
+            if (kvp.key === this) {
+                sb += "<this dict>";
+            }
+            else if (__is_string(kvp.key)) {
+                sb += ("\"" + __escapeSpecialChars__(kvp.key) + "\"");
+            }
+            else {
+                sb += kvp.key;
+            }
+            sb += "=";
+            if (kvp.value === null) {
+                sb += "null";
+            }
+            else if (kvp.value === this) {
+                sb += "<this dict>";
+            }
+            else if (__is_string(kvp.value)) {
+                sb += ("\"" + __escapeSpecialChars__(kvp.value) + "\"");
+            }
+            else {
+                sb += kvp.value;
+            }
+
+            if (i != len - 1) {
+                sb += ",";
+            }
+
+            i += 1;
+        }
+        sb += "]";
+        return sb;
+    };
+
     this = {
         set = _set,
         get = _get,
@@ -557,6 +645,8 @@ Dictionary = () => {
         values = _values,
         pairs = _pairs,
         enumerator = _enumerator,
+
+        toString = _toString,
 
         __operator_add__ = (left, right) => {
             left.set(right);
@@ -670,7 +760,7 @@ String = (s) => {
         found = false;
         i = 0;
         while (i < _length && found != true) {
-            if (_get(i) == char) {
+            if (_get(i) === char) {
                 found = true;
             }
             i += 1;
@@ -682,7 +772,7 @@ String = (s) => {
         charCount = 0;
         i = 0;
         while (i < _length) {
-            if (_get(i) == char) {
+            if (_get(i) === char) {
                 charCount += 1;
             }
             i += 1;
@@ -789,16 +879,15 @@ __parseInt__ = (s) => {
     s = String(s);
     sum = 0;
     signum = 1;
-    e = s.length - 1;
+    e = s.length() - 1;
     i = 0;
     if (s.get(0) == __minusSign__) {
         signum = 0 - 1;
         e -= 1;
         i += 1;
     }
-    while (i < s.length) {
+    while (i < s.length()) {
         d = s.get(i);
-
         if (__charToDigit__.contains(d)) {
                 sum += __charToDigit__.get(d) * __intPow__(10, e);
         }
@@ -837,14 +926,14 @@ __parseDecimal__ = (s) => {
         }
         decimalSum = .0;
         e = 0;
-        while (e < decimals.length) {
+        while (e < decimals.length()) {
             d = decimals.get(e);
             if (__charToDigit__.contains(d)) {
                 decimalSum += __charToDigit__.get(d) / (__intPow__(10, e) + .0);
             }
             else {
                 integerPartString = String(integers);
-                throw "Found illegal character '" + d + "' at index " + (integerPartString.length + e + 1) + " when parsing input string";
+                throw "Found illegal character '" + d + "' at index " + (integerPartString.length() + e + 1) + " when parsing input string";
             }
             e += 1;
         }
@@ -856,6 +945,15 @@ __parseDecimal__ = (s) => {
     }
 
     return sum;
+};
+
+__escapeSpecialChars__ = s => {
+    s = String(s);
+    s = s.replaceAll("\\", "\\\\");
+    s = s.replaceAll("\"", "\\\"");
+    s = s.replaceAll("\n", "\\n");
+    s = s.replaceAll("\t", "\\t");
+    return s.toString();
 };
 
 // 0001-00-00 00:00:00 --> 1970-01-01 00:00:00

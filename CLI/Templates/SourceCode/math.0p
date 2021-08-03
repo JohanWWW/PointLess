@@ -70,7 +70,7 @@ __MATH_IMPL__ = () => {
     sqrt = x => {
         r = null;
         if (x < 0) {
-            throw "Attempted to square a negative number which gives a complex solution";
+            throw "No real solution";
         }
         else {
             if (x == 0) {

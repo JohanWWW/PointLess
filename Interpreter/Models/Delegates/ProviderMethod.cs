@@ -1,4 +1,5 @@
 ﻿using Interpreter.Environment;
+using Interpreter.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,5 +10,5 @@ namespace Interpreter.Models.Delegates
     /// <summary>
     /// A method that do not accept arguments but returns a value
     /// </summary>
-    public delegate dynamic ProviderMethod();
+    public delegate IBinaryOperable ProviderMethod();
 }

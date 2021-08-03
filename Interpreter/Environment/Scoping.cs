@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Interpreter.Runtime;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,14 +7,15 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Environment
 {
+    // TODO: Implement TryGet
     public class Scoping
     {
-        private readonly IDictionary<string, dynamic> _bindings;
+        private readonly IDictionary<string, IBinaryOperable> _bindings;
 
         private Scoping _outer = null;
 
         public Scoping() =>
-            _bindings = new Dictionary<string, dynamic>();
+            _bindings = new Dictionary<string, IBinaryOperable>();
 
         public bool ContainsLocalBinding(string identifier) => _bindings.ContainsKey(identifier);
 
@@ -30,9 +32,9 @@ namespace Interpreter.Environment
             return false;
         }
 
-        public dynamic GetLocalValue(string identifier) => _bindings[identifier];
+        public IBinaryOperable GetLocalValue(string identifier) => _bindings[identifier];
 
-        public dynamic GetGlobalValue(string identifier)
+        public IBinaryOperable GetGlobalValue(string identifier)
         {
             Scoping currentScope = this;
             while (currentScope != null)
@@ -46,7 +48,7 @@ namespace Interpreter.Environment
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
         }
 
-        public void SetGlobalBinding(string identifier, dynamic value)
+        public void SetGlobalBinding(string identifier, IBinaryOperable value)
         {
             Scoping currentScope = this;
             while (currentScope != null)
@@ -63,7 +65,7 @@ namespace Interpreter.Environment
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
         }
 
-        public void AddLocalBinding(string identifier, dynamic value)
+        public void AddLocalBinding(string identifier, IBinaryOperable value)
         {
             _bindings.Add(identifier, value);
         }
@@ -84,6 +86,6 @@ namespace Interpreter.Environment
             _outer = scope;
         }
 
-        public IDictionary<string, dynamic> GetBindings() => _bindings;
+        public IDictionary<string, IBinaryOperable> GetBindings() => _bindings;
     }
 }
