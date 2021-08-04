@@ -1,38 +1,45 @@
 # ZeroPoint (Programming Language)
-ZeroPoint is a dynamic and object oriented programming language built in C#.
+ZP is a dynamic and object oriented programming language built in C#.
 
 ## Examples
-### Variable Declarations
-```
-a = 12;
-b = 6;
-c = a + b;
-println(c);
-
-a = "Hello";
-b = "World";
-c = a + b;
-println(c);
-```
-
-Output:
-```
-18
-HelloWorld
-```
 
 ### Object Definitions
-Objects in ZeroPoint are anonymous and are really simple to define. Below is an example of an object being assigned to a variable.
+Objects in ZP are anonymous reference types and are really simple to define. Below is an example of an object being assigned to the variable `myObject`.
 ```
-person = {
-    firstName = "Björn",
-    lastName = "Björnsson"
+myObject = {
+    identifier = "abc123",
+    value = 5.0898989,
+    timestamp = 10330278590000,
+    
+    // Inner object
+    position = {
+        column = 15,
+        row = 3
+    }
 };
 ```
 
-### Function Definitions
+### Method Definitions
 ```
-// Consumer definition
+action = () => {
+    println("action was called");
+};
+
+function = (a, b) => {
+    return a + b;
+};
+
+consumer = (x) => {
+    println("result: " + x);
+};
+
+provider = () => {
+    return 5.98;
+};
+
+lambda = x => x * 2;
+```
+```
 repeat = (message, count) => {
     i = 0;
     while (i < count) {
@@ -41,7 +48,6 @@ repeat = (message, count) => {
     }
 };
 
-// Consumer call
 repeat("Hello World!", 3);
 ```
 
@@ -52,56 +58,86 @@ Hello World!
 Hello World!
 ```
 
-### Recursion
+### Ternary Conditional Operator (?:)
+ZP supports this ternary conditional expressions which are basically if else statements with return value.
 ```
-factorial = (x) => {
-    result = null;
-    if (x == 1) {
-        result = x;
-    }
-    else {
-        result = x * factorial(x - 1);
-    }
-    return result;
-};
+factorial = x =>
+	x >= 0
+		? x == 0 || x == 1 
+			? 1 
+			: x * factorial(x - 1) 
+		: (0 - 1);
+```
 
-println(factorial(5));
+### Encapsulation
+Although classes are non-existent and more of a pattern in ZP it is still possible to simulate classes with functions which also allows for encapsulation. In the example below `firstName` and `lastName` become private and readonly values.
+```
+Person = (firstName, lastName) => {
+
+    getFirstName = () => firstName;
+
+    getLastName = () => lastName;
+
+    getFullName = () => getFirstName() + " " + getLastName();
+
+    // Construct and return the object
+    return {
+        getFirstName = getFirstName,
+        getLastName = getLastName,
+        getFullName = getFullName
+    };
+};
+```
+
+### Method Overloading
+Methods in ZP are overloadable. Just use the `+=` operator or add two or more method statements together with the `+` operator and assign to variable. The method overrides must differ in parameter count.
+```
+sayHello = name => println("Hello " + name + "!");
+
+// Default behaviour
+sayHello += () => sayHello("World");
+```
+
+### Operator Function Overriding
+Not only can you perform arithmetic operations between two numbers or strings. You can even perform operations between two objects or rather an object with a value of any type you wish, and you decide what should be returned from that operation. This is possible because operators in ZP are overridable functions that take two arguments and return a value. These operator functions are automatically called by the interpreter during runtime whenever corresponding operator is used. An example is ZP framework's complexMath library which makes use of operator overriding:
+
+```
+use std;
+use complexMath;
+
+complex = ComplexMath.Complex;
+
+main = (args) => {
+    a = complex(0.0, 1.0);
+	b = complex(5.0, 10.0);
+
+	// The objects can be used like numbers!
+	sum = a + b;
+	difference = a - b;
+	product = a * b;
+	quotient = a / b;
+
+	println(a + " + " + b + " = " + sum);
+	println(a + " - " + b + " = " + difference);
+	println(a + " * " + b + " = " + product);
+	println(a + " / " + b + " = " + quotient);
+	println(product + " * conj" + product + " = " + (product * ComplexMath.conjugate(product)));
+	println("í^2 == -1 = " + ((complex(0.0, 1.0) * complex(0.0, 1.0)) == ComplexMath.negate(complex(1.0, 0.0))));
+};
 ```
 
 Output:
 ```
-120
-```
-
-### Encapsulation
-Although classes are non-existent and more of a pattern in ZeroPoint it is still possible to simulate classes with functions which also allows for encapsulation.
-```
-Person = (firstName, lastName, age) => {
-    _getAge = () => {
-        return age;
-    };
-
-    _ageUp = () => {
-        age += 1;
-    };
-
-    _getFullName = () => {
-        return firstName + " " + lastName;
-    };
-
-    // Returns the constructed object which references private variables!
-    return {
-        firstName = firstName,
-        lastName = lastName,
-        getAge = _getAge,
-        ageUp = _ageUp,
-        getFullName = _getFullName
-    };
-};
+(í) + (5+10í) = (5+11í)
+(í) - (5+10í) = (-5-9í)
+(í) * (5+10í) = (-10+5í)
+(í) / (5+10í) = (0.08+0.04í)
+(-10+5í) * conj(-10+5í) = (125)
+í^2 == -1 = true
 ```
 
 ### Error Handling
-ZeroPoint support try-catch and throw statements as many other languages do.
+ZP support try-catch and throw statements as many other languages do.
 The catch part of the statement is a type of consumer function that accepts anything as an argument whether it is a string, integer, object etc. and is invoked whenever a throw statement is reached.
 ```
 divide = (x, y) => {

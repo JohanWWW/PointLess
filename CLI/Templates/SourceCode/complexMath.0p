@@ -32,7 +32,8 @@ __COMPLEX_MATH_IMPL__ = () => {
             val = d * Math.sqrt(1.0 + r * r);
         }
 
-        return val;
+        // abs of complex number always becomes real number but we still want to work with complex representation
+        return Complex(val, 0.0);
     };
 
     round = (x, precision) => Complex(Math.round(x.getReal(), precision), Math.round(x.getImaginary(), precision));
