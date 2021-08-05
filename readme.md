@@ -61,12 +61,12 @@ Hello World!
 ### Ternary Conditional Operator (?:)
 ZP supports this ternary conditional expressions which are basically if else statements with return value.
 ```
-factorial = x =>
-	x >= 0
-		? x == 0 || x == 1 
-			? 1 
-			: x * factorial(x - 1) 
-		: (0 - 1);
+factorial = x => 
+    x >= 0 
+        ? x == 0 || x == 1
+            ? 1
+            : x * factorial(x - 1)
+    : (0 - 1);
 ```
 
 ### Encapsulation
@@ -109,20 +109,20 @@ complex = ComplexMath.Complex;
 
 main = (args) => {
     a = complex(0.0, 1.0);
-	b = complex(5.0, 10.0);
+    b = complex(5.0, 10.0);
 
-	// The objects can be used like numbers!
-	sum = a + b;
-	difference = a - b;
-	product = a * b;
-	quotient = a / b;
+    // The objects can be used like numbers!
+    sum = a + b;
+    difference = a - b;
+    product = a * b;
+    quotient = a / b;
 
-	println(a + " + " + b + " = " + sum);
-	println(a + " - " + b + " = " + difference);
-	println(a + " * " + b + " = " + product);
-	println(a + " / " + b + " = " + quotient);
-	println(product + " * conj" + product + " = " + (product * ComplexMath.conjugate(product)));
-	println("í^2 == -1 = " + ((complex(0.0, 1.0) * complex(0.0, 1.0)) == ComplexMath.negate(complex(1.0, 0.0))));
+    println(a + " + " + b + " = " + sum);
+    println(a + " - " + b + " = " + difference);
+    println(a + " * " + b + " = " + product);
+    println(a + " / " + b + " = " + quotient);
+    println(product + " * conj" + product + " = " + (product * ComplexMath.conjugate(product)));
+    println("í^2 == -1 = " + ((complex(0.0, 1.0) * complex(0.0, 1.0)) == ComplexMath.negate(complex(1.0, 0.0))));
 };
 ```
 
