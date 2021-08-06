@@ -161,6 +161,25 @@ Output:
 Following error occurred: Cannot divide by zero!
 ```
 
+### Error & Exception Messages
+ZP's parsing engine can detect syntax errors and can tell you exactly where a syntax error is detected.
+```
+Syntax error at C:\Users\me\project\source\program.0p:140:27
+------------------------------------------------------------
+        someValue = obj.getValue());
+                                  ^
+                                  Unexpected proceeding token
+```
+
+ZP's interpreter catches exceptions and can also tell you where these occurred and what went wrong.
+```
+Unhandled runtime exception
+---------------------------
+        product = 2 * enumerator.next();
+$enumerator is defined but is null reference
+        at C:\Users\me\project\source\program.0p:148:15
+```
+
 ## CLI Installation
 .NET 5 SDK is recommended. Not tested on earlier .NET releases.
 
