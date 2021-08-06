@@ -27,8 +27,8 @@ namespace Interpreter.Runtime
         #region Optional overrides
 
         public virtual IBinaryOperable Add(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
-        public virtual IBinaryOperable BitwiseAnd(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.BitwiseAnd);
-        public virtual IBinaryOperable BitwiseOr(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.BitwiseOr);
+        public virtual IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseAnd);
+        public virtual IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseOr);
         public virtual IBinaryOperable BitwiseXOr(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.BitwiseXOr);
         public virtual IBinaryOperable Divide(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Div);
         public virtual IBinaryOperable Equal(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal);
@@ -36,8 +36,8 @@ namespace Interpreter.Runtime
         public virtual IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThanOrEqual);
         public virtual IBinaryOperable LessThan(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThan);
         public virtual IBinaryOperable LessThanOrEqual(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThanOrEqual);
-        public virtual IBinaryOperable LogicalAnd(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalAnd);
-        public virtual IBinaryOperable LogicalOr(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalOr);
+        public virtual IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.LogicalAnd);
+        public virtual IBinaryOperable LogicalOr(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.LogicalOr);
         public virtual IBinaryOperable LogicalXOr(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalXOr);
         public virtual IBinaryOperable Mod(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mod);
         public virtual IBinaryOperable Multiply(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mult);

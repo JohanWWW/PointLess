@@ -21,9 +21,9 @@ namespace Interpreter.Runtime
 
         public static BooleanWrapper FromBool(bool value) => value ? True : False;
 
-        public override IBinaryOperable BitwiseAnd(IBinaryOperable operand) => LogicalAnd(operand);
+        public override IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand) => LogicalAnd(operand);
 
-        public override IBinaryOperable BitwiseOr(IBinaryOperable operand) => LogicalOr(operand);
+        public override IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand) => LogicalOr(operand);
 
         public override IBinaryOperable BitwiseXOr(IBinaryOperable operand) => LogicalXOr(operand);
 
@@ -37,21 +37,31 @@ namespace Interpreter.Runtime
             };
         }
 
-        public override IBinaryOperable LogicalAnd(IBinaryOperable operand)
+        public override IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand)
         {
-            return operand.OperableType switch
+            if (!Value)
+                return False;
+
+            IBinaryOperable eval = operand();
+
+            return eval.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value && (operand as IBinaryOperable<bool>).Value),
-                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalAnd)
+                ObjectType.Boolean => FromBool(Value && (eval as IBinaryOperable<bool>).Value),
+                _ => throw MissingBinaryOperatorImplementation(eval, BinaryOperator.LogicalAnd)
             };
         }
 
-        public override IBinaryOperable LogicalOr(IBinaryOperable operand)
+        public override IBinaryOperable LogicalOr(Func<IBinaryOperable> operand)
         {
-            return operand.OperableType switch
+            if (Value)
+                return True;
+
+            IBinaryOperable eval = operand();
+
+            return eval.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value || (operand as IBinaryOperable<bool>).Value),
-                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalOr)
+                ObjectType.Boolean => FromBool(Value || (eval as IBinaryOperable<bool>).Value),
+                _ => throw MissingBinaryOperatorImplementation(eval, BinaryOperator.LogicalOr)
             };
         }
 

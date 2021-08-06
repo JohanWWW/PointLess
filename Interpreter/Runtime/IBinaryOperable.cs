@@ -35,11 +35,11 @@ namespace Interpreter.Runtime
         IBinaryOperable LessThanOrEqual(IBinaryOperable operand);
         IBinaryOperable GreaterThan(IBinaryOperable operand);
         IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand);
-        IBinaryOperable LogicalAnd(IBinaryOperable operand);
-        IBinaryOperable LogicalOr(IBinaryOperable operand);
+        IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand);
+        IBinaryOperable LogicalOr(Func<IBinaryOperable> operand);
         IBinaryOperable LogicalXOr(IBinaryOperable operand);
-        IBinaryOperable BitwiseAnd(IBinaryOperable operand);
-        IBinaryOperable BitwiseOr(IBinaryOperable operand);
+        IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand);
+        IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand);
         IBinaryOperable BitwiseXOr(IBinaryOperable operand);
         IBinaryOperable ShiftLeft(IBinaryOperable operand);
         IBinaryOperable ShiftRight(IBinaryOperable operand);

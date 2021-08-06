@@ -259,20 +259,20 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable LogicalAnd(IBinaryOperable operand)
+        public IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_logical_and__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LogicalAnd);
 
-            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
+            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
-        public IBinaryOperable LogicalOr(IBinaryOperable operand)
+        public IBinaryOperable LogicalOr(Func<IBinaryOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_logical_or__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LogicalOr);
 
-            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
+            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
         public IBinaryOperable LogicalXOr(IBinaryOperable operand)
@@ -283,20 +283,20 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable BitwiseAnd(IBinaryOperable operand)
+        public IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_bitwise_and__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.BitwiseAnd);
 
-            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
+            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
-        public IBinaryOperable BitwiseOr(IBinaryOperable operand)
+        public IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_bitwise_or__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.BitwiseOr);
 
-            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
+            return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
         public IBinaryOperable BitwiseXOr(IBinaryOperable operand)
