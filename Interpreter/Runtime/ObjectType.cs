@@ -17,6 +17,7 @@ namespace Interpreter.Runtime
         Boolean,
         NullReference,
         Array,
-        Dictionary
+        Dictionary,
+        UnsignedByte
     }
 }

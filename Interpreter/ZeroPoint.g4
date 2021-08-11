@@ -280,15 +280,34 @@ BOOLEAN
 NUMBER
 	: DECIMAL_NUMBER
 	| INTEGER_NUMBER
+	| BYTE_NUMBER
 	;
+
+	// The AST mapper decides if the values are in range!
+	BYTE_NUMBER
+		: 'b\'' INTEGER_NUMBER
+		| 'b\'' BINARY
+		| 'b\'' HEX
+		;
 
 	INTEGER_NUMBER
 		: [0-9]+
+		| BINARY
+		| HEX
 		;
 
 	DECIMAL_NUMBER
 		: [0-9]+ '.' [0-9]+
 		| '.' [0-9]+
+		;
+
+	// Used internally by NUMBER
+	BINARY
+		: '0b' [01]+
+		;
+
+	HEX
+		: '0x' ([0-9]|[a-fA-F])+
 		;
 	
 STRING

@@ -198,7 +198,13 @@ namespace NativeLibraries
         {
             NativeImplementation = size =>
             {
-                int s = (int)(BigInteger)size[0].Value;
+                IBinaryOperable indexNumber = size[0];
+                int s = indexNumber.OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(BigInteger)indexNumber.Value,
+                    ObjectType.UnsignedByte => (byte)indexNumber.Value,
+                    _ => throw new InvalidCastException($"Cannot cast type {indexNumber.Value.GetType()} to int")
+                };
                 IBinaryOperable[] array = Enumerable.Repeat(NullReferenceWrapper.Null, s).ToArray<IBinaryOperable>();
                 return new ArrayWrapper(array);
             }
@@ -220,7 +226,14 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 IBinaryOperable[] arr = (args[0] as IBinaryOperable<IBinaryOperable[]>).Value;
-                return arr[(int)(BigInteger)args[1].Value];
+                IBinaryOperable indexNumber = args[1];
+                int index = indexNumber.OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(BigInteger)indexNumber.Value,
+                    ObjectType.UnsignedByte => (byte)indexNumber.Value,
+                    _ => throw new InvalidCastException($"Cannot cast type {indexNumber.Value.GetType()} to int")
+                };
+                return arr[index];
             }
         };
 
@@ -230,7 +243,13 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 IBinaryOperable[] arr = (args[0] as IBinaryOperable<IBinaryOperable[]>).Value;
-                int index = (int)(BigInteger)args[1].Value;
+                IBinaryOperable indexNumber = args[1];
+                int index = indexNumber.OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(BigInteger)indexNumber.Value,
+                    ObjectType.UnsignedByte => (byte)indexNumber.Value,
+                    _ => throw new InvalidCastException($"Cannot cast type {indexNumber.Value.GetType()} to int")
+                };
                 arr[index] = args[2];
                 return null;
             }
