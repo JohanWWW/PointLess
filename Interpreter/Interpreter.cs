@@ -91,6 +91,13 @@ namespace Interpreter
             _ =>                                    throw new NotImplementedException(),
         };
 
+        private static IOperable EvaluateUnaryExpression(UnaryOperator op, IUnaryOperable x) => op switch
+        {
+            UnaryOperator.Not => x.UnaryNot(),
+            UnaryOperator.Minus => x.UnaryMinus(),
+            _ => throw new NotImplementedException()
+        };
+
         private static void AddLocalBinding(string identifier, IBinaryOperable value, Scoping scope)
         {
             if (value.OperableType == ObjectType.Method)
@@ -159,7 +166,7 @@ namespace Interpreter
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath, "Attempted to divide by zero", e);
             }
-            catch (RuntimeBinderException e)
+            catch (RuntimeBinderException e) // Obsolete!
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath,
                     $"Operator {op} cannot be applied on operands of type {a.OperableType} and {(bEval is null ? "null" : bEval.OperableType)}", e);
@@ -168,7 +175,32 @@ namespace Interpreter
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath, e.Message, e);
             }
-            catch (MissingBinaryOperatorOverrideException e)
+            catch (MissingOperatorOverrideException e)
+            {
+                throw new InterpreterRuntimeException(runtimeModel, _filePath, e.Message, e);
+            }
+        }
+
+        private IOperable AttemptToEvaluateUnaryExpression(UnaryExpressionModel expression, Scoping scope)
+        {
+            IUnaryOperable x = (IUnaryOperable)EnterExpression(expression, scope);
+            return AttemptToEvaluateUnaryExpression(expression.Operator, x, expression);
+        }
+
+        /// <summary>
+        /// Attempt to evaluate unary expression. Throw exception if it fails.
+        /// </summary>
+        private IOperable AttemptToEvaluateUnaryExpression(UnaryOperator op, IUnaryOperable x, IModel runtimeModel)
+        {
+            try
+            {
+                return EvaluateUnaryExpression(op, x);
+            }
+            catch (MethodOverloadException e)
+            {
+                throw new InterpreterRuntimeException(runtimeModel, _filePath, e.Message, e);
+            }
+            catch (MissingOperatorOverrideException e)
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath, e.Message, e);
             }
@@ -243,6 +275,9 @@ namespace Interpreter
             if (expression is BinaryExpressionModel)
                 return EnterBinaryExpression(expression as BinaryExpressionModel, scope);
 
+            //if (expression is UnaryExpressionModel)
+            //    return EnterUnaryExpression(expression as UnaryExpressionModel, scope);
+
             if (expression is ITernaryExpressionModel)
                 return EnterTernaryExpression(expression as ITernaryExpressionModel, scope);
 
@@ -255,10 +290,12 @@ namespace Interpreter
             if (expression is ObjectInitializationExpressionModel)
                 return EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope);
 
-            throw new NotImplementedException();
+            throw new NotImplementedException($"Missing implementation for '{expression.StartToken.Text}'");
         }
 
         public IBinaryOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
+
+        public IOperable EnterUnaryExpression(UnaryExpressionModel expression, Scoping scope) => AttemptToEvaluateUnaryExpression(expression, scope);
 
         public IBinaryOperable EnterTernaryExpression(ITernaryExpressionModel expression, Scoping scope)
         {

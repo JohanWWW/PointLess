@@ -9,11 +9,8 @@ namespace Interpreter.Runtime
     /// <summary>
     /// Represents an object that can perform binary operations
     /// </summary>
-    public interface IBinaryOperable
+    public interface IBinaryOperable : IOperable
     {
-        ObjectType OperableType { get; }
-        object Value { get; }
-
         IBinaryOperable Add(IBinaryOperable operand);
         IBinaryOperable Subtract(IBinaryOperable operand);
         IBinaryOperable Multiply(IBinaryOperable operand);
@@ -45,8 +42,7 @@ namespace Interpreter.Runtime
         IBinaryOperable ShiftRight(IBinaryOperable operand);
     }
 
-    public interface IBinaryOperable<T> : IBinaryOperable
+    public interface IBinaryOperable<T> : IBinaryOperable, IOperable<T>
     {
-        new T Value { get; }
     }
 }

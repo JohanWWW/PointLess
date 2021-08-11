@@ -350,10 +350,26 @@ namespace Interpreter
         {
             int expressionCount = context.expression().Length;
 
+            // If this is true we know that this is an expression enclosed in parenthesis
+            // or is a unary expression
             if (expressionCount is 1)
             {
                 var e = context.expression()[0];
-                return EnterExpression(e);
+                if (context.UNARY_NOT() != null)
+                {
+                    return new UnaryExpressionModel
+                    {
+                        Expression = EnterExpression(e),
+                        Operator = UnaryOperator.Not,
+                        StartToken = context.Start,
+                        StopToken = context.Stop
+                    };
+                }
+                else
+                {
+                    return EnterExpression(e);
+                }
+                //return EnterExpression(e);
             }
 
             // Ternary expression (conditional expression)

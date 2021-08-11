@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public abstract class WrapperBase : IBinaryOperable
+    public abstract class WrapperBase : IBinaryOperable, IUnaryOperable
     {
         public ObjectType OperableType { get; }
 
@@ -21,10 +21,15 @@ namespace Interpreter.Runtime
 
         protected Exception MissingBinaryOperatorImplementation(IBinaryOperable operand, BinaryOperator op)
         {
-            return new MissingBinaryOperatorOverrideException($"Missing operator implementation for operator '{op}' on types '{OperableType}' and '{operand.OperableType}'");
+            return new MissingOperatorOverrideException($"Missing operator implementation for operator '{op}' on types '{OperableType}' and '{operand.OperableType}'");
         }
 
-        #region Optional overrides
+        protected Exception MissingUnaryOperatorImplementation(UnaryOperator op)
+        {
+            return new MissingOperatorOverrideException($"Missing operator implementation for unary operator '{op}' on type '{OperableType}'");
+        }
+
+        #region Binary Operators
 
         public virtual IBinaryOperable Add(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
         public virtual IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseAnd);
@@ -46,10 +51,6 @@ namespace Interpreter.Runtime
         public virtual IBinaryOperable ShiftRight(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.ShiftRight);
         public virtual IBinaryOperable Subtract(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Sub);
 
-        #endregion
-
-        #region Mandatory overrides
-
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -62,16 +63,24 @@ namespace Interpreter.Runtime
 
         #endregion
 
+        #region Unary Operators
+
+        public virtual IOperable UnaryMinus() => throw MissingUnaryOperatorImplementation(UnaryOperator.Minus);
+        public virtual IOperable UnaryNot() => throw MissingUnaryOperatorImplementation(UnaryOperator.Not);
+
+        #endregion
+
         public override string ToString() => Value.ToString();
 
-        public bool Equals(IBinaryOperable operable) => Value.Equals(operable.Value);
+        public bool Equals(IOperable operable) => Value.Equals(operable.Value);
 
-        public override bool Equals(object obj) => Equals((IBinaryOperable)obj);
+        public override bool Equals(object obj) => Equals((IOperable)obj);
 
         public override int GetHashCode() => HashCode.Combine(OperableType, Value);
+
     }
 
-    public abstract class WrapperBase<T> : WrapperBase, IBinaryOperable<T>
+    public abstract class WrapperBase<T> : WrapperBase, IBinaryOperable<T>, IUnaryOperable<T>
     {
         public new T Value
         {

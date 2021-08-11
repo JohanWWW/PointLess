@@ -28,20 +28,6 @@ namespace Interpreter.Models.Enums
         BitwiseOr,
         BitwiseXOr,
         ShiftLeft,
-        ShiftRight,
-        Assign,
-        AddAssign,
-        SubAssign,
-        MultAssign,
-        DivAssign,
-        ModAssign,
-        AndAssign,
-        XOrAssign,
-        OrAssign,
-        BitwiseAndAssign,
-        BitwiseXOrAssign,
-        BitwiseOrAssign,
-        ShiftLeftAssign,
-        ShiftRightAssign
+        ShiftRight
     }
 }

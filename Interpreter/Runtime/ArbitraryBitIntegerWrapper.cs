@@ -23,7 +23,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => new ArbitraryPrecisionDecimalWrapper(Value + (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value + (operand as IBinaryOperable<byte>).Value),
                 ObjectType.String => new StringWrapper(Value.ToString() + operand.ToString()),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -35,7 +35,7 @@ namespace Interpreter.Runtime
             {
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value & (eval as IBinaryOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value & (eval as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -47,7 +47,7 @@ namespace Interpreter.Runtime
             {
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value | (eval as IBinaryOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value | (eval as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -57,7 +57,7 @@ namespace Interpreter.Runtime
             {
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value ^ (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value ^ (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -68,7 +68,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value / (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => new ArbitraryPrecisionDecimalWrapper(Value / (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value / (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -80,7 +80,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value == (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BooleanWrapper.FromBool(Value == (operand as IBinaryOperable<byte>).Value),
                 ObjectType.NullReference => BooleanWrapper.False,
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -91,7 +91,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value > (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value > (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BooleanWrapper.FromBool(Value > (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -102,7 +102,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value >= (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value >= (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BooleanWrapper.FromBool(Value >= (operand as IBinaryOperable<BigDecimal>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -113,7 +113,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value < (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value < (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BooleanWrapper.FromBool(Value < (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -124,7 +124,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => BooleanWrapper.FromBool(Value <= (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value <= (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BooleanWrapper.FromBool(Value <= (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -141,7 +141,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value % (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => new ArbitraryPrecisionDecimalWrapper(Value % (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value % (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -152,7 +152,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value * (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => new ArbitraryPrecisionDecimalWrapper(Value * (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value * (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -164,7 +164,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BooleanWrapper.FromBool(Value != (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BooleanWrapper.FromBool(Value != (operand as IBinaryOperable<byte>).Value),
                 ObjectType.NullReference => BooleanWrapper.True,
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -174,7 +174,7 @@ namespace Interpreter.Runtime
             {
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value << (int)(operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value << (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -184,7 +184,7 @@ namespace Interpreter.Runtime
             {
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value >> (int)(operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value >> (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 
@@ -195,7 +195,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => new ArbitraryBitIntegerWrapper(Value - (operand as IBinaryOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => new ArbitraryPrecisionDecimalWrapper(Value - (operand as IBinaryOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => new ArbitraryBitIntegerWrapper(Value - (operand as IBinaryOperable<byte>).Value),
-                _ => throw new MissingBinaryOperatorOverrideException()
+                _ => throw new MissingOperatorOverrideException()
             };
         }
 

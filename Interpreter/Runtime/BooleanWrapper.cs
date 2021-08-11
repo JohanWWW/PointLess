@@ -21,6 +21,8 @@ namespace Interpreter.Runtime
 
         public static BooleanWrapper FromBool(bool value) => value ? True : False;
 
+        #region Binary Operators
+
         public override IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand) => LogicalAnd(operand);
 
         public override IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand) => LogicalOr(operand);
@@ -99,6 +101,14 @@ namespace Interpreter.Runtime
 
             return FromBool(Value != (bool)operand.Value);
         }
+
+        #endregion
+
+        #region Unary Operators
+
+        public override IOperable UnaryNot() => FromBool(!Value);
+
+        #endregion
 
         public override string ToString() => Value ? TRUE_SYMBOL : FALSE_SYMBOL;
     }

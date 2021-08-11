@@ -17,11 +17,11 @@ namespace Interpreter.Runtime
     {
         private readonly IDictionary<string, IBinaryOperable> _properties = new Dictionary<string, IBinaryOperable>();
 
-        ObjectType IBinaryOperable.OperableType => ObjectType.Object;
+        ObjectType IOperable.OperableType => ObjectType.Object;
 
         public RuntimeObject Value => this;
 
-        object IBinaryOperable.Value => Value;
+        object IOperable.Value => Value;
 
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {

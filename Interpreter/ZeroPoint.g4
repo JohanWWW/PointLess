@@ -162,6 +162,7 @@ object_initialization_expression
 
 expression
 	: '(' expression ')'
+	| <assoc=right> (UNARY_NOT) expression
 	| expression (MULT|DIV|MOD) expression
 	| expression (PLUS|MINUS) expression
 	| expression (SHIFT_LEFT|SHIFT_RIGHT) expression
@@ -225,7 +226,13 @@ WS
 LINE_COMMENT
     : '//' ~[\r\n]* -> skip
 	;
-	
+
+// ++ Unary Operators ++
+//UNARY_MINUS: MINUS;
+UNARY_NOT: EXCLAMATION_MARK;
+// -- Unary Operators --
+
+// ++ Binary Operators ++
 PLUS: '+';
 MINUS: '-';
 MULT: '*';
@@ -250,7 +257,9 @@ BITWISE_OR: '|';
 
 SHIFT_LEFT: '<<';
 SHIFT_RIGHT: '>>';
+// -- Binary Operators --
 
+// ++ Assignment Operators (binary operators) ++
 ASSIGN: '=';
 ADD_ASSIGN: '+=';
 SUB_ASSIGN: '-=';
@@ -265,6 +274,7 @@ BITWISE_XOR_ASSIGN: '^=';
 BITWISE_OR_ASSIGN: '|=';
 SHIFT_LEFT_ASSIGN: '<<=';
 SHIFT_RIGHT_ASSIGN: '>>=';
+// -- Assignment Operators --
 	
 ACCESSOR: '.';
 	
@@ -338,4 +348,5 @@ IDENTIFIER
 LAMBDA: '=>';
 QUESTION_MARK: '?';
 COLON: ':';
+EXCLAMATION_MARK: '!';
 SEMICOLON: ';';
