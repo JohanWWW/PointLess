@@ -10,7 +10,7 @@ namespace Interpreter.Environment
     // TODO: Implement TryGet
     public class Namespace
     {
-        private IDictionary<string, IBinaryOperable> _importedBindings;
+        private IDictionary<string, IOperable> _importedBindings;
 
         public string Name { get; private set; }
         public Scoping Scope { get; private set; }
@@ -19,14 +19,14 @@ namespace Interpreter.Environment
         {
             Name = name;
             Scope = new Scoping();
-            _importedBindings = new Dictionary<string, IBinaryOperable>();
+            _importedBindings = new Dictionary<string, IOperable>();
         }
 
         public Namespace(string name, Namespace importNs)
         {
             Name = name;
             Scope = new Scoping();
-            _importedBindings = new Dictionary<string, IBinaryOperable>();
+            _importedBindings = new Dictionary<string, IOperable>();
             foreach (var kvp in importNs.Scope.GetBindings())
             {
                 _importedBindings.Add(kvp);
@@ -41,11 +41,11 @@ namespace Interpreter.Environment
             }
         }
 
-        public IDictionary<string, IBinaryOperable> GetImportedBindings() => _importedBindings;
+        public IDictionary<string, IOperable> GetImportedBindings() => _importedBindings;
 
-        public IBinaryOperable GetImportedValue(string identifier) => _importedBindings[identifier];
+        public IOperable GetImportedValue(string identifier) => _importedBindings[identifier];
 
-        public void AddOrUpdateBinding(string identifier, IBinaryOperable value) => _importedBindings[identifier] = value;
+        public void AddOrUpdateBinding(string identifier, IOperable value) => _importedBindings[identifier] = value;
 
         public override string ToString() => $"{nameof(Namespace)}(\"{Name}\")";
     }

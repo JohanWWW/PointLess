@@ -10,13 +10,13 @@ namespace Interpreter.Runtime
     /// <summary>
     /// Represents the native array that is encapsulated by the framework's own Array class
     /// </summary>
-    public class ArrayWrapper : WrapperBase<IBinaryOperable[]>
+    public class ArrayWrapper : WrapperBase<IOperable[]>
     {
-        public ArrayWrapper(IBinaryOperable[] value) : base(value, ObjectType.Array)
+        public ArrayWrapper(IOperable[] value) : base(value, ObjectType.Array)
         {
         }
 
-        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.False;
@@ -24,7 +24,7 @@ namespace Interpreter.Runtime
             return BooleanWrapper.FromBool(Value == operand.Value);
         }
 
-        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.True;

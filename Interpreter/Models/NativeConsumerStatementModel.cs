@@ -12,7 +12,7 @@ namespace Interpreter.Models
     public class NativeConsumerStatementModel : IFunctionModel
     {
         public string[] Parameters { get; set; }
-        public Action<IList<IBinaryOperable>> NativeImplementation { get; set; }
+        public Action<IList<IOperable>> NativeImplementation { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
     }

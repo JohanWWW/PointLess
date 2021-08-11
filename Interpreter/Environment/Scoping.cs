@@ -10,12 +10,12 @@ namespace Interpreter.Environment
     // TODO: Implement TryGet
     public class Scoping
     {
-        private readonly IDictionary<string, IBinaryOperable> _bindings;
+        private readonly IDictionary<string, IOperable> _bindings;
 
         private Scoping _outer = null;
 
         public Scoping() =>
-            _bindings = new Dictionary<string, IBinaryOperable>();
+            _bindings = new Dictionary<string, IOperable>();
 
         public bool ContainsLocalBinding(string identifier) => _bindings.ContainsKey(identifier);
 
@@ -32,9 +32,9 @@ namespace Interpreter.Environment
             return false;
         }
 
-        public IBinaryOperable GetLocalValue(string identifier) => _bindings[identifier];
+        public IOperable GetLocalValue(string identifier) => _bindings[identifier];
 
-        public IBinaryOperable GetGlobalValue(string identifier)
+        public IOperable GetGlobalValue(string identifier)
         {
             Scoping currentScope = this;
             while (currentScope != null)
@@ -48,7 +48,7 @@ namespace Interpreter.Environment
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
         }
 
-        public void SetGlobalBinding(string identifier, IBinaryOperable value)
+        public void SetGlobalBinding(string identifier, IOperable value)
         {
             Scoping currentScope = this;
             while (currentScope != null)
@@ -65,7 +65,7 @@ namespace Interpreter.Environment
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
         }
 
-        public void AddLocalBinding(string identifier, IBinaryOperable value)
+        public void AddLocalBinding(string identifier, IOperable value)
         {
             _bindings.Add(identifier, value);
         }
@@ -86,6 +86,6 @@ namespace Interpreter.Environment
             _outer = scope;
         }
 
-        public IDictionary<string, IBinaryOperable> GetBindings() => _bindings;
+        public IDictionary<string, IOperable> GetBindings() => _bindings;
     }
 }

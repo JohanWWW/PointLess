@@ -11,35 +11,35 @@ namespace Interpreter.Runtime
     /// </summary>
     public interface IBinaryOperable : IOperable
     {
-        IBinaryOperable Add(IBinaryOperable operand);
-        IBinaryOperable Subtract(IBinaryOperable operand);
-        IBinaryOperable Multiply(IBinaryOperable operand);
-        IBinaryOperable Divide(IBinaryOperable operand);
-        IBinaryOperable Mod(IBinaryOperable operand);
-        IBinaryOperable Equal(IBinaryOperable operand);
+        IOperable Add(IOperable operand);
+        IOperable Subtract(IOperable operand);
+        IOperable Multiply(IOperable operand);
+        IOperable Divide(IOperable operand);
+        IOperable Mod(IOperable operand);
+        IOperable Equal(IOperable operand);
 
         /// <summary>
         /// Returns true if the two objects of the same <see cref="ObjectType"/> are equal
         /// </summary>
-        IBinaryOperable<bool> StrictEqual(IBinaryOperable operand);
-        IBinaryOperable NotEqual(IBinaryOperable operand);
+        IOperable<bool> StrictEqual(IOperable operand);
+        IOperable NotEqual(IOperable operand);
 
         /// <summary>
         /// Returns false if the two objects of the same <see cref="ObjectType"/> are not equal
         /// </summary>
-        IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand);
-        IBinaryOperable LessThan(IBinaryOperable operand);
-        IBinaryOperable LessThanOrEqual(IBinaryOperable operand);
-        IBinaryOperable GreaterThan(IBinaryOperable operand);
-        IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand);
-        IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand);
-        IBinaryOperable LogicalOr(Func<IBinaryOperable> operand);
-        IBinaryOperable LogicalXOr(IBinaryOperable operand);
-        IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand);
-        IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand);
-        IBinaryOperable BitwiseXOr(IBinaryOperable operand);
-        IBinaryOperable ShiftLeft(IBinaryOperable operand);
-        IBinaryOperable ShiftRight(IBinaryOperable operand);
+        IOperable<bool> StrictNotEqual(IOperable operand);
+        IOperable LessThan(IOperable operand);
+        IOperable LessThanOrEqual(IOperable operand);
+        IOperable GreaterThan(IOperable operand);
+        IOperable GreaterThanOrEqual(IOperable operand);
+        IOperable LogicalAnd(Func<IOperable> operand);
+        IOperable LogicalOr(Func<IOperable> operand);
+        IOperable LogicalXOr(IOperable operand);
+        IOperable BitwiseAnd(Func<IOperable> operand);
+        IOperable BitwiseOr(Func<IOperable> operand);
+        IOperable BitwiseXOr(IOperable operand);
+        IOperable ShiftLeft(IOperable operand);
+        IOperable ShiftRight(IOperable operand);
     }
 
     public interface IBinaryOperable<T> : IBinaryOperable, IOperable<T>

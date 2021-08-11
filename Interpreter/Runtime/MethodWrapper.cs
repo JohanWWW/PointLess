@@ -14,23 +14,23 @@ namespace Interpreter.Runtime
         {
         }
 
-        public override IBinaryOperable Add(IBinaryOperable operand)
+        public override IOperable Add(IOperable operand)
         {
             if (operand.OperableType == ObjectType.MethodData)
             {
-                MethodData methodData = (operand as IBinaryOperable<MethodData>).Value;
+                MethodData methodData = (operand as IOperable<MethodData>).Value;
                 methodData.AddOverload(Value);
                 return new MethodDataWrapper(methodData);
             }
             else if (operand.OperableType == ObjectType.Method)
             {
-                return new MethodDataWrapper(new MethodData((operand as IBinaryOperable<Method>).Value));
+                return new MethodDataWrapper(new MethodData((operand as IOperable<Method>).Value));
             }
 
             throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
         }
 
-        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.False;
@@ -38,7 +38,7 @@ namespace Interpreter.Runtime
             return BooleanWrapper.FromBool(Value == operand.Value);
         }
 
-        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.True;

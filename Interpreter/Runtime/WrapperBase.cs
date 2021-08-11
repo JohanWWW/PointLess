@@ -19,7 +19,7 @@ namespace Interpreter.Runtime
             OperableType = type;
         }
 
-        protected Exception MissingBinaryOperatorImplementation(IBinaryOperable operand, BinaryOperator op)
+        protected Exception MissingBinaryOperatorImplementation(IOperable operand, BinaryOperator op)
         {
             return new MissingOperatorOverrideException($"Missing operator implementation for operator '{op}' on types '{OperableType}' and '{operand.OperableType}'");
         }
@@ -31,35 +31,35 @@ namespace Interpreter.Runtime
 
         #region Binary Operators
 
-        public virtual IBinaryOperable Add(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
-        public virtual IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseAnd);
-        public virtual IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseOr);
-        public virtual IBinaryOperable BitwiseXOr(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.BitwiseXOr);
-        public virtual IBinaryOperable Divide(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Div);
-        public virtual IBinaryOperable Equal(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal);
-        public virtual IBinaryOperable GreaterThan(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThan);
-        public virtual IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThanOrEqual);
-        public virtual IBinaryOperable LessThan(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThan);
-        public virtual IBinaryOperable LessThanOrEqual(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThanOrEqual);
-        public virtual IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.LogicalAnd);
-        public virtual IBinaryOperable LogicalOr(Func<IBinaryOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.LogicalOr);
-        public virtual IBinaryOperable LogicalXOr(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalXOr);
-        public virtual IBinaryOperable Mod(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mod);
-        public virtual IBinaryOperable Multiply(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mult);
-        public virtual IBinaryOperable NotEqual(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual);
-        public virtual IBinaryOperable ShiftLeft(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.ShiftLeft);
-        public virtual IBinaryOperable ShiftRight(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.ShiftRight);
-        public virtual IBinaryOperable Subtract(IBinaryOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Sub);
+        public virtual IOperable Add(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
+        public virtual IOperable BitwiseAnd(Func<IOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseAnd);
+        public virtual IOperable BitwiseOr(Func<IOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.BitwiseOr);
+        public virtual IOperable BitwiseXOr(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.BitwiseXOr);
+        public virtual IOperable Divide(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Div);
+        public virtual IOperable Equal(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal);
+        public virtual IOperable GreaterThan(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThan);
+        public virtual IOperable GreaterThanOrEqual(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThanOrEqual);
+        public virtual IOperable LessThan(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThan);
+        public virtual IOperable LessThanOrEqual(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThanOrEqual);
+        public virtual IOperable LogicalAnd(Func<IOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.LogicalAnd);
+        public virtual IOperable LogicalOr(Func<IOperable> operand) => throw MissingBinaryOperatorImplementation(operand(), BinaryOperator.LogicalOr);
+        public virtual IOperable LogicalXOr(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalXOr);
+        public virtual IOperable Mod(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mod);
+        public virtual IOperable Multiply(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mult);
+        public virtual IOperable NotEqual(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual);
+        public virtual IOperable ShiftLeft(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.ShiftLeft);
+        public virtual IOperable ShiftRight(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.ShiftRight);
+        public virtual IOperable Subtract(IOperable operand) => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Sub);
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract IBinaryOperable<bool> StrictEqual(IBinaryOperable operand);
+        public abstract IOperable<bool> StrictEqual(IOperable operand);
 
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        public abstract IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand);
+        public abstract IOperable<bool> StrictNotEqual(IOperable operand);
 
         #endregion
 

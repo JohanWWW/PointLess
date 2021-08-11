@@ -11,5 +11,5 @@ namespace Interpreter.Models.Delegates
     /// <summary>
     /// A void method that accepts arguments
     /// </summary>
-    public delegate void ConsumerMethod(IBinaryOperable[] args);
+    public delegate void ConsumerMethod(IOperable[] args);
 }

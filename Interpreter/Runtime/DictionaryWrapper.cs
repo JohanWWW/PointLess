@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class DictionaryWrapper : WrapperBase<IDictionary<IBinaryOperable, IBinaryOperable>>
+    public class DictionaryWrapper : WrapperBase<IDictionary<IOperable, IOperable>>
     {
-        public DictionaryWrapper(IDictionary<IBinaryOperable, IBinaryOperable> value) : base(value, ObjectType.Dictionary)
+        public DictionaryWrapper(IDictionary<IOperable, IOperable> value) : base(value, ObjectType.Dictionary)
         {
         }
 
-        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.False;
@@ -21,7 +21,7 @@ namespace Interpreter.Runtime
             return BooleanWrapper.FromBool(Value == operand.Value);
         }
 
-        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.True;

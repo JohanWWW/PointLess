@@ -23,70 +23,70 @@ namespace Interpreter.Runtime
 
         #region Binary Operators
 
-        public override IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand) => LogicalAnd(operand);
+        public override IOperable BitwiseAnd(Func<IOperable> operand) => LogicalAnd(operand);
 
-        public override IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand) => LogicalOr(operand);
+        public override IOperable BitwiseOr(Func<IOperable> operand) => LogicalOr(operand);
 
-        public override IBinaryOperable BitwiseXOr(IBinaryOperable operand) => LogicalXOr(operand);
+        public override IOperable BitwiseXOr(IOperable operand) => LogicalXOr(operand);
 
-        public override IBinaryOperable Equal(IBinaryOperable operand)
+        public override IOperable Equal(IOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value == (operand as IBinaryOperable<bool>).Value),
+                ObjectType.Boolean => FromBool(Value == (operand as IOperable<bool>).Value),
                 ObjectType.NullReference => False,
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
         }
 
-        public override IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand)
+        public override IOperable LogicalAnd(Func<IOperable> operand)
         {
             if (!Value)
                 return False;
 
-            IBinaryOperable eval = operand();
+            IOperable eval = operand();
 
             return eval.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value && (eval as IBinaryOperable<bool>).Value),
+                ObjectType.Boolean => FromBool(Value && (eval as IOperable<bool>).Value),
                 _ => throw MissingBinaryOperatorImplementation(eval, BinaryOperator.LogicalAnd)
             };
         }
 
-        public override IBinaryOperable LogicalOr(Func<IBinaryOperable> operand)
+        public override IOperable LogicalOr(Func<IOperable> operand)
         {
             if (Value)
                 return True;
 
-            IBinaryOperable eval = operand();
+            IOperable eval = operand();
 
             return eval.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value || (eval as IBinaryOperable<bool>).Value),
+                ObjectType.Boolean => FromBool(Value || (eval as IOperable<bool>).Value),
                 _ => throw MissingBinaryOperatorImplementation(eval, BinaryOperator.LogicalOr)
             };
         }
 
-        public override IBinaryOperable LogicalXOr(IBinaryOperable operand)
+        public override IOperable LogicalXOr(IOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value ^ (operand as IBinaryOperable<bool>).Value),
+                ObjectType.Boolean => FromBool(Value ^ (operand as IOperable<bool>).Value),
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LogicalXOr)
             };
         }
 
-        public override IBinaryOperable NotEqual(IBinaryOperable operand)
+        public override IOperable NotEqual(IOperable operand)
         {
             return operand.OperableType switch
             {
-                ObjectType.Boolean => FromBool(Value != (operand as IBinaryOperable<bool>).Value),
+                ObjectType.Boolean => FromBool(Value != (operand as IOperable<bool>).Value),
                 ObjectType.NullReference => True,
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
         }
 
-        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return False;
@@ -94,7 +94,7 @@ namespace Interpreter.Runtime
             return FromBool(Value == (bool)operand.Value);
         }
 
-        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return True;

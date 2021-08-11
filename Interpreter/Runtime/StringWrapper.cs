@@ -13,7 +13,7 @@ namespace Interpreter.Runtime
         {
         }
 
-        public override IBinaryOperable Add(IBinaryOperable operand)
+        public override IOperable Add(IOperable operand)
         {
             return operand.OperableType switch
             {
@@ -22,7 +22,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public override IBinaryOperable Equal(IBinaryOperable operand)
+        public override IOperable Equal(IOperable operand)
         {
             return operand.OperableType switch
             {
@@ -32,7 +32,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public override IBinaryOperable NotEqual(IBinaryOperable operand)
+        public override IOperable NotEqual(IOperable operand)
         {
             return operand.OperableType switch
             {
@@ -42,7 +42,7 @@ namespace Interpreter.Runtime
             };
         }
 
-        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.False;
@@ -50,7 +50,7 @@ namespace Interpreter.Runtime
             return BooleanWrapper.FromBool(Value == (string)operand.Value);
         }
 
-        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.True;

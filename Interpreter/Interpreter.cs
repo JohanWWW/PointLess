@@ -49,7 +49,7 @@ namespace Interpreter
         }
 
         /// <summary>
-        /// Evaluates a binary expression. The right operand should be provided as a lambda that returns <see cref="IBinaryOperable"/>.
+        /// Evaluates a binary expression. The right operand should be provided as a lambda that returns <see cref="IOperable"/>.
         /// This is so that logical expressions can be determined in advanced without the need to evaluate the right operand. <br></br>
         /// For example:
         /// <example>
@@ -60,12 +60,11 @@ namespace Interpreter
         /// </example>
         /// </summary>
         /// <param name="op">The binary operator to use</param>
-        /// <param name="a">An evaluated operand</param>
-        /// <param name="b">An unevaluated operand</param>
+        /// <param name="a">An evaluated operand of type <see cref="IBinaryOperable"/></param>
+        /// <param name="b">An unevaluated operand of type <see cref="IOperable"/></param>
         /// <returns>Returns the evaluated result of the provided operands</returns>
-        /// <exception cref="RuntimeBinderException"></exception>
         /// <exception cref="DivideByZeroException">If attempt to divide by zero</exception>
-        private static IBinaryOperable EvaluateBinaryExpression(BinaryOperator op, IBinaryOperable a, Func<IBinaryOperable> b) => op switch
+        private static IOperable EvaluateBinaryExpression(BinaryOperator op, IBinaryOperable a, Func<IOperable> b) => op switch
         {
             BinaryOperator.Add =>                   a.Add(b()),
             BinaryOperator.Sub =>                   a.Subtract(b()),
@@ -98,40 +97,40 @@ namespace Interpreter
             _ => throw new NotImplementedException()
         };
 
-        private static void AddLocalBinding(string identifier, IBinaryOperable value, Scoping scope)
+        private static void AddLocalBinding(string identifier, IOperable value, Scoping scope)
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new MethodData((value as IBinaryOperable<Method>).Value);
+                MethodData md = new MethodData((value as IOperable<Method>).Value);
                 scope.AddLocalBinding(identifier, new MethodDataWrapper(md));
                 return;
             }
             scope.AddLocalBinding(identifier, value);
         }
 
-        private static void AddGlobalBinding(string identifier, IBinaryOperable value, Scoping scope)
+        private static void AddGlobalBinding(string identifier, IOperable value, Scoping scope)
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new MethodData((value as IBinaryOperable<Method>).Value);
+                MethodData md = new MethodData((value as IOperable<Method>).Value);
                 scope.SetGlobalBinding(identifier, new MethodDataWrapper(md));
                 return;
             }
             scope.SetGlobalBinding(identifier, value);
         }
 
-        private static bool TrySetRuntimeObjectMember(RuntimeObject obj, string identifier, IBinaryOperable value)
+        private static bool TrySetRuntimeObjectMember(RuntimeObject obj, string identifier, IOperable value)
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new MethodData((value as IBinaryOperable<Method>).Value);
+                MethodData md = new MethodData((value as IOperable<Method>).Value);
                 return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), new MethodDataWrapper(md));
             }
 
             return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), value);
         }
 
-        private static bool TryGetRuntimeObjectMember(RuntimeObject obj, string identifier, out IBinaryOperable value)
+        private static bool TryGetRuntimeObjectMember(RuntimeObject obj, string identifier, out IOperable value)
         {
             if (!obj.TryGetMember(new RuntimeObject.GetterBinder(identifier), out object val))
             {
@@ -139,25 +138,25 @@ namespace Interpreter
                 return false;
             }
 
-            value = (IBinaryOperable)val;
+            value = (IOperable)val;
             return true;
         }
 
-        private IBinaryOperable AttemptToEvaluateExpression(BinaryExpressionModel expression, Scoping scope)
+        private IOperable AttemptToEvaluateExpression(BinaryExpressionModel expression, Scoping scope)
         {
             BinaryOperator op = expression.Operator;
 
-            IBinaryOperable a = EnterExpression(expression.LeftExpression, scope);
+            IOperable a = EnterExpression(expression.LeftExpression, scope);
             
-            return AttemptToEvaluateExpression(op, a, () => EnterExpression(expression.RightExpression, scope), expression);
+            return AttemptToEvaluateExpression(op, (IBinaryOperable)a, () => EnterExpression(expression.RightExpression, scope), expression);
         }
 
         /// <summary>
         /// Attempt to evaluate given expression. Throw exception if it fails.
         /// </summary>
-        private IBinaryOperable AttemptToEvaluateExpression(BinaryOperator op, IBinaryOperable a, Func<IBinaryOperable> b, IModel runtimeModel)
+        private IOperable AttemptToEvaluateExpression(BinaryOperator op, IBinaryOperable a, Func<IOperable> b, IModel runtimeModel)
         {
-            IBinaryOperable bEval = null;
+            IOperable bEval = null;
             try
             {
                 return bEval = EvaluateBinaryExpression(op, a, () => bEval = b());
@@ -165,11 +164,6 @@ namespace Interpreter
             catch (DivideByZeroException e)
             {
                 throw new InterpreterRuntimeException(runtimeModel, _filePath, "Attempted to divide by zero", e);
-            }
-            catch (RuntimeBinderException e) // Obsolete!
-            {
-                throw new InterpreterRuntimeException(runtimeModel, _filePath,
-                    $"Operator {op} cannot be applied on operands of type {a.OperableType} and {(bEval is null ? "null" : bEval.OperableType)}", e);
             }
             catch (MethodOverloadException e)
             {
@@ -183,7 +177,7 @@ namespace Interpreter
 
         private IOperable AttemptToEvaluateUnaryExpression(UnaryExpressionModel expression, Scoping scope)
         {
-            IUnaryOperable x = (IUnaryOperable)EnterExpression(expression, scope);
+            IUnaryOperable x = (IUnaryOperable)EnterExpression(expression.Expression, scope);
             return AttemptToEvaluateUnaryExpression(expression.Operator, x, expression);
         }
 
@@ -264,7 +258,7 @@ namespace Interpreter
             }
         }
 
-        public IBinaryOperable EnterExpression(IExpressionModel expression, Scoping scope)
+        public IOperable EnterExpression(IExpressionModel expression, Scoping scope)
         {
             if (expression is LiteralExpressionModel)
                 return EnterLiteralExpression(expression as LiteralExpressionModel, scope);
@@ -275,8 +269,8 @@ namespace Interpreter
             if (expression is BinaryExpressionModel)
                 return EnterBinaryExpression(expression as BinaryExpressionModel, scope);
 
-            //if (expression is UnaryExpressionModel)
-            //    return EnterUnaryExpression(expression as UnaryExpressionModel, scope);
+            if (expression is UnaryExpressionModel)
+                return EnterUnaryExpression(expression as UnaryExpressionModel, scope);
 
             if (expression is ITernaryExpressionModel)
                 return EnterTernaryExpression(expression as ITernaryExpressionModel, scope);
@@ -293,11 +287,11 @@ namespace Interpreter
             throw new NotImplementedException($"Missing implementation for '{expression.StartToken.Text}'");
         }
 
-        public IBinaryOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
+        public IOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
 
         public IOperable EnterUnaryExpression(UnaryExpressionModel expression, Scoping scope) => AttemptToEvaluateUnaryExpression(expression, scope);
 
-        public IBinaryOperable EnterTernaryExpression(ITernaryExpressionModel expression, Scoping scope)
+        public IOperable EnterTernaryExpression(ITernaryExpressionModel expression, Scoping scope)
         {
             if (expression is ConditionalTernaryExpressionModel conditionalExpression)
             {
@@ -307,9 +301,9 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        public IBinaryOperable EnterConditionalTernaryExpression(ConditionalTernaryExpressionModel expression, Scoping scope)
+        public IOperable EnterConditionalTernaryExpression(ConditionalTernaryExpressionModel expression, Scoping scope)
         {
-            IBinaryOperable conditionEval = EnterExpression(expression.ConditionExpression, scope);
+            IOperable conditionEval = EnterExpression(expression.ConditionExpression, scope);
             if (conditionEval.OperableType != ObjectType.Boolean)
                 throw new InterpreterRuntimeException(expression, _filePath, "Condition part of ternary expression was not a boolean expression");
 
@@ -324,9 +318,9 @@ namespace Interpreter
 
         }
 
-        public IBinaryOperable EnterLiteralExpression(LiteralExpressionModel expression, Scoping scope) => expression.Value;
+        public IOperable EnterLiteralExpression(LiteralExpressionModel expression, Scoping scope) => expression.Value;
 
-        public IBinaryOperable EnterIdentifierExpression(IdentifierExpressionModel expression, Scoping scope)
+        public IOperable EnterIdentifierExpression(IdentifierExpressionModel expression, Scoping scope)
         {
             if (expression.Identifier.Length is 1)
             {
@@ -338,7 +332,7 @@ namespace Interpreter
                 throw new InterpreterRuntimeException(expression, _filePath, $"${expression.Identifier[0]} is not defined in current scope");
             }
 
-            IBinaryOperable value =
+            IOperable value =
                 scope.ContainsGlobalBinding(expression.Identifier[0]) ?
                     scope.GetGlobalValue(expression.Identifier[0]) :
                 _namespace.GetImportedBindings().ContainsKey(expression.Identifier[0]) ?
@@ -354,7 +348,7 @@ namespace Interpreter
 
             for (int i = 1; i < expression.Identifier.Length - 1; i++)
             {
-                if (TryGetRuntimeObjectMember(obj, expression.Identifier[i], out IBinaryOperable memberValue))
+                if (TryGetRuntimeObjectMember(obj, expression.Identifier[i], out IOperable memberValue))
                 {
                     obj = memberValue.OperableType switch
                     {
@@ -367,34 +361,34 @@ namespace Interpreter
                     throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[i - 1]}->{expression.Identifier[i]} is not a defined");
             }
 
-            if (TryGetRuntimeObjectMember(obj, expression.Identifier.Last(), out IBinaryOperable outerMemberValue))
+            if (TryGetRuntimeObjectMember(obj, expression.Identifier.Last(), out IOperable outerMemberValue))
                 return outerMemberValue;
 
             throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[expression.Identifier.Length - 2]}->{expression.Identifier.Last()} is not defined");
 
         }
 
-        public IBinaryOperable EnterObjectInitializationExpression(ObjectInitializationExpressionModel expression, Scoping scope)
+        public IOperable EnterObjectInitializationExpression(ObjectInitializationExpressionModel expression, Scoping scope)
         {
             var runtimeObject = new RuntimeObject();
 
             foreach (ObjectPropertyExpressionModel property in expression.Properties)
             {
-                IBinaryOperable value = EnterExpression(property.Value, scope);
+                IOperable value = EnterExpression(property.Value, scope);
                 TrySetRuntimeObjectMember(runtimeObject, property.Identifier, value);
             }
 
             return runtimeObject;
         }
 
-        public IBinaryOperable EnterFunctionCallStatement(FunctionCallStatement functionCall, Scoping scope)
+        public IOperable EnterFunctionCallStatement(FunctionCallStatement functionCall, Scoping scope)
         {
-            IBinaryOperable method = null;
+            IOperable method = null;
 
             // Variable is object
             if (functionCall.IdentifierPath.Length > 1)
             {
-                IBinaryOperable value = 
+                IOperable value = 
                     scope.ContainsGlobalBinding(functionCall.IdentifierPath[0]) ?
                         scope.GetGlobalValue(functionCall.IdentifierPath[0]) :
                     _namespace.GetImportedBindings().ContainsKey(functionCall.IdentifierPath[0]) ?
@@ -410,7 +404,7 @@ namespace Interpreter
 
                 for (int i = 1; i < functionCall.IdentifierPath.Length - 1; i++)
                 {
-                    if (TryGetRuntimeObjectMember(obj, functionCall.IdentifierPath[i], out IBinaryOperable memberValue))
+                    if (TryGetRuntimeObjectMember(obj, functionCall.IdentifierPath[i], out IOperable memberValue))
                     {
                         obj = memberValue.OperableType switch
                         {
@@ -454,7 +448,7 @@ namespace Interpreter
             IExpressionModel[] args = functionCall.Arguments;
             int argumentCount = functionCall.Arguments?.Length ?? 0;
             
-            if (method is IBinaryOperable<MethodData> mdOp)
+            if (method is IOperable<MethodData> mdOp)
             {
                 MethodData md = mdOp.Value;
 
@@ -467,7 +461,7 @@ namespace Interpreter
                 {
                     case MethodType.Function:
                         {
-                            IBinaryOperable[] evalArgs = new IBinaryOperable[argumentCount];
+                            IOperable[] evalArgs = new IOperable[argumentCount];
                             for (int i = 0; i < argumentCount; i++)
                             {
                                 evalArgs[i] = EnterExpression(args[i], scope);
@@ -479,7 +473,7 @@ namespace Interpreter
                         return null;
                     case MethodType.Consumer:
                         {
-                            IBinaryOperable[] evalArgs = new IBinaryOperable[argumentCount];
+                            IOperable[] evalArgs = new IOperable[argumentCount];
                             for (int i = 0; i < argumentCount; i++)
                             {
                                 evalArgs[i] = EnterExpression(args[i], scope);
@@ -493,7 +487,7 @@ namespace Interpreter
                         throw new NotImplementedException($"Method type {overload.MethodType} not implemented");
                 }
             }
-            else if (method is IBinaryOperable<Method> overloadOp)
+            else if (method is IOperable<Method> overloadOp)
             {
                 Method overload = overloadOp.Value;
 
@@ -501,7 +495,7 @@ namespace Interpreter
                 {
                     case MethodType.Function:
                         {
-                            IBinaryOperable[] evalArgs = new IBinaryOperable[argumentCount];
+                            IOperable[] evalArgs = new IOperable[argumentCount];
                             for (int i = 0; i < argumentCount; i++)
                             {
                                 evalArgs[i] = EnterExpression(args[i], scope);
@@ -513,7 +507,7 @@ namespace Interpreter
                         return null;
                     case MethodType.Consumer:
                         {
-                            IBinaryOperable[] evalArgs = new IBinaryOperable[argumentCount];
+                            IOperable[] evalArgs = new IOperable[argumentCount];
                             for (int i = 0; i < argumentCount; i++)
                             {
                                 evalArgs[i] = EnterExpression(args[i], scope);
@@ -531,7 +525,7 @@ namespace Interpreter
             throw new NotImplementedException("The provided method atom type is not implemented");
         }
 
-        public IBinaryOperable<Method> EnterMethodStatement(IFunctionModel method, Scoping scope)
+        public IOperable<Method> EnterMethodStatement(IFunctionModel method, Scoping scope)
         {
             if (method is ActionStatementModel)
                 return EnterActionStatement(method as ActionStatementModel, scope);
@@ -563,7 +557,7 @@ namespace Interpreter
             throw new NotImplementedException();
         }
 
-        public IBinaryOperable<Method> EnterActionStatement(ActionStatementModel actionStatement, Scoping outerScope)
+        public IOperable<Method> EnterActionStatement(ActionStatementModel actionStatement, Scoping outerScope)
         {
             Method action = new Method(
                 parameterCount: 0,
@@ -584,7 +578,7 @@ namespace Interpreter
             return new MethodWrapper(action);
         }
 
-        public IBinaryOperable<Method> EnterFunctionStatement(FunctionStatementModel functionStatement, Scoping outerScope)
+        public IOperable<Method> EnterFunctionStatement(FunctionStatementModel functionStatement, Scoping outerScope)
         {
             Method function = new Method(
                 parameterCount: functionStatement.Parameters.Length,
@@ -603,7 +597,7 @@ namespace Interpreter
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         string argIdentifier = parameters[i];
-                        IBinaryOperable argValue = args[i];
+                        IOperable argValue = args[i];
 
                         AddLocalBinding(argIdentifier, argValue, blockScope);
                     }
@@ -619,7 +613,7 @@ namespace Interpreter
             return new MethodWrapper(function);
         }
 
-        public IBinaryOperable<Method> EnterProviderStatement(ProviderStatementModel providerStatement, Scoping outerScope)
+        public IOperable<Method> EnterProviderStatement(ProviderStatementModel providerStatement, Scoping outerScope)
         {
             Method provider = new Method(
                 parameterCount: 0,
@@ -643,7 +637,7 @@ namespace Interpreter
             return new MethodWrapper(provider);
         }
 
-        public IBinaryOperable<Method> EnterConsumerStatement(ConsumerStatementModel consumerStatement, Scoping outerScope)
+        public IOperable<Method> EnterConsumerStatement(ConsumerStatementModel consumerStatement, Scoping outerScope)
         {
             Method consumer = new Method(
                 parameterCount: consumerStatement.Parameters.Length,
@@ -662,7 +656,7 @@ namespace Interpreter
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         string argIdentifier = parameters[i];
-                        IBinaryOperable argValue = args[i];
+                        IOperable argValue = args[i];
 
                         AddLocalBinding(argIdentifier, argValue, localScope);
                     }
@@ -675,7 +669,7 @@ namespace Interpreter
             return new MethodWrapper(consumer);
         }
 
-        public IBinaryOperable<Method> EnterLambdaStatement(LambdaFunctionStatementModel lambdaStatement, Scoping outerScope)
+        public IOperable<Method> EnterLambdaStatement(LambdaFunctionStatementModel lambdaStatement, Scoping outerScope)
         {
             string[] parameters = lambdaStatement.Parameters;
 
@@ -715,7 +709,7 @@ namespace Interpreter
                             for (int i = 0; i < parameters.Length; i++)
                             {
                                 string argId = parameters[i];
-                                IBinaryOperable argVal = args[i];
+                                IOperable argVal = args[i];
 
                                 AddLocalBinding(argId, argVal, localScope);
                             }
@@ -738,7 +732,7 @@ namespace Interpreter
                             for (int i = 0; i < parameters.Length; i++)
                             {
                                 string argId = parameters[i];
-                                IBinaryOperable argVal = args[i];
+                                IOperable argVal = args[i];
 
                                 AddLocalBinding(argId, argVal, localScope);
                             }
@@ -751,7 +745,7 @@ namespace Interpreter
             }
         }
 
-        public IBinaryOperable<Method> EnterNativeConsumerStatement(NativeConsumerStatementModel consumerStatement, Scoping outerScope)
+        public IOperable<Method> EnterNativeConsumerStatement(NativeConsumerStatementModel consumerStatement, Scoping outerScope)
         {
             Method consumer = new Method(
                 parameterCount: consumerStatement.Parameters.Length,
@@ -766,7 +760,7 @@ namespace Interpreter
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         string argIdentifier = parameters[i];
-                        IBinaryOperable argValue = args[i];
+                        IOperable argValue = args[i];
 
                         AddLocalBinding(argIdentifier, argValue, localScope);
                     }
@@ -777,7 +771,7 @@ namespace Interpreter
             return new MethodWrapper(consumer);
         }
 
-        public IBinaryOperable<Method> EnterNativeProviderStatement(NativeProviderStatementModel providerStatement, Scoping outerScope)
+        public IOperable<Method> EnterNativeProviderStatement(NativeProviderStatementModel providerStatement, Scoping outerScope)
         {
             Method provider = new Method(
                 parameterCount: 0,
@@ -793,7 +787,7 @@ namespace Interpreter
             return new MethodWrapper(provider);
         }
 
-        public IBinaryOperable<Method> EnterNativeFunctionStatement(NativeFunctionStatementModel functionStatement, Scoping outerScope)
+        public IOperable<Method> EnterNativeFunctionStatement(NativeFunctionStatementModel functionStatement, Scoping outerScope)
         {
             Method function = new Method(
                 parameterCount: functionStatement.Parameters.Length,
@@ -808,7 +802,7 @@ namespace Interpreter
                     for (int i = 0; i < parameters.Length; i++)
                     {
                         string argIdentifier = parameters[i];
-                        IBinaryOperable argValue = args[i];
+                        IOperable argValue = args[i];
 
                         AddLocalBinding(argIdentifier, argValue, localScope);
                     }
@@ -819,7 +813,7 @@ namespace Interpreter
             return new MethodWrapper(function);
         }
 
-        public IBinaryOperable<Method> EnterNativeActionStatement(NativeActionStatementModel actionStatement, Scoping outerScope)
+        public IOperable<Method> EnterNativeActionStatement(NativeActionStatementModel actionStatement, Scoping outerScope)
         {
             Method action = new Method(
                 parameterCount: 0,
@@ -910,7 +904,7 @@ namespace Interpreter
         {
             IExpressionModel expression = assignStatement.Assignee;
             AssignmentOperator operatorCombination = assignStatement.OperatorCombination;
-            IBinaryOperable rightOperand = EnterExpression(expression, scope);
+            IOperable rightOperand = EnterExpression(expression, scope);
 
             // Standalone identifier
             if (assignStatement.Identifier.Length is 1)
@@ -925,8 +919,8 @@ namespace Interpreter
                     }
                     else
                     {
-                        IBinaryOperable evaluatedResult =
-                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], scope.GetGlobalValue(identifier), (Func<IBinaryOperable>)(() => rightOperand), assignStatement);
+                        IOperable evaluatedResult =
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)scope.GetGlobalValue(identifier), (Func<IOperable>)(() => rightOperand), assignStatement);
 
                         AddGlobalBinding(identifier, evaluatedResult, scope);
                     }
@@ -939,8 +933,8 @@ namespace Interpreter
                     }
                     else
                     {
-                        IBinaryOperable evaluatedResult =
-                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], _namespace.GetImportedValue(identifier), (Func<IBinaryOperable>)(() => rightOperand), assignStatement);
+                        IOperable evaluatedResult =
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)_namespace.GetImportedValue(identifier), (Func<IOperable>)(() => rightOperand), assignStatement);
 
                         _namespace.AddOrUpdateBinding(identifier, evaluatedResult);
                     }
@@ -957,7 +951,7 @@ namespace Interpreter
                 return;
             }
 
-            IBinaryOperable value =
+            IOperable value =
                 scope.ContainsGlobalBinding(assignStatement.Identifier[0]) ?
                     scope.GetGlobalValue(assignStatement.Identifier[0]) :
                 _namespace.GetImportedBindings().ContainsKey(assignStatement.Identifier[0]) ?
@@ -974,7 +968,7 @@ namespace Interpreter
             // Traverse through the identifier path
             for (int i = 1; i < assignStatement.Identifier.Length - 1; i++)
             {
-                if (TryGetRuntimeObjectMember(obj, assignStatement.Identifier[i], out IBinaryOperable prop))
+                if (TryGetRuntimeObjectMember(obj, assignStatement.Identifier[i], out IOperable prop))
                 {
                     obj = prop.OperableType switch
                     {
@@ -989,7 +983,7 @@ namespace Interpreter
 
             // If the member does not exist, add new binding
             string idLast = assignStatement.Identifier.Last();
-            if (!TryGetRuntimeObjectMember(obj, idLast, out IBinaryOperable member))
+            if (!TryGetRuntimeObjectMember(obj, idLast, out IOperable member))
             {
                 if (operatorCombination != AssignmentOperator.Assign)
                     throw new InterpreterRuntimeException(assignStatement, _filePath, $"Tried to use operator {operatorCombination} on undefined member ${string.Join("->", assignStatement.Identifier)}");
@@ -1007,7 +1001,7 @@ namespace Interpreter
                 }
                 else
                 {
-                    IBinaryOperable evaluatedResult = AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)member, (Func<IBinaryOperable>)(() => rightOperand), assignStatement);
+                    IOperable evaluatedResult = AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)member, (Func<IOperable>)(() => rightOperand), assignStatement);
                     TrySetRuntimeObjectMember(obj, idLast, evaluatedResult);
                     return;
                 }

@@ -10,5 +10,5 @@ namespace Interpreter.Models.Delegates
     /// <summary>
     /// A method that do not accept arguments but returns a value
     /// </summary>
-    public delegate IBinaryOperable ProviderMethod();
+    public delegate IOperable ProviderMethod();
 }

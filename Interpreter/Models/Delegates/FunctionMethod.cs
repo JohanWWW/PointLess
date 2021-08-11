@@ -11,5 +11,5 @@ namespace Interpreter.Models.Delegates
     /// <summary>
     /// A method that accepts arguments and returns a value
     /// </summary>
-    public delegate IBinaryOperable FunctionMethod(IBinaryOperable[] args);
+    public delegate IOperable FunctionMethod(IOperable[] args);
 }

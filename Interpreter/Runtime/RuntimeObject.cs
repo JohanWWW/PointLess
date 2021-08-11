@@ -144,9 +144,9 @@ namespace Interpreter.Runtime
             return stringBuilder.ToString();
         }
 
-        private static IBinaryOperable InvokeBinaryOperator(MethodData op, IBinaryOperable left, IBinaryOperable right)
+        private static IOperable InvokeBinaryOperator(MethodData op, IOperable left, IOperable right)
         {
-            return op.GetOverload(2).GetFunction().Invoke(new IBinaryOperable[] { left, right });
+            return op.GetOverload(2).GetFunction().Invoke(new IOperable[] { left, right });
         }
 
         private static void ThrowOperatorOverloadNotFound(BinaryOperator op)
@@ -159,7 +159,7 @@ namespace Interpreter.Runtime
             throw new MethodOverloadException($"No overload exists for operator {op}\n{additionalInfo}");
         }
 
-        public IBinaryOperable Add(IBinaryOperable operand)
+        public IOperable Add(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_add__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.Add);
@@ -167,7 +167,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable Subtract(IBinaryOperable operand)
+        public IOperable Subtract(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_sub__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.Sub);
@@ -175,7 +175,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable Multiply(IBinaryOperable operand)
+        public IOperable Multiply(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_mult__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.Mult);
@@ -183,7 +183,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable Divide(IBinaryOperable operand)
+        public IOperable Divide(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_div__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.Div);
@@ -191,7 +191,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable Mod(IBinaryOperable operand)
+        public IOperable Mod(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_mod__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.Mod);
@@ -199,7 +199,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable Equal(IBinaryOperable operand)
+        public IOperable Equal(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_equals__"), out object o))
                 // Default behaviour
@@ -213,7 +213,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable NotEqual(IBinaryOperable operand)
+        public IOperable NotEqual(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_not_equals__"), out object o))
                 // Default behaviour
@@ -227,7 +227,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable LessThan(IBinaryOperable operand)
+        public IOperable LessThan(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_less_than__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LessThan);
@@ -235,7 +235,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable LessThanOrEqual(IBinaryOperable operand)
+        public IOperable LessThanOrEqual(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_less_than_or_equals__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LessThanOrEqual);
@@ -243,7 +243,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable GreaterThan(IBinaryOperable operand)
+        public IOperable GreaterThan(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_greater_than__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.GreaterThan);
@@ -251,7 +251,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable GreaterThanOrEqual(IBinaryOperable operand)
+        public IOperable GreaterThanOrEqual(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_greater_than_or_equals__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.GreaterThanOrEqual);
@@ -259,7 +259,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable LogicalAnd(Func<IBinaryOperable> operand)
+        public IOperable LogicalAnd(Func<IOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_logical_and__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LogicalAnd);
@@ -267,7 +267,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
-        public IBinaryOperable LogicalOr(Func<IBinaryOperable> operand)
+        public IOperable LogicalOr(Func<IOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_logical_or__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LogicalOr);
@@ -275,7 +275,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
-        public IBinaryOperable LogicalXOr(IBinaryOperable operand)
+        public IOperable LogicalXOr(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_logical_xor__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.LogicalXOr);
@@ -283,7 +283,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable BitwiseAnd(Func<IBinaryOperable> operand)
+        public IOperable BitwiseAnd(Func<IOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_bitwise_and__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.BitwiseAnd);
@@ -291,7 +291,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
-        public IBinaryOperable BitwiseOr(Func<IBinaryOperable> operand)
+        public IOperable BitwiseOr(Func<IOperable> operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_bitwise_or__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.BitwiseOr);
@@ -299,7 +299,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand());
         }
 
-        public IBinaryOperable BitwiseXOr(IBinaryOperable operand)
+        public IOperable BitwiseXOr(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_bitwise_xor__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.BitwiseXOr);
@@ -307,7 +307,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable ShiftLeft(IBinaryOperable operand)
+        public IOperable ShiftLeft(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_shift_left__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.ShiftLeft);
@@ -315,7 +315,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable ShiftRight(IBinaryOperable operand)
+        public IOperable ShiftRight(IOperable operand)
         {
             if (!TryGetMember(new GetterBinder("__operator_shift_right__"), out object o))
                 ThrowOperatorOverloadNotFound(BinaryOperator.ShiftRight);
@@ -323,7 +323,7 @@ namespace Interpreter.Runtime
             return InvokeBinaryOperator((o as IBinaryOperable<MethodData>).Value, this, operand);
         }
 
-        public IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public IOperable<bool> StrictEqual(IOperable operand)
         {
             if ((this as IBinaryOperable).OperableType != operand.OperableType)
                 return BooleanWrapper.False;
@@ -331,7 +331,7 @@ namespace Interpreter.Runtime
             return BooleanWrapper.FromBool(this == operand.Value);
         }
 
-        public IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if ((this as IBinaryOperable).OperableType != operand.OperableType)
                 return BooleanWrapper.True;

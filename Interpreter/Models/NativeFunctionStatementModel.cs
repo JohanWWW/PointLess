@@ -12,7 +12,7 @@ namespace Interpreter.Models
     public class NativeFunctionStatementModel : IFunctionModel
     {
         public string[] Parameters { get; set; }
-        public Func<IList<IBinaryOperable>, IBinaryOperable> NativeImplementation { get; set; }
+        public Func<IList<IOperable>, IOperable> NativeImplementation { get; set; }
         public IToken StartToken { get; set; }
         public IToken StopToken { get; set; }
 

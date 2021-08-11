@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class ObjectWrapper : WrapperBase<IDictionary<string, IBinaryOperable>>
+    public class ObjectWrapper : WrapperBase<IDictionary<string, IOperable>>
     { 
 
-        public ObjectWrapper() : base(new Dictionary<string, IBinaryOperable>(), ObjectType.Object)
+        public ObjectWrapper() : base(new Dictionary<string, IOperable>(), ObjectType.Object)
         {
         }
 
-        public override IBinaryOperable<bool> StrictEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.False;
@@ -21,7 +21,7 @@ namespace Interpreter.Runtime
             return BooleanWrapper.FromBool(Value == operand.Value);
         }
 
-        public override IBinaryOperable<bool> StrictNotEqual(IBinaryOperable operand)
+        public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
                 return BooleanWrapper.True;
