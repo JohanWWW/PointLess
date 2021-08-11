@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Singulink.Numerics;
 using Interpreter.Runtime;
+using Interpreter.Helpers;
 
 namespace Interpreter
 {
@@ -17,8 +18,13 @@ namespace Interpreter
     {
         private readonly IReadOnlyDictionary<string, IFunctionModel> _nativeImplementations;
 
-        private static readonly Regex _integerNumberPattern = new Regex(@"^\d+$");
-        private static readonly Regex _decimalNumberPattern = new Regex(@"^\d*\.\d+$");
+        private static readonly Regex _integerNumberPattern = new(@"^\d+$");
+        private static readonly Regex _integerBinaryPattern = new(@"^0b[01]+$");
+        private static readonly Regex _integerHexPattern    = new(@"^0x([0-9]|[a-fA-F])+$");
+        private static readonly Regex _decimalNumberPattern = new(@"^\d*\.\d+$");
+        private static readonly Regex _ubytePattern         = new(@"^b'([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])$");
+        private static readonly Regex _ubyteBinaryPattern   = new(@"^b'0b[01]{1,8}$");
+        private static readonly Regex _ubyteHexPattern      = new(@"^b'0x([0-9]|[a-fA-F]){1,2}$");
 
         public ASTMapper(params NativeImplementationBase[] implementations)
         {
@@ -672,6 +678,39 @@ namespace Interpreter
                 else if (_integerNumberPattern.IsMatch(numberText))
                 {
                     literalExpression.Value = new ArbitraryBitIntegerWrapper(BigInteger.Parse(numberText));
+                    return literalExpression;
+                }
+                else if (_integerBinaryPattern.IsMatch(numberText))
+                {
+                    Range delimitBinary = new(2, numberText.Length);
+                    string binary = numberText[delimitBinary];
+                    literalExpression.Value = (ArbitraryBitIntegerWrapper)NumberParserHelper.BinaryToBigInt(binary);
+                    return literalExpression;
+                }
+                else if (_integerHexPattern.IsMatch(numberText))
+                {
+                    Range delimitHex = new(2, numberText.Length);
+                    string hex = numberText[delimitHex];
+                    literalExpression.Value = (ArbitraryBitIntegerWrapper)NumberParserHelper.HexToBigInt(hex);
+                    return literalExpression;
+                }
+                else if (_ubytePattern.IsMatch(numberText))
+                {
+                    literalExpression.Value = new ByteWrapper(byte.Parse(numberText.Split('\'')[1]));
+                    return literalExpression;
+                }
+                else if (_ubyteBinaryPattern.IsMatch(numberText))
+                {
+                    Range delimitBinary = new(numberText.IndexOf('\'') + 3, numberText.Length);
+                    string binary = numberText[delimitBinary];
+                    literalExpression.Value = (ByteWrapper)NumberParserHelper.BinaryToUByte(binary);
+                    return literalExpression;
+                }
+                else if (_ubyteHexPattern.IsMatch(numberText))
+                {
+                    Range delimitHex = new(numberText.IndexOf('\'') + 3, numberText.Length);
+                    string hex = numberText[delimitHex];
+                    literalExpression.Value = (ByteWrapper)NumberParserHelper.HexToUByte(hex);
                     return literalExpression;
                 }
                 else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
