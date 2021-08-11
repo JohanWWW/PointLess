@@ -44,6 +44,18 @@ namespace Interpreter.Environment
 
         public Method GetSingle() => _overloads.Single().Value;
 
+        public bool TryGetSingle(out Method value)
+        {
+            if (OverloadCount != 1)
+            {
+                value = null;
+                return false;
+            }
+
+            value = GetSingle();
+            return true;
+        }
+
         public bool ContainsOverload(int parameterCount)
         {
             return _overloads.ContainsKey(parameterCount);

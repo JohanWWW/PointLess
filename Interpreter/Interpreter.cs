@@ -102,7 +102,7 @@ namespace Interpreter
             if (value.OperableType == ObjectType.Method)
             {
                 MethodData md = new MethodData((value as IOperable<Method>).Value);
-                scope.AddLocalBinding(identifier, new MethodDataWrapper(md));
+                scope.AddLocalBinding(identifier, new MethodDataOperable(md));
                 return;
             }
             scope.AddLocalBinding(identifier, value);
@@ -113,7 +113,7 @@ namespace Interpreter
             if (value.OperableType == ObjectType.Method)
             {
                 MethodData md = new MethodData((value as IOperable<Method>).Value);
-                scope.SetGlobalBinding(identifier, new MethodDataWrapper(md));
+                scope.SetGlobalBinding(identifier, new MethodDataOperable(md));
                 return;
             }
             scope.SetGlobalBinding(identifier, value);
@@ -123,24 +123,15 @@ namespace Interpreter
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new MethodData((value as IOperable<Method>).Value);
-                return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), new MethodDataWrapper(md));
+                MethodData md = new((value as IOperable<Method>).Value);
+                return obj.TrySetMember(identifier, (MethodDataOperable)md);
             }
 
-            return obj.TrySetMember(new RuntimeObject.SetterBinder(identifier), value);
+            return obj.TrySetMember(identifier, value);
         }
 
-        private static bool TryGetRuntimeObjectMember(RuntimeObject obj, string identifier, out IOperable value)
-        {
-            if (!obj.TryGetMember(new RuntimeObject.GetterBinder(identifier), out object val))
-            {
-                value = null;
-                return false;
-            }
-
-            value = (IOperable)val;
-            return true;
-        }
+        private static bool TryGetRuntimeObjectMember(RuntimeObject obj, string identifier, out IOperable value) =>
+            obj.TryGetMember(identifier, out value);
 
         private IOperable AttemptToEvaluateExpression(BinaryExpressionModel expression, Scoping scope)
         {
@@ -341,7 +332,7 @@ namespace Interpreter
 
             RuntimeObject obj = value.OperableType switch
             {
-                ObjectType.Object => (RuntimeObject)value.Value,
+                ObjectType.Object => (value as IOperable<RuntimeObject>).Value,
                 ObjectType.NullReference => throw new InterpreterRuntimeException(expression, _filePath, $"${expression.Identifier[0]} is defined but is null reference"),
                 _ => throw new InterpreterRuntimeException(expression, _filePath, $"Attempted to access member of atom type '{value.OperableType}'")
             };
@@ -375,10 +366,11 @@ namespace Interpreter
             foreach (ObjectPropertyExpressionModel property in expression.Properties)
             {
                 IOperable value = EnterExpression(property.Value, scope);
-                TrySetRuntimeObjectMember(runtimeObject, property.Identifier, value);
+                if (!TrySetRuntimeObjectMember(runtimeObject, property.Identifier, value))
+                    throw new InterpreterRuntimeException(expression, _filePath, $"Failed when binding object member '{property.Identifier}'");
             }
 
-            return runtimeObject;
+            return (ObjectOperable)runtimeObject;
         }
 
         public IOperable EnterFunctionCallStatement(FunctionCallStatement functionCall, Scoping scope)
@@ -397,7 +389,7 @@ namespace Interpreter
 
                 RuntimeObject obj = value.OperableType switch
                 {
-                    ObjectType.Object => (RuntimeObject)value,
+                    ObjectType.Object => (value as IOperable<RuntimeObject>).Value,
                     ObjectType.NullReference => throw new InterpreterRuntimeException(functionCall, _filePath, $"${functionCall.IdentifierPath[0]} is defined but is null reference"),
                     _ => throw new InterpreterRuntimeException(functionCall, _filePath, $"Attempted to access member on atom type '{value.OperableType}'")
                 };
@@ -575,7 +567,7 @@ namespace Interpreter
                 })
             );
 
-            return new MethodWrapper(action);
+            return new MethodOperable(action);
         }
 
         public IOperable<Method> EnterFunctionStatement(FunctionStatementModel functionStatement, Scoping outerScope)
@@ -610,7 +602,7 @@ namespace Interpreter
                 })
             );
 
-            return new MethodWrapper(function);
+            return new MethodOperable(function);
         }
 
         public IOperable<Method> EnterProviderStatement(ProviderStatementModel providerStatement, Scoping outerScope)
@@ -634,7 +626,7 @@ namespace Interpreter
                 })
             );
 
-            return new MethodWrapper(provider);
+            return new MethodOperable(provider);
         }
 
         public IOperable<Method> EnterConsumerStatement(ConsumerStatementModel consumerStatement, Scoping outerScope)
@@ -666,7 +658,7 @@ namespace Interpreter
                 })
             );
 
-            return new MethodWrapper(consumer);
+            return new MethodOperable(consumer);
         }
 
         public IOperable<Method> EnterLambdaStatement(LambdaFunctionStatementModel lambdaStatement, Scoping outerScope)
@@ -682,7 +674,7 @@ namespace Interpreter
                         type: MethodType.Provider,
                         method: new ProviderMethod(() => EnterExpression(lambdaStatement.Mode as IExpressionModel, outerScope))
                     );
-                    return new MethodWrapper(provider);
+                    return new MethodOperable(provider);
                 }
                 else
                 {
@@ -691,7 +683,7 @@ namespace Interpreter
                         type: MethodType.Action,
                         method: new ActionMethod(() => EnterAssignStatement(lambdaStatement.Mode as AssignStatementModel, outerScope))
                     );
-                    return new MethodWrapper(action);
+                    return new MethodOperable(action);
                 }
             }
             else
@@ -717,7 +709,7 @@ namespace Interpreter
                             return EnterExpression(lambdaStatement.Mode as IExpressionModel, localScope);
                         })
                     );
-                    return new MethodWrapper(function);
+                    return new MethodOperable(function);
                 }
                 else
                 {
@@ -740,7 +732,7 @@ namespace Interpreter
                             EnterAssignStatement(lambdaStatement.Mode as AssignStatementModel, localScope);
                         })
                     );
-                    return new MethodWrapper(consumer);
+                    return new MethodOperable(consumer);
                 }
             }
         }
@@ -768,7 +760,7 @@ namespace Interpreter
                     consumerStatement.NativeImplementation(args);
                 })
             );
-            return new MethodWrapper(consumer);
+            return new MethodOperable(consumer);
         }
 
         public IOperable<Method> EnterNativeProviderStatement(NativeProviderStatementModel providerStatement, Scoping outerScope)
@@ -784,7 +776,7 @@ namespace Interpreter
                     return providerStatement.NativeImplementation();
                 })
             );
-            return new MethodWrapper(provider);
+            return new MethodOperable(provider);
         }
 
         public IOperable<Method> EnterNativeFunctionStatement(NativeFunctionStatementModel functionStatement, Scoping outerScope)
@@ -810,7 +802,7 @@ namespace Interpreter
                     return functionStatement.NativeImplementation(args);
                 })
             );
-            return new MethodWrapper(function);
+            return new MethodOperable(function);
         }
 
         public IOperable<Method> EnterNativeActionStatement(NativeActionStatementModel actionStatement, Scoping outerScope)
@@ -820,7 +812,7 @@ namespace Interpreter
                 type: MethodType.Action,
                 method: new ActionMethod(() => actionStatement.NativeImplementation())
             );
-            return new MethodWrapper(action);
+            return new MethodOperable(action);
         }
 
         public void EnterBlock(BlockModel block, Scoping scope)
@@ -1047,10 +1039,10 @@ namespace Interpreter
 
                 // Map the .NET exception to an object readable by the interpreter
                 var dotnetExceptionRuntimeObject = new RuntimeObject();
-                TrySetRuntimeObjectMember(dotnetExceptionRuntimeObject, "message", new StringWrapper($"Core exception: {e.Message}"));
-                TrySetRuntimeObjectMember(dotnetExceptionRuntimeObject, "messageFull", new StringWrapper($"Core exception: {e}"));
+                TrySetRuntimeObjectMember(dotnetExceptionRuntimeObject, "message", new StringOperable($"Core exception: {e.Message}"));
+                TrySetRuntimeObjectMember(dotnetExceptionRuntimeObject, "messageFull", new StringOperable($"Core exception: {e}"));
 
-                AddLocalBinding(statement.Catch.ArgumentName, dotnetExceptionRuntimeObject, catchBlockScope);
+                AddLocalBinding(statement.Catch.ArgumentName, (ObjectOperable)dotnetExceptionRuntimeObject, catchBlockScope);
 
                 EnterBlock(statement.Catch.Body, catchBlockScope);
             }

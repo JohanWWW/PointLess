@@ -7,29 +7,26 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    /// <summary>
-    /// Represents the native array that is encapsulated by the framework's own Array class
-    /// </summary>
-    public class ArrayWrapper : WrapperBase<IOperable[]>
+    public class DictionaryOperable : OperableBase<IDictionary<IOperable, IOperable>>
     {
-        public ArrayWrapper(IOperable[] value) : base(value, ObjectType.Array)
+        public DictionaryOperable(IDictionary<IOperable, IOperable> value) : base(value, ObjectType.Dictionary)
         {
         }
 
         public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.False;
+                return BoolOperable.False;
 
-            return BooleanWrapper.FromBool(Value == operand.Value);
+            return BoolOperable.FromBool(Value == operand.Value);
         }
 
         public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.True;
+                return BoolOperable.True;
 
-            return BooleanWrapper.FromBool(Value != operand.Value);
+            return BoolOperable.FromBool(Value != operand.Value);
         }
     }
 }

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class StringWrapper : WrapperBase<string>
+    public class StringOperable : OperableBase<string>
     {
-        public StringWrapper(string value) : base(value, ObjectType.String)
+        public StringOperable(string value) : base(value, ObjectType.String)
         {
         }
 
@@ -17,8 +17,8 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.String => new StringWrapper(Value + (operand as IBinaryOperable<string>).Value),
-                _ => new StringWrapper(Value + operand.ToString())
+                ObjectType.String => new StringOperable(Value + (operand as IBinaryOperable<string>).Value),
+                _ => new StringOperable(Value + operand.ToString())
             };
         }
 
@@ -26,8 +26,8 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.String => BooleanWrapper.FromBool(Value == (operand as IBinaryOperable<string>).Value),
-                ObjectType.NullReference => BooleanWrapper.FromBool(Value == null),
+                ObjectType.String => BoolOperable.FromBool(Value == (operand as IBinaryOperable<string>).Value),
+                ObjectType.NullReference => BoolOperable.FromBool(Value == null),
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
         }
@@ -36,8 +36,8 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.String => BooleanWrapper.FromBool(Value != (operand as IBinaryOperable<string>).Value),
-                ObjectType.NullReference => BooleanWrapper.FromBool(Value != null),
+                ObjectType.String => BoolOperable.FromBool(Value != (operand as IBinaryOperable<string>).Value),
+                ObjectType.NullReference => BoolOperable.FromBool(Value != null),
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
         }
@@ -45,17 +45,17 @@ namespace Interpreter.Runtime
         public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.False;
+                return BoolOperable.False;
 
-            return BooleanWrapper.FromBool(Value == (string)operand.Value);
+            return BoolOperable.FromBool(Value == (string)operand.Value);
         }
 
         public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.True;
+                return BoolOperable.True;
 
-            return BooleanWrapper.FromBool(Value != (string)operand.Value);
+            return BoolOperable.FromBool(Value != (string)operand.Value);
         }
     }
 }

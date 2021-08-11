@@ -72,7 +72,7 @@ namespace NativeLibraries
             NativeImplementation = () =>
             {
                 string input = Console.ReadLine();
-                return new StringWrapper(input);
+                return new StringOperable(input);
             }
         };
 
@@ -84,7 +84,7 @@ namespace NativeLibraries
                 IOperable v = s[0];
                 if (v.OperableType == ObjectType.String)
                 {
-                    return new ArbitraryBitIntegerWrapper(BigInteger.Parse((v as IOperable<string>).Value));
+                    return new BigIntOperable(BigInteger.Parse((v as IOperable<string>).Value));
                 }
                 else
                 {
@@ -103,7 +103,7 @@ namespace NativeLibraries
                 if (value.OperableType == ObjectType.ArbitraryBitInteger)
                     return value;
 
-                return new ArbitraryPrecisionDecimalWrapper(new BigDecimal((value as IOperable<BigInteger>).Value, 0));
+                return new BigDecimalOperable(new BigDecimal((value as IOperable<BigInteger>).Value, 0));
             }
         };
 
@@ -117,7 +117,7 @@ namespace NativeLibraries
                 if (value.OperableType == ObjectType.ArbitraryBitInteger)
                     return value;
 
-                return new ArbitraryBitIntegerWrapper((BigInteger)(value as IOperable<BigDecimal>).Value);
+                return new BigIntOperable((BigInteger)(value as IOperable<BigDecimal>).Value);
             }
         };
 
@@ -127,38 +127,44 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 IOperable value = args[0];
-                return BooleanWrapper.FromBool(value.OperableType == ObjectType.ArbitraryBitInteger || value.OperableType == ObjectType.ArbitraryPrecisionDecimal);
+                return BoolOperable.FromBool(value.OperableType == ObjectType.ArbitraryBitInteger || value.OperableType == ObjectType.ArbitraryPrecisionDecimal);
             }
         };
 
         [ImplementationIdentifier("std.__is_integer")]
         public static readonly NativeFunctionStatementModel IsInteger = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.ArbitraryBitInteger)
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.ArbitraryBitInteger)
         };
 
         [ImplementationIdentifier("std.__is_decimal")]
         public static readonly NativeFunctionStatementModel IsDecimal = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.ArbitraryPrecisionDecimal)
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.ArbitraryPrecisionDecimal)
+        };
+
+        [ImplementationIdentifier("std.__is_byte")]
+        public static readonly NativeFunctionStatementModel IsByte = new NativeFunctionStatementModel("value")
+        {
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.UnsignedByte)
         };
 
         [ImplementationIdentifier("std.__is_string")]
         public static readonly NativeFunctionStatementModel IsString = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.String)
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.String)
         };
 
         [ImplementationIdentifier("std.__is_bool")]
         public static readonly NativeFunctionStatementModel IsBool = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.Boolean)
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.Boolean)
         };
 
         [ImplementationIdentifier("std.__is_object")]
         public static readonly NativeFunctionStatementModel IsObject = new NativeFunctionStatementModel("value")
         {
-            NativeImplementation = args => BooleanWrapper.FromBool(args[0].OperableType == ObjectType.Object)
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.Object)
         };
 
         [ImplementationIdentifier("std.__is_method")]
@@ -167,7 +173,7 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 IOperable value = args[0];
-                return BooleanWrapper.FromBool(value.OperableType == ObjectType.MethodData || value.OperableType == ObjectType.Method);
+                return BoolOperable.FromBool(value.OperableType == ObjectType.MethodData || value.OperableType == ObjectType.Method);
             }
         };
 
@@ -184,13 +190,13 @@ namespace NativeLibraries
         [ImplementationIdentifier("std.systemMillis")]
         public static readonly NativeProviderStatementModel MillisecondsSinceSystemStart = new NativeProviderStatementModel
         {
-            NativeImplementation = () => new ArbitraryBitIntegerWrapper(new BigInteger(Environment.TickCount64))
+            NativeImplementation = () => new BigIntOperable(new BigInteger(Environment.TickCount64))
         };
 
         [ImplementationIdentifier("std.ticks")]
         public static readonly NativeProviderStatementModel TicksSinceUnixStart = new NativeProviderStatementModel
         {
-            NativeImplementation = () => new ArbitraryBitIntegerWrapper(new BigInteger(DateTime.UtcNow.Ticks))
+            NativeImplementation = () => new BigIntOperable(new BigInteger(DateTime.UtcNow.Ticks))
         };
 
         [ImplementationIdentifier("std.__array_allocate")]
@@ -205,8 +211,8 @@ namespace NativeLibraries
                     ObjectType.UnsignedByte => (byte)indexNumber.Value,
                     _ => throw new InvalidCastException($"Cannot cast type {indexNumber.Value.GetType()} to int")
                 };
-                IOperable[] array = Enumerable.Repeat(NullReferenceWrapper.Null, s).ToArray<IOperable>();
-                return new ArrayWrapper(array);
+                IOperable[] array = Enumerable.Repeat(NullOperable.Null, s).ToArray<IOperable>();
+                return new ArrayOperable(array);
             }
         };
 
@@ -216,7 +222,7 @@ namespace NativeLibraries
             NativeImplementation = arrayRef =>
             {
                 IOperable[] arr = (arrayRef[0] as IOperable<IOperable[]>).Value;
-                return new ArbitraryBitIntegerWrapper(new BigInteger(arr.Length));
+                return new BigIntOperable(new BigInteger(arr.Length));
             }
         };
 
@@ -261,15 +267,15 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 string s = (string)args[0].Value;
-                IOperable[] sCharArray = s.Select(c => new StringWrapper(c.ToString())).ToArray();
-                return new ArrayWrapper(sCharArray);
+                IOperable[] sCharArray = s.Select(c => new StringOperable(c.ToString())).ToArray();
+                return new ArrayOperable(sCharArray);
             }
         };
 
         [ImplementationIdentifier("std.__dict_allocate")]
         public static readonly NativeProviderStatementModel DictionaryCreate = new NativeProviderStatementModel
         {
-            NativeImplementation = () => new DictionaryWrapper(new Dictionary<IOperable, IOperable>())
+            NativeImplementation = () => new DictionaryOperable(new Dictionary<IOperable, IOperable>())
         };
 
         [ImplementationIdentifier("std.__dict_set")]
@@ -281,7 +287,7 @@ namespace NativeLibraries
                 IOperable key = args[1];
                 IOperable value = args[2];
                 dictRef[key] = value;
-                return NullReferenceWrapper.Null;
+                return NullOperable.Null;
             }
         };
 
@@ -303,7 +309,7 @@ namespace NativeLibraries
             {
                 var dictRef = (IDictionary<IOperable, IOperable>)args[0].Value;
                 IOperable key = args[1];
-                return BooleanWrapper.FromBool(dictRef.ContainsKey(key));
+                return BoolOperable.FromBool(dictRef.ContainsKey(key));
             }
         };
 
@@ -314,7 +320,7 @@ namespace NativeLibraries
             {
                 var dictRef = (IDictionary<IOperable, IOperable>)args[0].Value;
                 IOperable key = args[1];
-                return BooleanWrapper.FromBool(dictRef.Remove(key));
+                return BoolOperable.FromBool(dictRef.Remove(key));
             }
         };
 
@@ -324,7 +330,7 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 var dictRef = (IDictionary<IOperable, IOperable>)args[0].Value;
-                return new ArbitraryBitIntegerWrapper(new BigInteger(dictRef.Count));
+                return new BigIntOperable(new BigInteger(dictRef.Count));
             }
         };
 
@@ -334,7 +340,7 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 var dictRef = (IDictionary<IOperable, IOperable>)args[0].Value;
-                return new ArrayWrapper(dictRef.Keys.ToArray());
+                return new ArrayOperable(dictRef.Keys.ToArray());
             }
         };
 
@@ -344,7 +350,7 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 var dictRef = (IDictionary<IOperable, IOperable>)args[0].Value;
-                return new ArrayWrapper(dictRef.Values.ToArray());
+                return new ArrayOperable(dictRef.Values.ToArray());
             }
         };
     }

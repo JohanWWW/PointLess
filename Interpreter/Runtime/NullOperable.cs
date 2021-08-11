@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class NullReferenceWrapper : WrapperBase
+    public class NullOperable : OperableBase
     {
         private const string NULL_SYMBOL = "null";
 
-        public static readonly NullReferenceWrapper Null = new();
+        public static readonly NullOperable Null = new();
 
-        private NullReferenceWrapper() : base(null, ObjectType.NullReference)
+        private NullOperable() : base(null, ObjectType.NullReference)
         {
         }
 
@@ -21,8 +21,8 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.NullReference => BooleanWrapper.True,
-                _ => BooleanWrapper.False
+                ObjectType.NullReference => BoolOperable.True,
+                _ => BoolOperable.False
             };
         }
 
@@ -30,15 +30,15 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.NullReference => BooleanWrapper.False,
-                _ => BooleanWrapper.True
+                ObjectType.NullReference => BoolOperable.False,
+                _ => BoolOperable.True
             };
         }
 
         public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.False;
+                return BoolOperable.False;
 
             return (IBinaryOperable<bool>)Equal(operand);
         }
@@ -46,7 +46,7 @@ namespace Interpreter.Runtime
         public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.True;
+                return BoolOperable.True;
 
             return (IBinaryOperable<bool>)NotEqual(operand);
         }

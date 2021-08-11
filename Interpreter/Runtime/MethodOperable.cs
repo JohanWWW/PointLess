@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class MethodWrapper : WrapperBase<Method>
+    public class MethodOperable : OperableBase<Method>
     {
-        public MethodWrapper(Method value) : base(value, ObjectType.Method)
+        public MethodOperable(Method value) : base(value, ObjectType.Method)
         {
         }
 
@@ -20,11 +20,14 @@ namespace Interpreter.Runtime
             {
                 MethodData methodData = (operand as IOperable<MethodData>).Value;
                 methodData.AddOverload(Value);
-                return new MethodDataWrapper(methodData);
+                return new MethodDataOperable(methodData);
             }
             else if (operand.OperableType == ObjectType.Method)
             {
-                return new MethodDataWrapper(new MethodData((operand as IOperable<Method>).Value));
+                MethodData methodData = new(Value);
+                methodData.AddOverload((operand as IOperable<Method>).Value);
+                //return new MethodDataOperable(new MethodData((operand as IOperable<Method>).Value));
+                return (MethodDataOperable)methodData;
             }
 
             throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
@@ -33,17 +36,17 @@ namespace Interpreter.Runtime
         public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.False;
+                return BoolOperable.False;
 
-            return BooleanWrapper.FromBool(Value == operand.Value);
+            return BoolOperable.FromBool(Value == operand.Value);
         }
 
         public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.True;
+                return BoolOperable.True;
 
-            return BooleanWrapper.FromBool(Value != operand.Value);
+            return BoolOperable.FromBool(Value != operand.Value);
         }
     }
 }

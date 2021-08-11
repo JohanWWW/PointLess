@@ -162,17 +162,17 @@ object_initialization_expression
 
 expression
 	: '(' expression ')'
-	| <assoc=right> (UNARY_NOT) expression
-	| expression (MULT|DIV|MOD) expression
-	| expression (PLUS|MINUS) expression
-	| expression (SHIFT_LEFT|SHIFT_RIGHT) expression
-	| expression (LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL) expression
-	| expression (EQUAL|NOTEQUAL|STRICT_EQUAL|STRICT_NOTEQUAL) expression
-	| expression BITWISE_AND expression
-	| expression BITWISE_XOR expression
-	| expression BITWISE_OR expression
-	| expression AND expression
-	| expression OR expression
+	| <assoc=right> op=(EXCLAMATION_MARK|MINUS) expression
+	| expression op=(MULT|DIV|MOD) expression
+	| expression op=(PLUS|MINUS) expression
+	| expression op=(SHIFT_LEFT|SHIFT_RIGHT) expression
+	| expression op=(LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL) expression
+	| expression op=(EQUAL|NOTEQUAL|STRICT_EQUAL|STRICT_NOTEQUAL) expression
+	| expression op=BITWISE_AND expression
+	| expression op=BITWISE_XOR expression
+	| expression op=BITWISE_OR expression
+	| expression op=AND expression
+	| expression op=OR expression
 	| <assoc=right> expression QUESTION_MARK expression COLON expression	// Conditional ternary expression
 	| literal
 	| IDENTIFIER
@@ -226,11 +226,6 @@ WS
 LINE_COMMENT
     : '//' ~[\r\n]* -> skip
 	;
-
-// ++ Unary Operators ++
-//UNARY_MINUS: MINUS;
-UNARY_NOT: EXCLAMATION_MARK;
-// -- Unary Operators --
 
 // ++ Binary Operators ++
 PLUS: '+';

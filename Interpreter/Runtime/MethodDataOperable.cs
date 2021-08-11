@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class MethodDataWrapper : WrapperBase<MethodData>
+    public class MethodDataOperable : OperableBase<MethodData>
     {
-        public MethodDataWrapper(MethodData value) : base(value, ObjectType.MethodData)
+        public MethodDataOperable(MethodData value) : base(value, ObjectType.MethodData)
         {
         }
 
@@ -20,7 +20,7 @@ namespace Interpreter.Runtime
             {
                 Method method = (operand as IOperable<Method>).Value;
                 Value.AddOverload(method);
-                return new MethodDataWrapper(Value);
+                return new MethodDataOperable(Value);
             }
 
             throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add);
@@ -30,8 +30,8 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.MethodData => BooleanWrapper.FromBool(Value == operand.Value),
-                ObjectType.NullReference => BooleanWrapper.False,
+                ObjectType.MethodData => BoolOperable.FromBool(Value == operand.Value),
+                ObjectType.NullReference => BoolOperable.False,
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
         }
@@ -40,8 +40,8 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.MethodData => BooleanWrapper.FromBool(Value != operand.Value),
-                ObjectType.NullReference => BooleanWrapper.True,
+                ObjectType.MethodData => BoolOperable.FromBool(Value != operand.Value),
+                ObjectType.NullReference => BoolOperable.True,
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
         }
@@ -49,19 +49,34 @@ namespace Interpreter.Runtime
         public override IOperable<bool> StrictEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.False;
+                return BoolOperable.False;
 
-            return BooleanWrapper.FromBool(Value == operand.Value);
+            return BoolOperable.FromBool(Value == operand.Value);
         }
 
         public override IOperable<bool> StrictNotEqual(IOperable operand)
         {
             if (OperableType != operand.OperableType)
-                return BooleanWrapper.True;
+                return BoolOperable.True;
 
-            return BooleanWrapper.FromBool(Value != operand.Value);
+            return BoolOperable.FromBool(Value != operand.Value);
         }
 
-        public override string ToString() => Value.ToString();
+        public static implicit operator MethodDataOperable(MethodData value) => new MethodDataOperable(value);
+
+        public override string ToString()
+        {
+            if (!Value.TryGetSingle(out Method method))
+                return Value.ToString();
+
+            return method.MethodType switch
+            {
+                MethodType.Action   => "()=>void",
+                MethodType.Consumer => $"([{method.ParameterCount}])=>void",
+                MethodType.Function => $"([{method.ParameterCount}])=>*",
+                MethodType.Provider => $"()=>*",
+                _                   => method.ToString()
+            };
+        }
     }
 }

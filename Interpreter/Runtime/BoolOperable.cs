@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class BooleanWrapper : WrapperBase<bool>
+    public class BoolOperable : OperableBase<bool>
     {
         private const string TRUE_SYMBOL = "true";
         private const string FALSE_SYMBOL = "false";
 
-        public static readonly BooleanWrapper True = new(true);
-        public static readonly BooleanWrapper False = new(false);
+        public static readonly BoolOperable True = new(true);
+        public static readonly BoolOperable False = new(false);
 
-        private BooleanWrapper(bool value) : base(value, ObjectType.Boolean)
+        private BoolOperable(bool value) : base(value, ObjectType.Boolean)
         {
         }
 
-        public static BooleanWrapper FromBool(bool value) => value ? True : False;
+        public static BoolOperable FromBool(bool value) => value ? True : False;
 
         #region Binary Operators
 

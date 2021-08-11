@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public abstract class WrapperBase : IBinaryOperable, IUnaryOperable
+    public abstract class OperableBase : IBinaryOperable, IUnaryOperable
     {
         public ObjectType OperableType { get; }
 
         public object Value { get; set; }
 
-        protected WrapperBase(object value, ObjectType type)
+        protected OperableBase(object value, ObjectType type)
         {
             Value = value;
             OperableType = type;
@@ -80,15 +80,15 @@ namespace Interpreter.Runtime
 
     }
 
-    public abstract class WrapperBase<T> : WrapperBase, IBinaryOperable<T>, IUnaryOperable<T>
+    public abstract class OperableBase<T> : OperableBase, IBinaryOperable<T>, IUnaryOperable<T>
     {
         public new T Value
         {
-            get => (T)(this as WrapperBase).Value;
-            set => (this as WrapperBase).Value = value;
+            get => (T)(this as OperableBase).Value;
+            set => (this as OperableBase).Value = value;
         }
 
-        protected WrapperBase(T value, ObjectType type) : base(value, type)
+        protected OperableBase(T value, ObjectType type) : base(value, type)
         {
         }
     }

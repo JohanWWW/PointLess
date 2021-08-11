@@ -355,12 +355,22 @@ namespace Interpreter
             if (expressionCount is 1)
             {
                 var e = context.expression()[0];
-                if (context.UNARY_NOT() != null)
+                if (context.EXCLAMATION_MARK() != null)
                 {
                     return new UnaryExpressionModel
                     {
                         Expression = EnterExpression(e),
                         Operator = UnaryOperator.Not,
+                        StartToken = context.Start,
+                        StopToken = context.Stop
+                    };
+                }
+                else if (context.MINUS() != null)
+                {
+                    return new UnaryExpressionModel
+                    {
+                        Expression = EnterExpression(e),
+                        Operator = UnaryOperator.Minus,
                         StartToken = context.Start,
                         StopToken = context.Stop
                     };
@@ -671,13 +681,13 @@ namespace Interpreter
 
             if (context.BOOLEAN() != null)
             {
-                literalExpression.Value = BooleanWrapper.FromBool(bool.Parse(context.BOOLEAN().GetText()));
+                literalExpression.Value = BoolOperable.FromBool(bool.Parse(context.BOOLEAN().GetText()));
                 return literalExpression;
             }
 
             if (context.NULL() != null)
             {
-                literalExpression.Value = NullReferenceWrapper.Null;
+                literalExpression.Value = NullOperable.Null;
                 return literalExpression;
             }
 
@@ -688,45 +698,45 @@ namespace Interpreter
                 // Order might be important!
                 if (_decimalNumberPattern.IsMatch(numberText))
                 {
-                    literalExpression.Value = new ArbitraryPrecisionDecimalWrapper(BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture));
+                    literalExpression.Value = new BigDecimalOperable(BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture));
                     return literalExpression;
                 }
                 else if (_integerNumberPattern.IsMatch(numberText))
                 {
-                    literalExpression.Value = new ArbitraryBitIntegerWrapper(BigInteger.Parse(numberText));
+                    literalExpression.Value = new BigIntOperable(BigInteger.Parse(numberText));
                     return literalExpression;
                 }
                 else if (_integerBinaryPattern.IsMatch(numberText))
                 {
                     Range delimitBinary = new(2, numberText.Length);
                     string binary = numberText[delimitBinary];
-                    literalExpression.Value = (ArbitraryBitIntegerWrapper)NumberParserHelper.BinaryToBigInt(binary);
+                    literalExpression.Value = (BigIntOperable)NumberParserHelper.BinaryToBigInt(binary);
                     return literalExpression;
                 }
                 else if (_integerHexPattern.IsMatch(numberText))
                 {
                     Range delimitHex = new(2, numberText.Length);
                     string hex = numberText[delimitHex];
-                    literalExpression.Value = (ArbitraryBitIntegerWrapper)NumberParserHelper.HexToBigInt(hex);
+                    literalExpression.Value = (BigIntOperable)NumberParserHelper.HexToBigInt(hex);
                     return literalExpression;
                 }
                 else if (_ubytePattern.IsMatch(numberText))
                 {
-                    literalExpression.Value = new ByteWrapper(byte.Parse(numberText.Split('\'')[1]));
+                    literalExpression.Value = new ByteOperable(byte.Parse(numberText.Split('\'')[1]));
                     return literalExpression;
                 }
                 else if (_ubyteBinaryPattern.IsMatch(numberText))
                 {
                     Range delimitBinary = new(numberText.IndexOf('\'') + 3, numberText.Length);
                     string binary = numberText[delimitBinary];
-                    literalExpression.Value = (ByteWrapper)NumberParserHelper.BinaryToUByte(binary);
+                    literalExpression.Value = (ByteOperable)NumberParserHelper.BinaryToUByte(binary);
                     return literalExpression;
                 }
                 else if (_ubyteHexPattern.IsMatch(numberText))
                 {
                     Range delimitHex = new(numberText.IndexOf('\'') + 3, numberText.Length);
                     string hex = numberText[delimitHex];
-                    literalExpression.Value = (ByteWrapper)NumberParserHelper.HexToUByte(hex);
+                    literalExpression.Value = (ByteOperable)NumberParserHelper.HexToUByte(hex);
                     return literalExpression;
                 }
                 else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
@@ -739,7 +749,7 @@ namespace Interpreter
                 if (s.Length is 2)
                 {
                     s = string.Empty;
-                    literalExpression.Value = new StringWrapper(s);
+                    literalExpression.Value = new StringOperable(s);
                     return literalExpression;
                 }
                 else
@@ -786,7 +796,7 @@ namespace Interpreter
 
                 s = s.Replace("\\\\", "\\");
 
-                literalExpression.Value = new StringWrapper(s);
+                literalExpression.Value = new StringOperable(s);
                 return literalExpression;
             }
 
