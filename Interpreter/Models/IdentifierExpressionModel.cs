@@ -11,14 +11,16 @@ namespace Interpreter.Models
     /// <summary>
     /// Represents a value from the an identifier path
     /// </summary>
-    public class IdentifierExpressionModel : IExpressionModel
+    public class IdentifierExpressionModel : ModelBase, IExpressionModel
     {
         /// <summary>
         /// Full path to the identifier
         /// </summary>
         public string[] Identifier { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+
+        public IdentifierExpressionModel() : base(Enums.ModelTypeCode.IdentifierExpression)
+        {
+        }
 
         public override string ToString()
         {

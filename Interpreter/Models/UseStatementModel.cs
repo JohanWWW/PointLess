@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class UseStatementModel : IStatementModel
+    public class UseStatementModel : ModelBase, IStatementModel
     {
         public string[] PathToNamespace { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public UseStatementModel() : base(Enums.ModelTypeCode.UseStatement)
+        {
+        }
 
         public override string ToString() => string.Join(".", PathToNamespace);
     }

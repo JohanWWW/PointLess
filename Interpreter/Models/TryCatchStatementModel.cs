@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class TryCatchStatementModel : IStatementModel
+    public class TryCatchStatementModel : ModelBase, IStatementModel
     {
         public TryStatement Try { get; set; }
         public CatchStatement Catch { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+       
+        public TryCatchStatementModel() : base(Enums.ModelTypeCode.TryCatchStatement)
+        {
+        }
     }
 
     public class TryStatement

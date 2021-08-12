@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class ConsumerStatementModel : IFunctionModel
+    public class ConsumerStatementModel : ModelBase, IFunctionModel
     {
         public string[] Parameters { get; set; }
         public BlockModel Body { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+
+        public ConsumerStatementModel() : base(Enums.ModelTypeCode.ConsumerStatement)
+        {
+        }
     }
 }

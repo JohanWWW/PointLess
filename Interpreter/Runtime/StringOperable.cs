@@ -57,5 +57,7 @@ namespace Interpreter.Runtime
 
             return BoolOperable.FromBool(Value != (string)operand.Value);
         }
+
+        public static implicit operator StringOperable(string value) => new StringOperable(value);
     }
 }

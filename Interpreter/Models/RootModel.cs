@@ -7,8 +7,12 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class RootModel
+    public class RootModel : ModelBase
     {
         public ICollection<IStatementModel> Statements { get; set; }
+
+        public RootModel() : base(Enums.ModelTypeCode.Root)
+        {
+        }
     }
 }

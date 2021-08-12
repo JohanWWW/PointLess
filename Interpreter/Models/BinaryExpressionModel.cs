@@ -12,12 +12,14 @@ namespace Interpreter.Models
     /// <summary>
     /// Represents a binary expression
     /// </summary>
-    public class BinaryExpressionModel : IExpressionModel
+    public class BinaryExpressionModel : ModelBase, IExpressionModel
     {
         public BinaryOperator Operator { get; set; }
         public IExpressionModel LeftExpression { get; set; }
         public IExpressionModel RightExpression { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public BinaryExpressionModel() : base(ModelTypeCode.BinaryExpression)
+        {
+        }
     }
 }

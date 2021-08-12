@@ -7,8 +7,12 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class BlockModel
+    public class BlockModel : ModelBase
     {
         public ICollection<IStatementModel> Statements { get; set; }
+
+        public BlockModel() : base(Enums.ModelTypeCode.Block)
+        {
+        }
     }
 }

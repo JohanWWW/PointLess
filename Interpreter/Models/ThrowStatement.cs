@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class ThrowStatement : IStatementModel
+    public class ThrowStatement : ModelBase, IStatementModel
     {
         public IExpressionModel Expression { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public ThrowStatement() : base(Enums.ModelTypeCode.ThrowStatement)
+        {
+        }
     }
 }

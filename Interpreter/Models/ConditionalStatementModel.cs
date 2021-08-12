@@ -8,13 +8,15 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class ConditionalStatementModel : IStatementModel
+    public class ConditionalStatementModel : ModelBase, IStatementModel
     {
         public IfStatementModel If { get; set; }
         public ICollection<ElseIfStatementModel> ElseIf { get; set; }
         public ElseStatementModel Else { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+       
+        public ConditionalStatementModel() : base(Enums.ModelTypeCode.ConditionalStatement)
+        {
+        }
     }
 
     public class IfStatementModel

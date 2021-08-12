@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class NativeConsumerStatementModel : IFunctionModel
+    public class NativeConsumerStatementModel : ModelBase, IFunctionModel
     {
         public string[] Parameters { get; set; }
         public Action<IList<IOperable>> NativeImplementation { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public NativeConsumerStatementModel() : base(Enums.ModelTypeCode.NativeConsumerStatement)
+        {
+        }
     }
 }

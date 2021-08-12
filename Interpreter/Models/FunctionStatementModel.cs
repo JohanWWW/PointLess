@@ -8,12 +8,14 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class FunctionStatementModel : IFunctionModel
+    public class FunctionStatementModel : ModelBase, IFunctionModel
     {
         public string[] Parameters { get; set; }
         public BlockModel Body { get; set; }
         public IExpressionModel Return { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+
+        public FunctionStatementModel() : base(Enums.ModelTypeCode.FunctionStatement)
+        {
+        }
     }
 }

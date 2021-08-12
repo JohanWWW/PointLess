@@ -9,17 +9,18 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class NativeFunctionStatementModel : IFunctionModel
+    public class NativeFunctionStatementModel : ModelBase, IFunctionModel
     {
         public string[] Parameters { get; set; }
         public Func<IList<IOperable>, IOperable> NativeImplementation { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
 
-        public NativeFunctionStatementModel()
+        public NativeFunctionStatementModel() : base(Enums.ModelTypeCode.NativeFunctionStatement)
         {
         }
 
-        public NativeFunctionStatementModel(params string[] parameters) => Parameters = parameters;
+        public NativeFunctionStatementModel(params string[] parameters) : this()
+        {
+            Parameters = parameters;
+        }
     }
 }

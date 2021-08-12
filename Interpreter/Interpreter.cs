@@ -23,19 +23,19 @@ namespace Interpreter
 
         private readonly IReadOnlyDictionary<AssignmentOperator, BinaryOperator> _ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT = new Dictionary<AssignmentOperator, BinaryOperator>
         {
-            [AssignmentOperator.AddAssign] = BinaryOperator.Add,
-            [AssignmentOperator.SubAssign] = BinaryOperator.Sub,
-            [AssignmentOperator.MultAssign] = BinaryOperator.Mult,
-            [AssignmentOperator.DivAssign] = BinaryOperator.Div,
-            [AssignmentOperator.ModAssign] = BinaryOperator.Mod,
-            [AssignmentOperator.AndAssign] = BinaryOperator.LogicalAnd,
-            [AssignmentOperator.BitwiseAndAssign] = BinaryOperator.BitwiseAnd,
-            [AssignmentOperator.OrAssign] = BinaryOperator.LogicalOr,
-            [AssignmentOperator.BitwiseOrAssign] = BinaryOperator.BitwiseOr,
-            [AssignmentOperator.XorAssign] = BinaryOperator.LogicalXOr,
-            [AssignmentOperator.BitwiseXorAssign] = BinaryOperator.BitwiseXOr,
-            [AssignmentOperator.ShiftLeftAssign] = BinaryOperator.ShiftLeft,
-            [AssignmentOperator.ShiftRightAssign] = BinaryOperator.ShiftRight
+            [AssignmentOperator.AddAssign]          = BinaryOperator.Add,
+            [AssignmentOperator.SubAssign]          = BinaryOperator.Sub,
+            [AssignmentOperator.MultAssign]         = BinaryOperator.Mult,
+            [AssignmentOperator.DivAssign]          = BinaryOperator.Div,
+            [AssignmentOperator.ModAssign]          = BinaryOperator.Mod,
+            [AssignmentOperator.AndAssign]          = BinaryOperator.LogicalAnd,
+            [AssignmentOperator.BitwiseAndAssign]   = BinaryOperator.BitwiseAnd,
+            [AssignmentOperator.OrAssign]           = BinaryOperator.LogicalOr,
+            [AssignmentOperator.BitwiseOrAssign]    = BinaryOperator.BitwiseOr,
+            [AssignmentOperator.XorAssign]          = BinaryOperator.LogicalXOr,
+            [AssignmentOperator.BitwiseXorAssign]   = BinaryOperator.BitwiseXOr,
+            [AssignmentOperator.ShiftLeftAssign]    = BinaryOperator.ShiftLeft,
+            [AssignmentOperator.ShiftRightAssign]   = BinaryOperator.ShiftRight
         };
 
         public Namespace Namespace => _namespace;
@@ -66,42 +66,42 @@ namespace Interpreter
         /// <exception cref="DivideByZeroException">If attempt to divide by zero</exception>
         private static IOperable EvaluateBinaryExpression(BinaryOperator op, IBinaryOperable a, Func<IOperable> b) => op switch
         {
-            BinaryOperator.Add =>                   a.Add(b()),
-            BinaryOperator.Sub =>                   a.Subtract(b()),
-            BinaryOperator.Mult =>                  a.Multiply(b()),
-            BinaryOperator.Div =>                   a.Divide(b()),
-            BinaryOperator.Mod =>                   a.Mod(b()),
-            BinaryOperator.Equal =>                 a.Equal(b()),
-            BinaryOperator.StrictEqual =>           a.StrictEqual(b()),
-            BinaryOperator.NotEqual =>              a.NotEqual(b()),
-            BinaryOperator.StrictNotEqual =>        a.StrictNotEqual(b()),
-            BinaryOperator.LessThan =>              a.LessThan(b()),
-            BinaryOperator.LessThanOrEqual =>       a.LessThanOrEqual(b()),
-            BinaryOperator.GreaterThan =>           a.GreaterThan(b()),
-            BinaryOperator.GreaterThanOrEqual =>    a.GreaterThanOrEqual(b()),
-            BinaryOperator.LogicalAnd =>            a.LogicalAnd(b),
-            BinaryOperator.LogicalXOr =>            a.LogicalXOr(b()),
-            BinaryOperator.LogicalOr =>             a.LogicalOr(b),
-            BinaryOperator.BitwiseAnd =>            a.BitwiseAnd(b),
-            BinaryOperator.BitwiseXOr =>            a.BitwiseXOr(b()),
-            BinaryOperator.BitwiseOr =>             a.BitwiseOr(b),
-            BinaryOperator.ShiftLeft =>             a.ShiftLeft(b()),
-            BinaryOperator.ShiftRight =>            a.ShiftRight(b()),
-            _ =>                                    throw new NotImplementedException(),
+            BinaryOperator.Add                      => a.Add(b()),
+            BinaryOperator.Sub                      => a.Subtract(b()),
+            BinaryOperator.Mult                     => a.Multiply(b()),
+            BinaryOperator.Div                      => a.Divide(b()),
+            BinaryOperator.Mod                      => a.Mod(b()),
+            BinaryOperator.Equal                    => a.Equal(b()),
+            BinaryOperator.StrictEqual              => a.StrictEqual(b()),
+            BinaryOperator.NotEqual                 => a.NotEqual(b()),
+            BinaryOperator.StrictNotEqual           => a.StrictNotEqual(b()),
+            BinaryOperator.LessThan                 => a.LessThan(b()),
+            BinaryOperator.LessThanOrEqual          => a.LessThanOrEqual(b()),
+            BinaryOperator.GreaterThan              => a.GreaterThan(b()),
+            BinaryOperator.GreaterThanOrEqual       => a.GreaterThanOrEqual(b()),
+            BinaryOperator.LogicalAnd               => a.LogicalAnd(b),
+            BinaryOperator.LogicalXOr               => a.LogicalXOr(b()),
+            BinaryOperator.LogicalOr                => a.LogicalOr(b),
+            BinaryOperator.BitwiseAnd               => a.BitwiseAnd(b),
+            BinaryOperator.BitwiseXOr               => a.BitwiseXOr(b()),
+            BinaryOperator.BitwiseOr                => a.BitwiseOr(b),
+            BinaryOperator.ShiftLeft                => a.ShiftLeft(b()),
+            BinaryOperator.ShiftRight               => a.ShiftRight(b()),
+            _                                       => throw new NotImplementedException(),
         };
 
         private static IOperable EvaluateUnaryExpression(UnaryOperator op, IUnaryOperable x) => op switch
         {
-            UnaryOperator.Not => x.UnaryNot(),
-            UnaryOperator.Minus => x.UnaryMinus(),
-            _ => throw new NotImplementedException()
+            UnaryOperator.Not                       => x.UnaryNot(),
+            UnaryOperator.Minus                     => x.UnaryMinus(),
+            _                                       => throw new NotImplementedException()
         };
 
         private static void AddLocalBinding(string identifier, IOperable value, Scoping scope)
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new MethodData((value as IOperable<Method>).Value);
+                MethodData md = new((value as IOperable<Method>).Value);
                 scope.AddLocalBinding(identifier, new MethodDataOperable(md));
                 return;
             }
@@ -112,7 +112,7 @@ namespace Interpreter
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new MethodData((value as IOperable<Method>).Value);
+                MethodData md = new((value as IOperable<Method>).Value);
                 scope.SetGlobalBinding(identifier, new MethodDataOperable(md));
                 return;
             }
@@ -206,91 +206,62 @@ namespace Interpreter
 
         public void EnterStatement(IStatementModel statement, Scoping scope)
         {
-            if (statement is AssignStatementModel)
+            switch (statement.TypeCode)
             {
-                EnterAssignStatement(statement as AssignStatementModel, scope);
-                return;
-            }
-
-            if (statement is ConditionalStatementModel)
-            {
-                EnterConditionalStatement(statement as ConditionalStatementModel, scope);
-                return;
-            }
-
-            if (statement is FunctionCallStatement)
-            {
-                EnterFunctionCallStatement(statement as FunctionCallStatement, scope);
-                return;
-            }
-
-            if (statement is ILoopStatementModel)
-            {
-                EnterLoopStatement(statement as ILoopStatementModel, scope);
-                return;
-            }
-
-            if (statement is UseStatementModel)
-            {
-                EnterUseStatementModel(statement as UseStatementModel, scope);
-                return;
-            }
-
-            if (statement is TryCatchStatementModel)
-            {
-                EnterTryCatchStatement(statement as TryCatchStatementModel, scope);
-                return;
-            }
-
-            if (statement is ThrowStatement)
-            {
-                EnterThrowStatement(statement as ThrowStatement, scope);
-                return;
+                case ModelTypeCode.AssignStatement:
+                    EnterAssignStatement(statement as AssignStatementModel, scope);
+                    break;
+                case ModelTypeCode.ConditionalStatement:
+                    EnterConditionalStatement(statement as ConditionalStatementModel, scope);
+                    break;
+                case ModelTypeCode.FunctionCallStatement:
+                    EnterFunctionCallStatement(statement as FunctionCallStatement, scope);
+                    break;
+                case ModelTypeCode.WhileLoopStatement:
+                    EnterWhileLoopStatement(statement as WhileLoopStatement, scope);
+                    break;
+                case ModelTypeCode.UseStatement:
+                    EnterUseStatementModel(statement as UseStatementModel, scope);
+                    break;
+                case ModelTypeCode.TryCatchStatement:
+                    EnterTryCatchStatement(statement as TryCatchStatementModel, scope);
+                    break;
+                case ModelTypeCode.ThrowStatement:
+                    EnterThrowStatement(statement as ThrowStatement, scope);
+                    break;
+                default:
+                    throw new NotImplementedException($"Statement with type code '{statement.TypeCode}' is not implemented");
             }
         }
 
-        public IOperable EnterExpression(IExpressionModel expression, Scoping scope)
+        public IOperable EnterExpression(IExpressionModel expression, Scoping scope) => expression.TypeCode switch
         {
-            if (expression is LiteralExpressionModel)
-                return EnterLiteralExpression(expression as LiteralExpressionModel, scope);
+            ModelTypeCode.LiteralExpression                 => EnterLiteralExpression(expression as LiteralExpressionModel, scope),
+            ModelTypeCode.IdentifierExpression              => EnterIdentifierExpression(expression as IdentifierExpressionModel, scope),
+            ModelTypeCode.BinaryExpression                  => EnterBinaryExpression(expression as BinaryExpressionModel, scope),
+            ModelTypeCode.UnaryExpression                   => EnterUnaryExpression(expression as UnaryExpressionModel, scope),
+            ModelTypeCode.ConditionalTernaryExpression      => EnterConditionalTernaryExpression(expression as ConditionalTernaryExpressionModel, scope),
 
-            if (expression is IdentifierExpressionModel)
-                return EnterIdentifierExpression(expression as IdentifierExpressionModel, scope);
+            // ++Methods++
+            ModelTypeCode.ActionStatement                   => EnterActionStatement(expression as ActionStatementModel, scope),
+            ModelTypeCode.FunctionStatement                 => EnterFunctionStatement(expression as FunctionStatementModel, scope),
+            ModelTypeCode.ProviderStatement                 => EnterProviderStatement(expression as ProviderStatementModel, scope),
+            ModelTypeCode.ConsumerStatement                 => EnterConsumerStatement(expression as ConsumerStatementModel, scope),
+            ModelTypeCode.LambdaFunctionStatement           => EnterLambdaStatement(expression as LambdaFunctionStatementModel, scope),
+            ModelTypeCode.NativeConsumerStatement           => EnterNativeConsumerStatement(expression as NativeConsumerStatementModel, scope),
+            ModelTypeCode.NativeProviderStatement           => EnterNativeProviderStatement(expression as NativeProviderStatementModel, scope),
+            ModelTypeCode.NativeFunctionStatement           => EnterNativeFunctionStatement(expression as NativeFunctionStatementModel, scope),
+            ModelTypeCode.NativeActionStatement             => EnterNativeActionStatement(expression as NativeActionStatementModel, scope),
+            // --Methods--
 
-            if (expression is BinaryExpressionModel)
-                return EnterBinaryExpression(expression as BinaryExpressionModel, scope);
-
-            if (expression is UnaryExpressionModel)
-                return EnterUnaryExpression(expression as UnaryExpressionModel, scope);
-
-            if (expression is ITernaryExpressionModel)
-                return EnterTernaryExpression(expression as ITernaryExpressionModel, scope);
-
-            if (expression is IFunctionModel)
-                return EnterMethodStatement(expression as IFunctionModel, scope);
-
-            if (expression is FunctionCallStatement)
-                return EnterFunctionCallStatement(expression as FunctionCallStatement, scope);
-
-            if (expression is ObjectInitializationExpressionModel)
-                return EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope);
-
-            throw new NotImplementedException($"Missing implementation for '{expression.StartToken.Text}'");
-        }
+            ModelTypeCode.FunctionCallStatement             => EnterFunctionCallStatement(expression as FunctionCallStatement, scope),
+            ModelTypeCode.ObjectInitializationExpression    => EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope),
+            _                                               => throw new NotImplementedException($"Expression with type code '{expression.TypeCode}' is not implemented"),
+        };
 
         public IOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
 
         public IOperable EnterUnaryExpression(UnaryExpressionModel expression, Scoping scope) => AttemptToEvaluateUnaryExpression(expression, scope);
-
-        public IOperable EnterTernaryExpression(ITernaryExpressionModel expression, Scoping scope)
-        {
-            if (expression is ConditionalTernaryExpressionModel conditionalExpression)
-            {
-                return EnterConditionalTernaryExpression(conditionalExpression, scope);
-            }
-
-            throw new NotImplementedException();
-        }
 
         public IOperable EnterConditionalTernaryExpression(ConditionalTernaryExpressionModel expression, Scoping scope)
         {
@@ -515,38 +486,6 @@ namespace Interpreter
             }
 
             throw new NotImplementedException("The provided method atom type is not implemented");
-        }
-
-        public IOperable<Method> EnterMethodStatement(IFunctionModel method, Scoping scope)
-        {
-            if (method is ActionStatementModel)
-                return EnterActionStatement(method as ActionStatementModel, scope);
-
-            if (method is FunctionStatementModel)
-                return EnterFunctionStatement(method as FunctionStatementModel, scope);
-
-            if (method is ProviderStatementModel)
-                return EnterProviderStatement(method as ProviderStatementModel, scope);
-
-            if (method is ConsumerStatementModel)
-                return EnterConsumerStatement(method as ConsumerStatementModel, scope);
-
-            if (method is LambdaFunctionStatementModel)
-                return EnterLambdaStatement(method as LambdaFunctionStatementModel, scope);
-
-            if (method is NativeConsumerStatementModel)
-                return EnterNativeConsumerStatement(method as NativeConsumerStatementModel, scope);
-
-            if (method is NativeProviderStatementModel)
-                return EnterNativeProviderStatement(method as NativeProviderStatementModel, scope);
-
-            if (method is NativeFunctionStatementModel)
-                return EnterNativeFunctionStatement(method as NativeFunctionStatementModel, scope);
-
-            if (method is NativeActionStatementModel)
-                return EnterNativeActionStatement(method as NativeActionStatementModel, scope);
-
-            throw new NotImplementedException();
         }
 
         public IOperable<Method> EnterActionStatement(ActionStatementModel actionStatement, Scoping outerScope)
@@ -823,15 +762,6 @@ namespace Interpreter
             foreach (IStatementModel statement in block.Statements)
             {
                 EnterStatement(statement, scope);
-            }
-        }
-
-        public void EnterLoopStatement(ILoopStatementModel loop, Scoping scope)
-        {
-            if (loop is WhileLoopStatement)
-            {
-                EnterWhileLoopStatement(loop as WhileLoopStatement, scope);
-                return;
             }
         }
 

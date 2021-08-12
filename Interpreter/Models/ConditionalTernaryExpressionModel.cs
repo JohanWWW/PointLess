@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class ConditionalTernaryExpressionModel : ITernaryExpressionModel
+    public class ConditionalTernaryExpressionModel : ModelBase, ITernaryExpressionModel
     {
         public IExpressionModel ConditionExpression { get; set; }
         public IExpressionModel TrueExpression { get; set; }
         public IExpressionModel FalseExpression { get; set; }
 
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        public ConditionalTernaryExpressionModel() : base(Enums.ModelTypeCode.ConditionalTernaryExpression)
+        {
+        }
     }
 }

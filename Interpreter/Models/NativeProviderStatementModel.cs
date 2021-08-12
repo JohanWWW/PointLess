@@ -9,10 +9,12 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class NativeProviderStatementModel : IFunctionModel
+    public class NativeProviderStatementModel : ModelBase, IFunctionModel
     {
         public Func<IBinaryOperable> NativeImplementation { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public NativeProviderStatementModel() : base(Enums.ModelTypeCode.NativeProviderStatement)
+        {
+        }
     }
 }

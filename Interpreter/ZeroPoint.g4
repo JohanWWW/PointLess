@@ -161,25 +161,20 @@ object_initialization_expression
 	;
 
 expression
-	: '(' expression ')'
-	| <assoc=right> op=(EXCLAMATION_MARK|MINUS) expression
-	| expression op=(MULT|DIV|MOD) expression
-	| expression op=(PLUS|MINUS) expression
-	| expression op=(SHIFT_LEFT|SHIFT_RIGHT) expression
+	: '(' expression ')'																		
+	| <assoc=right> op=(EXCLAMATION_MARK|MINUS) expression										
+	| expression op=(MULT|DIV|MOD) expression													
+	| expression op=(PLUS|MINUS) expression														
+	| expression op=(SHIFT_LEFT|SHIFT_RIGHT) expression											
 	| expression op=(LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL) expression
-	| expression op=(EQUAL|NOTEQUAL|STRICT_EQUAL|STRICT_NOTEQUAL) expression
-	| expression op=BITWISE_AND expression
-	| expression op=BITWISE_XOR expression
-	| expression op=BITWISE_OR expression
-	| expression op=AND expression
-	| expression op=OR expression
-	| <assoc=right> expression QUESTION_MARK expression COLON expression	// Conditional ternary expression
-	| literal
-	| IDENTIFIER
-	| identifier_access
-	| function_call_statement
-	| object_initialization_expression
-	| anonymous_function_definition_statement
+	| expression op=(EQUAL|NOTEQUAL|STRICT_EQUAL|STRICT_NOTEQUAL) expression					
+	| expression op=BITWISE_AND expression														
+	| expression op=BITWISE_XOR expression														
+	| expression op=BITWISE_OR expression														
+	| expression op=AND expression																
+	| expression op=OR expression																
+	| <assoc=right> expression QUESTION_MARK expression COLON expression
+	| atom
 	;
 	
 identifier_access
@@ -187,28 +182,38 @@ identifier_access
 	| ACCESSOR IDENTIFIER (ACCESSOR IDENTIFIER)*
 	;
 	
+
+atom
+	: literal								
+	| IDENTIFIER							
+	| identifier_access						
+	| function_call_statement				
+	| object_initialization_expression		
+	| anonymous_function_definition_statement
+	;
+
 literal
-	: STRING
-	| BOOLEAN
-	| NUMBER
-	| NULL
+	: lit=STRING
+	| lit=BOOLEAN
+	| lit=NUMBER
+	| lit=NULL
 	;
 	
 assignment_operator
-	: ASSIGN
-	| ADD_ASSIGN
-	| SUB_ASSIGN
-	| MULT_ASSIGN
-	| DIV_ASSIGN
-	| MOD_ASSIGN
-	| AND_ASSIGN
-	| XOR_ASSIGN
-	| OR_ASSIGN
-	| BITWISE_AND_ASSIGN
-	| BITWISE_XOR_ASSIGN
-	| BITWISE_OR_ASSIGN
-	| SHIFT_LEFT_ASSIGN
-	| SHIFT_RIGHT_ASSIGN
+	: op=ASSIGN
+	| op=ADD_ASSIGN
+	| op=SUB_ASSIGN
+	| op=MULT_ASSIGN
+	| op=DIV_ASSIGN
+	| op=MOD_ASSIGN
+	| op=AND_ASSIGN
+	| op=XOR_ASSIGN
+	| op=OR_ASSIGN
+	| op=BITWISE_AND_ASSIGN
+	| op=BITWISE_XOR_ASSIGN
+	| op=BITWISE_OR_ASSIGN
+	| op=SHIFT_LEFT_ASSIGN
+	| op=SHIFT_RIGHT_ASSIGN
 	;
 	
 parameter_list

@@ -12,11 +12,13 @@ namespace Interpreter.Models
     /// <summary>
     /// Represents a unary expression
     /// </summary>
-    public class UnaryExpressionModel : IExpressionModel
+    public class UnaryExpressionModel : ModelBase, IExpressionModel
     {
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
         public UnaryOperator Operator { get; set; }
         public IExpressionModel Expression { get; set; }
+
+        public UnaryExpressionModel() : base(ModelTypeCode.UnaryExpression)
+        {
+        }
     }
 }

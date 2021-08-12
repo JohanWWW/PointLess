@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class WhileLoopStatement : ILoopStatementModel
+    public class WhileLoopStatement : ModelBase, ILoopStatementModel
     {
         public IExpressionModel Condition { get; set; }
         public BlockModel Body { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public WhileLoopStatement() : base(Enums.ModelTypeCode.WhileLoopStatement)
+        {
+        }
     }
 }

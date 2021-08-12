@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class NativeActionStatementModel : IFunctionModel
+    public class NativeActionStatementModel : ModelBase, IFunctionModel
     {
         public Action NativeImplementation { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public NativeActionStatementModel() : base(Enums.ModelTypeCode.NativeActionStatement)
+        {
+        }
     }
 }

@@ -8,11 +8,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Models
 {
-    public class ObjectInitializationExpressionModel : IExpressionModel
+    public class ObjectInitializationExpressionModel : ModelBase, IExpressionModel
     {
         public ICollection<ObjectPropertyExpressionModel> Properties { get; set; }
-        public IToken StartToken { get; set; }
-        public IToken StopToken { get; set; }
+        
+        public ObjectInitializationExpressionModel() : base(Enums.ModelTypeCode.ObjectInitializationExpression)
+        {
+        }
     }
 
     public class ObjectPropertyExpressionModel

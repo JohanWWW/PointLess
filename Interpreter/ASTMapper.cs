@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using Singulink.Numerics;
 using Interpreter.Runtime;
 using Interpreter.Helpers;
+using Antlr4.Runtime.Tree;
 
 namespace Interpreter
 {
@@ -25,6 +26,63 @@ namespace Interpreter
         private static readonly Regex _ubytePattern         = new(@"^b'([01]?[0-9][0-9]?|2[0-4][0-9]|25[0-5])$");
         private static readonly Regex _ubyteBinaryPattern   = new(@"^b'0b[01]{1,8}$");
         private static readonly Regex _ubyteHexPattern      = new(@"^b'0x([0-9]|[a-fA-F]){1,2}$");
+
+        private static readonly IReadOnlyDictionary<int, BinaryOperator> BINARY_OPERATORS = new Dictionary<int, BinaryOperator>
+        {
+            [ZeroPointParser.PLUS]                  = BinaryOperator.Add,
+            [ZeroPointParser.MINUS]                 = BinaryOperator.Sub,
+            [ZeroPointParser.MULT]                  = BinaryOperator.Mult,
+            [ZeroPointParser.DIV]                   = BinaryOperator.Div,
+            [ZeroPointParser.MOD]                   = BinaryOperator.Mod,
+            [ZeroPointParser.EQUAL]                 = BinaryOperator.Equal,
+            [ZeroPointParser.STRICT_EQUAL]          = BinaryOperator.StrictEqual,
+            [ZeroPointParser.NOTEQUAL]              = BinaryOperator.NotEqual,
+            [ZeroPointParser.STRICT_NOTEQUAL]       = BinaryOperator.StrictNotEqual,
+            [ZeroPointParser.LESS_THAN]             = BinaryOperator.LessThan,
+            [ZeroPointParser.LESS_THAN_OR_EQUAL]    = BinaryOperator.LessThanOrEqual,
+            [ZeroPointParser.GREATER_THAN]          = BinaryOperator.GreaterThan,
+            [ZeroPointParser.GREATER_THAN_OR_EQUAL] = BinaryOperator.GreaterThanOrEqual,
+            [ZeroPointParser.AND]                   = BinaryOperator.LogicalAnd,
+            [ZeroPointParser.XOR]                   = BinaryOperator.LogicalXOr,
+            [ZeroPointParser.OR]                    = BinaryOperator.LogicalOr,
+            [ZeroPointParser.BITWISE_AND]           = BinaryOperator.BitwiseAnd,
+            [ZeroPointParser.BITWISE_XOR]           = BinaryOperator.BitwiseXOr,
+            [ZeroPointParser.BITWISE_OR]            = BinaryOperator.BitwiseOr,
+            [ZeroPointParser.SHIFT_LEFT]            = BinaryOperator.ShiftLeft,
+            [ZeroPointParser.SHIFT_RIGHT]           = BinaryOperator.ShiftRight
+        };
+
+        private static readonly IReadOnlyDictionary<int, AssignmentOperator> ASSIGNMENT_OPERATORS = new Dictionary<int, AssignmentOperator>
+        {
+            [ZeroPointParser.ASSIGN]                = AssignmentOperator.Assign,
+            [ZeroPointParser.ADD_ASSIGN]            = AssignmentOperator.AddAssign,
+            [ZeroPointParser.SUB_ASSIGN]            = AssignmentOperator.SubAssign,
+            [ZeroPointParser.MULT_ASSIGN]           = AssignmentOperator.MultAssign,
+            [ZeroPointParser.DIV_ASSIGN]            = AssignmentOperator.DivAssign,
+            [ZeroPointParser.MOD_ASSIGN]            = AssignmentOperator.ModAssign,
+            [ZeroPointParser.AND_ASSIGN]            = AssignmentOperator.AndAssign,
+            [ZeroPointParser.XOR_ASSIGN]            = AssignmentOperator.XorAssign,
+            [ZeroPointParser.OR_ASSIGN]             = AssignmentOperator.OrAssign,
+            [ZeroPointParser.BITWISE_AND_ASSIGN]    = AssignmentOperator.BitwiseAndAssign,
+            [ZeroPointParser.BITWISE_XOR_ASSIGN]    = AssignmentOperator.BitwiseXorAssign,
+            [ZeroPointParser.BITWISE_OR_ASSIGN]     = AssignmentOperator.BitwiseOrAssign,
+            [ZeroPointParser.SHIFT_LEFT_ASSIGN]     = AssignmentOperator.ShiftLeftAssign,
+            [ZeroPointParser.SHIFT_RIGHT_ASSIGN]    = AssignmentOperator.ShiftRightAssign
+        };
+
+        private static readonly IReadOnlyDictionary<int, UnaryOperator> UNARY_OPERATORS = new Dictionary<int, UnaryOperator>
+        {
+            [ZeroPointParser.EXCLAMATION_MARK]      = UnaryOperator.Not,
+            [ZeroPointParser.MINUS]                 = UnaryOperator.Minus
+        };
+
+        private static readonly IReadOnlyDictionary<int, LiteralType> LITERALS = new Dictionary<int, LiteralType>
+        {
+            [ZeroPointParser.STRING]                = LiteralType.String,
+            [ZeroPointParser.BOOLEAN]               = LiteralType.Boolean,
+            [ZeroPointParser.NUMBER]                = LiteralType.Number,
+            [ZeroPointParser.NULL]                  = LiteralType.Null
+        };
 
         public ASTMapper(params NativeImplementationBase[] implementations)
         {
@@ -86,48 +144,31 @@ namespace Interpreter
 
         private IStatementModel EnterStatement(ZeroPointParser.StatementContext context)
         {
-            if (context.assign_statement() != null)
-            {
-                return EnterAssignStatement(context.assign_statement());
-            }
+            int ruleIndex = context.GetRuleContext<ParserRuleContext>(0).RuleIndex;
 
-            if (context.conditional_statement() != null)
+            return ruleIndex switch
             {
-                return EnterConditionalStatement(context.conditional_statement());
-            }
-
-            if (context.function_call_statement() != null)
-            {
-                return EnterFunctionCall(context.function_call_statement());
-            }
-
-            if (context.loop_statement() != null)
-            {
-                return EnterLoopStatement(context.loop_statement());
-            }
-
-            if (context.try_catch_statement() != null)
-            {
-                return EnterTryCatchStatement(context.try_catch_statement());
-            }
-
-            if (context.throw_statement() != null)
-            {
-                return EnterThrowStatement(context.throw_statement());
-            }
-
-            throw new NotImplementedException();
+                ZeroPointParser.RULE_assign_statement           => EnterAssignStatement(context.assign_statement()),
+                ZeroPointParser.RULE_conditional_statement      => EnterConditionalStatement(context.conditional_statement()),
+                ZeroPointParser.RULE_function_call_statement    => EnterFunctionCall(context.function_call_statement()),
+                ZeroPointParser.RULE_loop_statement             => EnterLoopStatement(context.loop_statement()),
+                ZeroPointParser.RULE_try_catch_statement        => EnterTryCatchStatement(context.try_catch_statement()),
+                ZeroPointParser.RULE_throw_statement            => EnterThrowStatement(context.throw_statement()),
+                _                                               => throw new NotImplementedException($"Rule {ruleIndex} does not exist")
+            };
         }
 
         private IStatementModel EnterAssignStatement(ZeroPointParser.Assign_statementContext context)
         {
+            int opType = context.assignment_operator().op.Type;
+
             // Standalone identifier
             if (context.IDENTIFIER() != null)
             {
                 return new AssignStatementModel
                 {
                     Identifier = new[] { context.IDENTIFIER().GetText() },
-                    OperatorCombination = EnterAssignmentOperator(context.assignment_operator()),
+                    OperatorCombination = ASSIGNMENT_OPERATORS[opType],
                     Assignee = EnterExpression(context.expression()),
                     StartToken = context.Start,
                     StopToken = context.Stop
@@ -138,60 +179,11 @@ namespace Interpreter
             return new AssignStatementModel
             {
                 Identifier = context.identifier_access().IDENTIFIER().Select(i => i.GetText()).ToArray(),
-                OperatorCombination = EnterAssignmentOperator(context.assignment_operator()),
+                OperatorCombination = ASSIGNMENT_OPERATORS[opType],
                 Assignee = EnterExpression(context.expression()),
                 StartToken = context.Start,
                 StopToken = context.Stop
             };
-        }
-
-        private AssignmentOperator EnterAssignmentOperator(ZeroPointParser.Assignment_operatorContext context)
-        {
-            // Declare/Update referenced value (=)
-            if (context.ASSIGN() != null)
-                return AssignmentOperator.Assign;
-
-            // Variants of the assignment operator should only work on existing variables (<operator>=)
-            if (context.ADD_ASSIGN() != null)
-                return AssignmentOperator.AddAssign;
-
-            if (context.SUB_ASSIGN() != null)
-                return AssignmentOperator.SubAssign;
-
-            if (context.MULT_ASSIGN() != null)
-                return AssignmentOperator.MultAssign;
-
-            if (context.DIV_ASSIGN() != null)
-                return AssignmentOperator.DivAssign;
-
-            if (context.MOD_ASSIGN() != null)
-                return AssignmentOperator.ModAssign;
-
-            if (context.AND_ASSIGN() != null)
-                return AssignmentOperator.AndAssign;
-
-            if (context.XOR_ASSIGN() != null)
-                return AssignmentOperator.XorAssign;
-
-            if (context.OR_ASSIGN() != null)
-                return AssignmentOperator.OrAssign;
-
-            if (context.BITWISE_AND_ASSIGN() != null)
-                return AssignmentOperator.BitwiseAndAssign;
-
-            if (context.BITWISE_XOR_ASSIGN() != null)
-                return AssignmentOperator.BitwiseXorAssign;
-
-            if (context.BITWISE_OR_ASSIGN() != null)
-                return AssignmentOperator.BitwiseOrAssign;
-
-            if (context.SHIFT_LEFT_ASSIGN() != null)
-                return AssignmentOperator.ShiftLeftAssign;
-
-            if (context.SHIFT_RIGHT_ASSIGN() != null)
-                return AssignmentOperator.ShiftRightAssign;
-
-            throw new NotImplementedException("That operator is not supported.");
         }
 
         private ConditionalStatementModel EnterConditionalStatement(ZeroPointParser.Conditional_statementContext context)
@@ -300,47 +292,57 @@ namespace Interpreter
 
         private IExpressionModel EnterExpression(ZeroPointParser.ExpressionContext context)
         {
-            if (context.anonymous_function_definition_statement() != null)
+            if (context.atom().IsPresent())
             {
-                return EnterFunctionDefinitionExpression(context.anonymous_function_definition_statement());
-            }
-
-            if (context.function_call_statement() != null)
-            {
-                return EnterFunctionCall(context.function_call_statement());
-            }
-
-            if (context.IDENTIFIER() != null)
-            {
-                return new IdentifierExpressionModel
-                {
-                    Identifier = new[] { context.IDENTIFIER().GetText() },
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-
-            if (context.identifier_access() != null)
-            {
-                return new IdentifierExpressionModel
-                {
-                    Identifier = context.identifier_access().IDENTIFIER().Select(i => i.GetText()).ToArray(),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-
-            if (context.literal() != null)
-            {
-                return EnterLiteral(context.literal());
-            }
-
-            if (context.object_initialization_expression() != null)
-            {
-                return EnterObjectInitialization(context.object_initialization_expression());
+                return EnterAtom(context.atom());
             }
 
             return EnterExpressionExpression(context);
+        }
+
+        private IExpressionModel EnterAtom(ZeroPointParser.AtomContext ctx)
+        {
+            if (ctx.literal().IsPresent())
+            {
+                return EnterLiteral(ctx.literal());
+            }
+
+            if (ctx.IDENTIFIER().IsPresent())
+            {
+                return new IdentifierExpressionModel
+                {
+                    Identifier = new[] { ctx.IDENTIFIER().GetText() },
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop,
+                };
+            }
+
+            if (ctx.identifier_access().IsPresent())
+            {
+                return new IdentifierExpressionModel
+                {
+                    Identifier = EnterIdentifierAccess(ctx.identifier_access()),
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop
+                };
+            }
+
+            if (ctx.function_call_statement().IsPresent())
+            {
+                return EnterFunctionCall(ctx.function_call_statement());
+            }
+
+            if (ctx.object_initialization_expression().IsPresent())
+            {
+                return EnterObjectInitialization(ctx.object_initialization_expression());
+            }
+
+            if (ctx.anonymous_function_definition_statement().IsPresent())
+            {
+                return EnterFunctionDefinitionExpression(ctx.anonymous_function_definition_statement());
+            }
+
+            throw new NotImplementedException("Invalid atom type");
         }
 
         /// <summary>
@@ -399,273 +401,36 @@ namespace Interpreter
             }
 
             // Binary expression
-            var left = context.expression()[0];
-            var right = context.expression()[1];
 
-            if (context.AND() != null)
+            var left = context.expression(0);
+            var right = context.expression(1);
+            int opType = context.op.Type;
+
+            return new BinaryExpressionModel
             {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.LogicalAnd,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.BITWISE_AND() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.BitwiseAnd,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.BITWISE_OR() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.BitwiseOr,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.BITWISE_XOR() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.BitwiseXOr,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.DIV() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.Div,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.EQUAL() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.Equal,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.GREATER_THAN() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.GreaterThan,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.GREATER_THAN_OR_EQUAL() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.GreaterThanOrEqual,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.LESS_THAN() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.LessThan,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.LESS_THAN_OR_EQUAL() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.LessThanOrEqual,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.MINUS() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.Sub,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.MOD() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.Mod,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.MULT() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.Mult,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.NOTEQUAL() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.NotEqual,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.OR() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.LogicalOr,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.PLUS() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.Add,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.SHIFT_LEFT() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.ShiftLeft,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.SHIFT_RIGHT() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.ShiftRight,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.STRICT_EQUAL() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.StrictEqual,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else if (context.STRICT_NOTEQUAL() != null)
-            {
-                return new BinaryExpressionModel
-                {
-                    Operator = BinaryOperator.StrictNotEqual,
-                    LeftExpression = EnterExpression(left),
-                    RightExpression = EnterExpression(right),
-                    StartToken = context.Start,
-                    StopToken = context.Stop
-                };
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
+                Operator = BINARY_OPERATORS[opType],
+                LeftExpression = EnterExpression(left),
+                RightExpression = EnterExpression(right),
+                StartToken = context.Start,
+                StopToken = context.Stop
+            };
         }
 
         private IExpressionModel EnterFunctionDefinitionExpression(ZeroPointParser.Anonymous_function_definition_statementContext context)
         {
-            if (context.function_statement() != null)
-            {
-                return EnterFunctionStatement(context.function_statement());
-            }
+            int ruleIndex = context.GetRuleContext<ParserRuleContext>(0).RuleIndex;
 
-            if (context.action_statement() != null)
+            return ruleIndex switch
             {
-                return EnterActionStatement(context.action_statement());
-            }
-
-            if (context.consumer_statement() != null)
-            {
-                return EnterConsumerStatement(context.consumer_statement());
-            }
-
-            if (context.provider_statement() != null)
-            {
-                return EnterProviderStatement(context.provider_statement());
-            }
-
-            if (context.lambda_function_statement() != null)
-            {
-                return EnterLambdaFunctionStatement(context.lambda_function_statement());
-            }
-
-            if (context.native_function_statement() != null)
-            {
-                return EnterNativeFunctionStatement(context.native_function_statement());
-            }
-
-            if (context.native_provider_statement() != null)
-            {
-                return EnterNativeProviderStatement(context.native_provider_statement());
-            }
-
-            throw new NotImplementedException();
+                ZeroPointParser.RULE_function_statement         => EnterFunctionStatement(context.function_statement()),
+                ZeroPointParser.RULE_action_statement           => EnterActionStatement(context.action_statement()),
+                ZeroPointParser.RULE_consumer_statement         => EnterConsumerStatement(context.consumer_statement()),
+                ZeroPointParser.RULE_provider_statement         => EnterProviderStatement(context.provider_statement()),
+                ZeroPointParser.RULE_lambda_function_statement  => EnterLambdaFunctionStatement(context.lambda_function_statement()),
+                ZeroPointParser.RULE_native_function_statement  => EnterNativeFunctionStatement(context.native_function_statement()),
+                ZeroPointParser.RULE_native_provider_statement  => EnterNativeProviderStatement(context.native_provider_statement()),
+                _                                               => throw new NotImplementedException($"Rule {ruleIndex} does not exist")
+            };
         }
 
         private string[] EnterIdentifierAccess(ZeroPointParser.Identifier_accessContext context) =>
@@ -673,134 +438,123 @@ namespace Interpreter
 
         private LiteralExpressionModel EnterLiteral(ZeroPointParser.LiteralContext context)
         {
-            var literalExpression = new LiteralExpressionModel
+            int literalType = context.lit.Type;
+
+            return LITERALS[literalType] switch
             {
-                StartToken = context.Start,
-                StopToken = context.Stop
+                LiteralType.String => ParseString(context),
+                LiteralType.Boolean => new LiteralExpressionModel(BoolOperable.FromBool(bool.Parse(context.BOOLEAN().GetText())), context.Start, context.Stop),
+                LiteralType.Number => ParseNumber(context),
+                LiteralType.Null => new LiteralExpressionModel(NullOperable.Null),
+                _ => throw new NotImplementedException($"Literal of type {literalType} is not implemented")
             };
+        }
 
-            if (context.BOOLEAN() != null)
+        private LiteralExpressionModel ParseNumber(ZeroPointParser.LiteralContext value)
+        {
+            string numberText = value.NUMBER().GetText();
+
+            // Order might be important!
+            if (_decimalNumberPattern.IsMatch(numberText))
             {
-                literalExpression.Value = BoolOperable.FromBool(bool.Parse(context.BOOLEAN().GetText()));
-                return literalExpression;
+                var tmp = new BigDecimalOperable(BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture));
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
             }
-
-            if (context.NULL() != null)
+            else if (_integerNumberPattern.IsMatch(numberText))
             {
-                literalExpression.Value = NullOperable.Null;
-                return literalExpression;
+                var tmp = new BigIntOperable(BigInteger.Parse(numberText));
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
             }
-
-            if (context.NUMBER() != null)
+            else if (_integerBinaryPattern.IsMatch(numberText))
             {
-                string numberText = context.NUMBER().GetText();
-
-                // Order might be important!
-                if (_decimalNumberPattern.IsMatch(numberText))
-                {
-                    literalExpression.Value = new BigDecimalOperable(BigDecimal.Parse(numberText, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture));
-                    return literalExpression;
-                }
-                else if (_integerNumberPattern.IsMatch(numberText))
-                {
-                    literalExpression.Value = new BigIntOperable(BigInteger.Parse(numberText));
-                    return literalExpression;
-                }
-                else if (_integerBinaryPattern.IsMatch(numberText))
-                {
-                    Range delimitBinary = new(2, numberText.Length);
-                    string binary = numberText[delimitBinary];
-                    literalExpression.Value = (BigIntOperable)NumberParserHelper.BinaryToBigInt(binary);
-                    return literalExpression;
-                }
-                else if (_integerHexPattern.IsMatch(numberText))
-                {
-                    Range delimitHex = new(2, numberText.Length);
-                    string hex = numberText[delimitHex];
-                    literalExpression.Value = (BigIntOperable)NumberParserHelper.HexToBigInt(hex);
-                    return literalExpression;
-                }
-                else if (_ubytePattern.IsMatch(numberText))
-                {
-                    literalExpression.Value = new ByteOperable(byte.Parse(numberText.Split('\'')[1]));
-                    return literalExpression;
-                }
-                else if (_ubyteBinaryPattern.IsMatch(numberText))
-                {
-                    Range delimitBinary = new(numberText.IndexOf('\'') + 3, numberText.Length);
-                    string binary = numberText[delimitBinary];
-                    literalExpression.Value = (ByteOperable)NumberParserHelper.BinaryToUByte(binary);
-                    return literalExpression;
-                }
-                else if (_ubyteHexPattern.IsMatch(numberText))
-                {
-                    Range delimitHex = new(numberText.IndexOf('\'') + 3, numberText.Length);
-                    string hex = numberText[delimitHex];
-                    literalExpression.Value = (ByteOperable)NumberParserHelper.HexToUByte(hex);
-                    return literalExpression;
-                }
-                else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
+                Range delimitBinary = new(2, numberText.Length);
+                string binary = numberText[delimitBinary];
+                var tmp = (BigIntOperable)NumberParserHelper.BinaryToBigInt(binary);
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
             }
-
-            if (context.STRING() != null)
+            else if (_integerHexPattern.IsMatch(numberText))
             {
-                string s = context.STRING().GetText();
+                Range delimitHex = new(2, numberText.Length);
+                string hex = numberText[delimitHex];
+                var tmp = (BigIntOperable)NumberParserHelper.HexToBigInt(hex);
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
+            }
+            else if (_ubytePattern.IsMatch(numberText))
+            {
+                var tmp = new ByteOperable(byte.Parse(numberText.Split('\'')[1]));
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
+            }
+            else if (_ubyteBinaryPattern.IsMatch(numberText))
+            {
+                Range delimitBinary = new(numberText.IndexOf('\'') + 3, numberText.Length);
+                string binary = numberText[delimitBinary];
+                var tmp = (ByteOperable)NumberParserHelper.BinaryToUByte(binary);
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
+            }
+            else if (_ubyteHexPattern.IsMatch(numberText))
+            {
+                Range delimitHex = new(numberText.IndexOf('\'') + 3, numberText.Length);
+                string hex = numberText[delimitHex];
+                var tmp = (ByteOperable)NumberParserHelper.HexToUByte(hex);
+                return new LiteralExpressionModel(tmp, value.Start, value.Stop);
+            }
+            else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
+        }
 
-                if (s.Length is 2)
-                {
-                    s = string.Empty;
-                    literalExpression.Value = new StringOperable(s);
-                    return literalExpression;
-                }
-                else
-                    s = s[1..^1];
+        private LiteralExpressionModel ParseString(ZeroPointParser.LiteralContext value)
+        {
+            string s = value.STRING().GetText();
 
-                s = s.Replace("\\\"", "\"");
+            if (s.Length is 2)
+            {
+                s = string.Empty;
+                return new LiteralExpressionModel(new StringOperable(s), value.Start, value.Stop);
+            }
+            else
+                s = s[1..^1];
 
-                // Ugly but working solution
-                // TODO: Beautify
-                s = Regex.Replace(s,
-                    @"\\n", m =>
-                    {
-                        int index = m.Index;
-                        if (index is 0)
-                        {
-                            return "\n";
-                        }
-                        else if (s[index - 1] is '\\')
-                        {
-                            return m.Value; // do nothing
-                        }
-                        else
-                        {
-                            return "\n";
-                        }
-                    });
+            s = s.Replace("\\\"", "\"");
 
-                s = Regex.Replace(s, @"\\t", m =>
+            // Ugly but working solution
+            // TODO: Beautify
+            s = Regex.Replace(s,
+                @"\\n", m =>
                 {
                     int index = m.Index;
                     if (index is 0)
                     {
-                        return "\t";
+                        return "\n";
                     }
                     else if (s[index - 1] is '\\')
                     {
                         return m.Value; // do nothing
-                    }
+                        }
                     else
                     {
-                        return "\t";
+                        return "\n";
                     }
                 });
 
-                s = s.Replace("\\\\", "\\");
+            s = Regex.Replace(s, @"\\t", m =>
+            {
+                int index = m.Index;
+                if (index is 0)
+                {
+                    return "\t";
+                }
+                else if (s[index - 1] is '\\')
+                {
+                    return m.Value; // do nothing
+                }
+                else
+                {
+                    return "\t";
+                }
+            });
 
-                literalExpression.Value = new StringOperable(s);
-                return literalExpression;
-            }
+            s = s.Replace("\\\\", "\\");
 
-            throw new NotImplementedException();
+            return new LiteralExpressionModel((StringOperable)s, value.Start, value.Stop);
         }
 
         private FunctionStatementModel EnterFunctionStatement(ZeroPointParser.Function_statementContext context)
@@ -956,7 +710,7 @@ namespace Interpreter
 
         private string[] EnterParameterList(ZeroPointParser.Parameter_listContext context)
         {
-            Antlr4.Runtime.Tree.ITerminalNode[] parameters = context.IDENTIFIER();
+            ITerminalNode[] parameters = context.IDENTIFIER();
 
             if (parameters is null || parameters.Length is 0)
                 throw new InvalidOperationException("No parameters were present");
@@ -1007,5 +761,12 @@ namespace Interpreter
                 StopToken = context.Stop
             };
         }
+    }
+
+    internal static class ContextExtensions
+    {
+        public static bool IsPresent(this ParserRuleContext context) => context != null;
+        public static bool IsPresent(this ITerminalNode node) => node != null;
+        public static bool IsPresent(this IToken token) => token != null;
     }
 }
