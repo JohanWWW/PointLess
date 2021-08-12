@@ -143,6 +143,21 @@ anonymous_function_definition_statement
 		: NATIVE '(' ')' LAMBDA inject_statement
 		;
 
+	operator_function_statement
+		: binary_operator_function_statement
+		| unary_operator_function_statement
+		;
+
+	binary_operator_function_statement
+		: OPERATOR IDENTIFIER '[' 
+			op=(MULT|DIV|MOD|PLUS|MINUS|SHIFT_LEFT|SHIFT_RIGHT|LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL|EQUAL|NOTEQUAL|BITWISE_AND|BITWISE_XOR|BITWISE_OR|AND|OR) 
+		  ']' IDENTIFIER LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
+		;
+
+	unary_operator_function_statement
+		: OPERATOR UNARY '[' op=(EXCLAMATION_MARK|MINUS) ']' IDENTIFIER LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
+		;
+
 
 inject_statement
 	: '<' '@' STRING '>'
@@ -154,8 +169,8 @@ function_call_statement
 	
 object_initialization_expression
 	: '{'
-			assign_statement
-			(',' assign_statement)*
+			(assign_statement | operator_function_statement)
+			(',' (assign_statement | operator_function_statement))*
 	  '}'
 	| '{' '}'
 	;
@@ -332,6 +347,8 @@ NULL
 USE: 'use';
 IN: 'in';
 NATIVE: 'native';
+OPERATOR: 'operator';
+UNARY: 'unary';
 
 WHILE: 'while';
 

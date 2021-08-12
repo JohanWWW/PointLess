@@ -32,7 +32,7 @@ __COMPLEX_MATH_IMPL__ = () => {
             val = d * Math.sqrt(1.0 + r * r);
         }
 
-        // abs of complex number always becomes real number but we still want to work with complex representation
+        // abs of complex number always becomes real number but we still want to work with objects
         return Complex(val, 0.0);
     };
 
@@ -96,20 +96,21 @@ __COMPLEX_MATH_IMPL__ = () => {
             toString = toString,
 
             // Operator overloads
-            __operator_add__ = (left, right) => // Returns either complex or string
-                __is_string(right) ? 
-                    (left.toString() + right) : 
+            operator left[+]right =>
+                // if right operand is string, return string
+                __is_string(right) ?
+                    (left.toString() + right) :
                     Complex(left.getReal() + right.getReal(), left.getImaginary() + right.getImaginary()),
 
-            __operator_sub__ = (left, right) => Complex(left.getReal() - right.getReal(), left.getImaginary() - right.getImaginary()),
+            operator left[-]right => Complex(left.getReal() - right.getReal(), left.getImaginary() - right.getImaginary()),
 
-            __operator_mult__ = (left, right) => {
+            operator left[*]right => {
                 reProd = (left.getReal() * right.getReal()) - (left.getImaginary() * right.getImaginary());
                 imProd = (left.getImaginary() * right.getReal()) + (left.getReal() * right.getImaginary());
                 return Complex(reProd, imProd);
             },
 
-            __operator_div__ = (left, right) => {
+            operator left[/]right => {
                 a = left.getReal();
                 b = left.getImaginary();
                 c = right.getReal();
@@ -128,18 +129,24 @@ __COMPLEX_MATH_IMPL__ = () => {
                 return complex;
             },
 
-            __operator_equals__ = (left, right) => {
+            operator left[==]right => {
                 return right == null ? 
                     false : 
                     (left.getReal() == right.getReal()) && 
                         (left.getImaginary() == right.getImaginary());
             },
 
-            __operator_not_equals__ = (left, right) => {
+            operator left[!=]right => {
                 return right == null ?
                     true :
                     (left.getReal() != right.getReal()) ||
                         (left.getImaginary() != right.getImaginary());
+            },
+
+            operator unary [-]x => {
+                re = x.getReal();
+                im = x.getImaginary();
+                return Complex(-re, -im);
             }
         };
 
@@ -147,7 +154,7 @@ __COMPLEX_MATH_IMPL__ = () => {
     };
 
     Complex += real => {
-        if (__is_number(real) != true) {
+        if (!__is_number(real)) {
             throw "Real part of complex must be a number";
         }
 

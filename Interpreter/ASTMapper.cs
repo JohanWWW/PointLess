@@ -84,6 +84,36 @@ namespace Interpreter
             [ZeroPointParser.NULL]                  = LiteralType.Null
         };
 
+        // TODO: ObjectOperable has this too. Move to some static resource instead.
+        private static readonly IReadOnlyDictionary<BinaryOperator, string> BINARY_OPERATOR_FUNC_NAMES = new Dictionary<BinaryOperator, string>
+        {
+            [BinaryOperator.Add]                    = "__operator_add__",
+            [BinaryOperator.Sub]                    = "__operator_sub__",
+            [BinaryOperator.Mult]                   = "__operator_mult__",
+            [BinaryOperator.Div]                    = "__operator_div__",
+            [BinaryOperator.Mod]                    = "__operator_mod__",
+            [BinaryOperator.Equal]                  = "__operator_equals__",
+            [BinaryOperator.NotEqual]               = "__operator_not_equals__",
+            [BinaryOperator.LessThan]               = "__operator_less_than__",
+            [BinaryOperator.LessThanOrEqual]        = "__operator_less_than_or_equals__",
+            [BinaryOperator.GreaterThan]            = "__operator_greater_than__",
+            [BinaryOperator.GreaterThanOrEqual]     = "__operator_greater_than_or_equals__",
+            [BinaryOperator.LogicalAnd]             = "__operator_logical_and__",
+            [BinaryOperator.LogicalOr]              = "__operator_logical_or__",
+            [BinaryOperator.LogicalXOr]             = "__operator_logical_xor__",
+            [BinaryOperator.BitwiseAnd]             = "__operator_bitwise_and__",
+            [BinaryOperator.BitwiseOr]              = "__operator_bitwise_or__",
+            [BinaryOperator.BitwiseXOr]             = "__operator_bitwise_xor__",
+            [BinaryOperator.ShiftLeft]              = "__operator_shift_left__",
+            [BinaryOperator.ShiftRight]             = "__operator_shift_right__"
+        };
+
+        private static readonly IReadOnlyDictionary<UnaryOperator, string> UNARY_OPERATOR_FUNC_NAMES = new Dictionary<UnaryOperator, string>
+        {
+            [UnaryOperator.Not]                     = "__operator_unary_not__",
+            [UnaryOperator.Minus]                   = "__operator_unary_minus__"
+        };
+
         public ASTMapper(params NativeImplementationBase[] implementations)
         {
             _nativeImplementations = implementations.SelectMany(i => i.GetImplementationMap()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -734,7 +764,8 @@ namespace Interpreter
 
         private ObjectInitializationExpressionModel EnterObjectInitialization(ZeroPointParser.Object_initialization_expressionContext context)
         {
-            if (context.assign_statement() is null)
+
+            if (context.assign_statement() is null && context.operator_function_statement() is null)
             {
                 return new ObjectInitializationExpressionModel
                 {
@@ -745,13 +776,53 @@ namespace Interpreter
 
             var properties = new List<ObjectPropertyExpressionModel>();
 
-            foreach (var s in context.assign_statement())
+            foreach (var s in context.GetRuleContexts<ParserRuleContext>())
             {
-                properties.Add(new ObjectPropertyExpressionModel
+                switch (s.RuleIndex)
                 {
-                    Identifier = s.IDENTIFIER().GetText(),
-                    Value = EnterExpression(s.expression())
-                });
+                    case ZeroPointParser.RULE_assign_statement:
+                        {
+                            var assignStatement = s as ZeroPointParser.Assign_statementContext;
+                            properties.Add(new ObjectPropertyExpressionModel
+                            {
+                                Identifier = assignStatement.IDENTIFIER().GetText(),
+                                Value = EnterExpression(assignStatement.expression())
+                            });
+                            break;
+                        }
+                    case ZeroPointParser.RULE_operator_function_statement:
+                        {
+                            var operatorStatement = s as ZeroPointParser.Operator_function_statementContext;
+
+                            if (operatorStatement.binary_operator_function_statement().IsPresent())
+                            {
+                                var binaryOperatorStatement = operatorStatement.binary_operator_function_statement();
+                                int opCode = binaryOperatorStatement.op.Type;
+                                BinaryOperator op = BINARY_OPERATORS[opCode];
+                                properties.Add(new ObjectPropertyExpressionModel
+                                {
+                                    Identifier = BINARY_OPERATOR_FUNC_NAMES[op],
+                                    Value = BinaryOperatorSyntaxSugarToFunctionStatement(binaryOperatorStatement)
+                                });
+                            }
+                            else if (operatorStatement.unary_operator_function_statement().IsPresent())
+                            {
+                                var unaryOperatorStatement = operatorStatement.unary_operator_function_statement();
+                                int opCode = unaryOperatorStatement.op.Type;
+                                UnaryOperator op = UNARY_OPERATORS[opCode];
+                                properties.Add(new ObjectPropertyExpressionModel
+                                {
+                                    Identifier = UNARY_OPERATOR_FUNC_NAMES[op],
+                                    Value = UnaryOperatorSyntaxSugarToFunctionStatement(unaryOperatorStatement)
+                                });
+                            }
+                            else
+                                throw new NotImplementedException();
+                            break;
+                        }
+                    default:
+                        throw new NotImplementedException($"Rule {s.RuleIndex} does not exist");
+                }
             }
 
             return new ObjectInitializationExpressionModel
@@ -759,6 +830,30 @@ namespace Interpreter
                 Properties = properties,
                 StartToken = context.Start,
                 StopToken = context.Stop
+            };
+        }
+
+        private FunctionStatementModel BinaryOperatorSyntaxSugarToFunctionStatement(ZeroPointParser.Binary_operator_function_statementContext ctx)
+        {
+            return new FunctionStatementModel
+            {
+                Parameters = new[] { ctx.IDENTIFIER(0).GetText(), ctx.IDENTIFIER(1).GetText() },
+                Body = ctx.block().IsPresent() ? EnterBlock(ctx.block()) : null,
+                Return = ctx.expression().IsPresent() ? EnterExpression(ctx.expression()) : null,
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
+        }
+
+        private FunctionStatementModel UnaryOperatorSyntaxSugarToFunctionStatement(ZeroPointParser.Unary_operator_function_statementContext ctx)
+        {
+            return new FunctionStatementModel
+            {
+                Parameters = new[] { ctx.IDENTIFIER().GetText() },
+                Body = ctx.block().IsPresent() ? EnterBlock(ctx.block()) : null,
+                Return = ctx.expression().IsPresent() ? EnterExpression(ctx.expression()) : null,
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
             };
         }
     }

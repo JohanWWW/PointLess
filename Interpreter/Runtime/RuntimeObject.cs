@@ -26,7 +26,15 @@ namespace Interpreter.Runtime
         public bool TryGetMember(string name, out IOperable value) =>
             _bindings.TryGetValue(name, out value);
 
-        public bool TrySetMember(string name, IOperable value) =>
-            _bindings.TryAdd(name, value);
+        public bool TrySetMember(string name, IOperable value)
+        {
+            if (_bindings.ContainsKey(name))
+            {
+                this[name] = value;
+                return true;
+            }
+
+            return _bindings.TryAdd(name, value);
+        }
     }
 }

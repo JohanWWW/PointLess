@@ -140,7 +140,7 @@ LinkedList = () => {
 			previous = current;
 			current = current.next;
 			found = false;
-			while (current != null && found == false) {
+			while (current != null && !found) {
 				if (current.value == e) {
 					found = true;
 				}
@@ -194,7 +194,7 @@ LinkedList = () => {
 			else {
 				i = 0;
 				n = __root;
-				while (i < __length && found == false) {
+				while (i < __length && !found) {
 					if (n.value == e) {
 						found = true;
 					}
@@ -252,11 +252,6 @@ LinkedList = () => {
 
 	_toString += () => _toString(this);
 
-	__operator_add__ = (left, right) => {
-		left.add(right);
-		return this;
-	};
-
 	this = {
 		add = _add,
 		insertAt = _insertAt,
@@ -271,7 +266,10 @@ LinkedList = () => {
 		// Overloads
 		toString = _toString,
 
-		__operator_add__ = __operator_add__
+		operator ref[+]element => {
+			ref.add(element);
+			return this;
+		}
 	};
 
 	return this;
@@ -313,11 +311,6 @@ Stack = () => {
 		return __list;
 	};
 
-	__operator_add__ = (left, right) => {
-		left.push(right);
-		return this;
-	};
-
 	this = { 
 		push = _push,
 		pop = _pop,
@@ -329,7 +322,10 @@ Stack = () => {
 		// Overrides
 		toString = () => __list.toString(this),
 
-		__operator_add__ = __operator_add__
+		operator ref[+]element => {
+			ref.push(element);
+			return this;
+		}
 	};
 
 	return this;
@@ -371,11 +367,6 @@ Queue = () => {
 		return __list;
 	};
 
-	__operator_add__ = (left, right) => {
-		left.enqueue(right);
-		return this;
-	};
-
 	this = {
 		enqueue = _enqueue,
 		dequeue = _dequeue,
@@ -387,7 +378,10 @@ Queue = () => {
 		// Overrides
 		toString = () => __list.toString(this),
 
-		__operator_add__ = __operator_add__
+		operator ref[+]element => {
+			ref.enqueue(element);
+			return this;
+		}
 	};
 
 	return this;
