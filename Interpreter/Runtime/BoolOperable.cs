@@ -34,7 +34,7 @@ namespace Interpreter.Runtime
             return operand.OperableType switch
             {
                 ObjectType.Boolean => FromBool(Value == (operand as IOperable<bool>).Value),
-                ObjectType.NullReference => False,
+                ObjectType.Void => False,
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
         }
@@ -81,7 +81,7 @@ namespace Interpreter.Runtime
             return operand.OperableType switch
             {
                 ObjectType.Boolean => FromBool(Value != (operand as IOperable<bool>).Value),
-                ObjectType.NullReference => True,
+                ObjectType.Void => True,
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
         }

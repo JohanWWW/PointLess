@@ -304,7 +304,7 @@ namespace Interpreter
             RuntimeObject obj = value.OperableType switch
             {
                 ObjectType.Object => (value as IOperable<RuntimeObject>).Value,
-                ObjectType.NullReference => throw new InterpreterRuntimeException(expression, _filePath, $"${expression.Identifier[0]} is defined but is null reference"),
+                ObjectType.Void => throw new InterpreterRuntimeException(expression, _filePath, $"Cannot access member on void type ${expression.Identifier[0]}"),
                 _ => throw new InterpreterRuntimeException(expression, _filePath, $"Attempted to access member of atom type '{value.OperableType}'")
             };
 
@@ -315,7 +315,7 @@ namespace Interpreter
                     obj = memberValue.OperableType switch
                     {
                         ObjectType.Object => (RuntimeObject)memberValue.Value,
-                        ObjectType.NullReference => throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[i - 1]}->{expression.Identifier[i]} is defined but is null reference"),
+                        ObjectType.Void => throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[i - 1]}->{expression.Identifier[i]} is defined but is null reference"),
                         _ => throw new InterpreterRuntimeException(expression, _filePath, $"Attempted to access member of atom type '{value.OperableType}'")
                     };
                 }
@@ -361,7 +361,7 @@ namespace Interpreter
                 RuntimeObject obj = value.OperableType switch
                 {
                     ObjectType.Object => (value as IOperable<RuntimeObject>).Value,
-                    ObjectType.NullReference => throw new InterpreterRuntimeException(functionCall, _filePath, $"${functionCall.IdentifierPath[0]} is defined but is null reference"),
+                    ObjectType.Void => throw new InterpreterRuntimeException(functionCall, _filePath, $"Cannot access members on void type ${functionCall.IdentifierPath[0]}"),
                     _ => throw new InterpreterRuntimeException(functionCall, _filePath, $"Attempted to access member on atom type '{value.OperableType}'")
                 };
 
@@ -372,7 +372,7 @@ namespace Interpreter
                         obj = memberValue.OperableType switch
                         {
                             ObjectType.Object => (RuntimeObject)memberValue.Value,
-                            ObjectType.NullReference => throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${functionCall.IdentifierPath[i - 1]}->{functionCall.IdentifierPath[i]} is defined but is null reference"),
+                            ObjectType.Void => throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${functionCall.IdentifierPath[i - 1]}->{functionCall.IdentifierPath[i]} is defined but is null reference"),
                             _ => throw new InterpreterRuntimeException(functionCall, _filePath, $"Attempted to access member on atom type '{value.OperableType}'")
                         };
                     }
@@ -883,7 +883,7 @@ namespace Interpreter
             RuntimeObject obj = value.OperableType switch
             {
                 ObjectType.Object => (RuntimeObject)value.Value,
-                ObjectType.NullReference => throw new InterpreterRuntimeException(expression, _filePath, $"${assignStatement.Identifier[0]} is defined but is null reference"),
+                ObjectType.Void => throw new InterpreterRuntimeException(expression, _filePath, $"Cannot access member on void type ${assignStatement.Identifier[0]}"),
                 _ => throw new InterpreterRuntimeException(expression, _filePath, $"Attempted to access member of atom type '{value.OperableType}'")
             };
 
@@ -895,7 +895,7 @@ namespace Interpreter
                     obj = prop.OperableType switch
                     {
                         ObjectType.Object => (RuntimeObject)prop.Value,
-                        ObjectType.NullReference => throw new InterpreterRuntimeException(assignStatement, _filePath, $"Member ${assignStatement.Identifier[i - 1]}->{assignStatement.Identifier[i]} is defined but is null reference"),
+                        ObjectType.Void => throw new InterpreterRuntimeException(assignStatement, _filePath, $"Member ${assignStatement.Identifier[i - 1]}->{assignStatement.Identifier[i]} is defined but is null reference"),
                         _ => throw new InterpreterRuntimeException(expression, _filePath, $"Attempted to access member of atom type '{prop.OperableType}'")
                     };
                 }

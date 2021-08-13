@@ -212,6 +212,7 @@ literal
 	| lit=BOOLEAN
 	| lit=NUMBER
 	| lit=NULL
+	| lit=VOID
 	;
 	
 assignment_operator
@@ -342,6 +343,10 @@ STRING
 	
 NULL
 	: 'null'
+	;
+
+VOID
+	: 'void'
 	;
 	
 USE: 'use';

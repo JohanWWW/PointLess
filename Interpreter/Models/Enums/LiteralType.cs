@@ -11,6 +11,7 @@ namespace Interpreter.Models.Enums
         String,
         Boolean,
         Number,
-        Null
+        Null,
+        Void
     }
 }

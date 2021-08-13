@@ -32,12 +32,6 @@ namespace NativeLibraries
 
                 IOperable obj = args[0];
 
-                if (obj.OperableType == ObjectType.NullReference)
-                {
-                    Console.Write("null");
-                    return null;
-                }
-
                 Console.Write(FormatPrintText(obj));
 
                 return null;
@@ -53,12 +47,6 @@ namespace NativeLibraries
                     Console.WriteLine();
 
                 IOperable obj = args[0];
-                
-                if (obj.OperableType == ObjectType.NullReference)
-                {
-                    Console.WriteLine("null");
-                    return null;
-                }
 
                 Console.WriteLine(FormatPrintText(obj));
 
@@ -211,7 +199,7 @@ namespace NativeLibraries
                     ObjectType.UnsignedByte => (byte)indexNumber.Value,
                     _ => throw new InvalidCastException($"Cannot cast type {indexNumber.Value.GetType()} to int")
                 };
-                IOperable[] array = Enumerable.Repeat(NullOperable.Null, s).ToArray<IOperable>();
+                IOperable[] array = Enumerable.Repeat(VoidOperable.Void, s).ToArray<IOperable>();
                 return new ArrayOperable(array);
             }
         };
@@ -287,7 +275,7 @@ namespace NativeLibraries
                 IOperable key = args[1];
                 IOperable value = args[2];
                 dictRef[key] = value;
-                return NullOperable.Null;
+                return VoidOperable.Void;
             }
         };
 

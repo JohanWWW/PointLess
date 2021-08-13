@@ -15,7 +15,7 @@ namespace Interpreter.Runtime
         ArbitraryBitInteger,
         ArbitraryPrecisionDecimal,
         Boolean,
-        NullReference,
+        Void,
         Array,
         Dictionary,
         UnsignedByte

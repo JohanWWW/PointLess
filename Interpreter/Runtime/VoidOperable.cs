@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class NullOperable : OperableBase
+    public class VoidOperable : OperableBase
     {
-        private const string NULL_SYMBOL = "null";
+        private const string VOID_SYMBOL = "void";
 
-        public static readonly NullOperable Null = new();
+        public static readonly VoidOperable Void = new();
 
-        private NullOperable() : base(null, ObjectType.NullReference)
+        private VoidOperable() : base(null, ObjectType.Void)
         {
         }
 
@@ -21,7 +21,7 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.NullReference => BoolOperable.True,
+                ObjectType.Void => BoolOperable.True,
                 _ => BoolOperable.False
             };
         }
@@ -30,7 +30,7 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.NullReference => BoolOperable.False,
+                ObjectType.Void => BoolOperable.False,
                 _ => BoolOperable.True
             };
         }
@@ -51,6 +51,6 @@ namespace Interpreter.Runtime
             return (IBinaryOperable<bool>)NotEqual(operand);
         }
 
-        public override string ToString() => NULL_SYMBOL;
+        public override string ToString() => VOID_SYMBOL;
     }
 }

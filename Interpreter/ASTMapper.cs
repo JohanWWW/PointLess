@@ -81,7 +81,8 @@ namespace Interpreter
             [ZeroPointParser.STRING]                = LiteralType.String,
             [ZeroPointParser.BOOLEAN]               = LiteralType.Boolean,
             [ZeroPointParser.NUMBER]                = LiteralType.Number,
-            [ZeroPointParser.NULL]                  = LiteralType.Null
+            [ZeroPointParser.NULL]                  = LiteralType.Null,
+            [ZeroPointParser.VOID]                  = LiteralType.Void
         };
 
         // TODO: ObjectOperable has this too. Move to some static resource instead.
@@ -475,7 +476,7 @@ namespace Interpreter
                 LiteralType.String => ParseString(context),
                 LiteralType.Boolean => new LiteralExpressionModel(BoolOperable.FromBool(bool.Parse(context.BOOLEAN().GetText())), context.Start, context.Stop),
                 LiteralType.Number => ParseNumber(context),
-                LiteralType.Null => new LiteralExpressionModel(NullOperable.Null),
+                LiteralType.Null or LiteralType.Void => new LiteralExpressionModel(VoidOperable.Void),
                 _ => throw new NotImplementedException($"Literal of type {literalType} is not implemented")
             };
         }

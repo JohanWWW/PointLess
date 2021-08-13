@@ -121,7 +121,7 @@ namespace Interpreter.Runtime
             IOperable defaultEqual(IOperable operand) => operand.OperableType switch
             {
                 ObjectType.Object => BoolOperable.FromBool(Value == operand.Value),
-                ObjectType.NullReference => BoolOperable.False,
+                ObjectType.Void => BoolOperable.False,
                 _ => throw new MissingOperatorOverrideException($"Cannot apply operator '{BinaryOperator.Equal}' on types '{OperableType}' and '{operand.OperableType}'. Consider overriding this operator.")
             };
         }
@@ -136,7 +136,7 @@ namespace Interpreter.Runtime
             IOperable defaultNotEqual(IOperable operand) => operand.OperableType switch
             {
                 ObjectType.Object => BoolOperable.FromBool(Value != operand.Value),
-                ObjectType.NullReference => BoolOperable.True,
+                ObjectType.Void => BoolOperable.True,
                 _ => throw new MissingOperatorOverrideException($"Cannot apply operator '{BinaryOperator.NotEqual}' on types '{OperableType}' and '{operand.OperableType}'. Consider overriding this operator.")
             };
         }

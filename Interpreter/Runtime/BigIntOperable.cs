@@ -81,7 +81,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value == (operand as IOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value == (operand as IOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value == (operand as IOperable<byte>).Value),
-                ObjectType.NullReference => BoolOperable.False,
+                ObjectType.Void => BoolOperable.False,
                 _ => throw new MissingOperatorOverrideException()
             };
         }
@@ -165,7 +165,7 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value != (operand as IOperable<BigInteger>).Value),
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value != (operand as IOperable<BigDecimal>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value != (operand as IOperable<byte>).Value),
-                ObjectType.NullReference => BoolOperable.True,
+                ObjectType.Void => BoolOperable.True,
                 _ => throw new MissingOperatorOverrideException()
             };
         }
