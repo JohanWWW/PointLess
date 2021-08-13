@@ -197,18 +197,10 @@ Array = (size) => {
         return index < 0 || index > _length - 1;
     };
 
-    _get = (index) => {
-        if (_isIndexOutOfBounds(index)) {
-            throw "Array._get: Index out of bounds";
-        }
-        return __array_get(_array, index);
-    };
+    _get = (index) => this[index];
 
     _set = (index, value) => {
-        if (_isIndexOutOfBounds(index)) {
-            throw "Array._set: Index out of bounds";
-        }
-        return __array_set(_array, index, value);
+        this[index] = value;
     };
 
     _Enumerator = () => {
@@ -242,10 +234,7 @@ Array = (size) => {
         i = start;
         while (i < end) {
             e = _get(i);
-            if (e === null) {
-                sb += "null";
-            }
-            else if (e === this) {
+            if (e === this) {
                 sb += "<this array>";
             }
             else if (__is_string(e)) {
@@ -271,7 +260,21 @@ Array = (size) => {
         get = _get,
         set = _set,
         enumerator = _enumerator,
-        toString = _toString
+        toString = _toString,
+
+        indexer [index]<-value => {
+            if (_isIndexOutOfBounds(index)) {
+                throw "Array: Index out of bounds";
+            }
+            __array_set(_array, index, value);
+        },
+
+        indexer [index] => {
+            if (_isIndexOutOfBounds(index)) {
+                throw "Array: Index out of bounds";
+            }
+            return __array_get(_array, index);
+        }
     };
 
     return this;
@@ -395,16 +398,11 @@ ArrayList = (size) => {
     };
 
     _set = (index, value) => {
-        if (index < 0 || index > _length) {
-            throw "ArrayList._set: Index out of bounds";
-        }
-        else {
-            _array.set(index, value);
-        }
+        this[index] = value;
     };
 
     _get = (index) => {
-        return _array.get(index);
+        return _array[index];
     };
 
     _removeAt = (index) => {
@@ -456,10 +454,7 @@ ArrayList = (size) => {
         en = _enumerator();
         while (en.next()) {
             e = en.current();
-            if (e === null) {
-                sb += "null";
-            }
-            else if (e === this) {
+            if (e === this) {
                 sb += "<this list>";
             }
             else if (__is_string(e)) {
@@ -491,6 +486,20 @@ ArrayList = (size) => {
         toArray = _toArray,
         toString = _toString,
 
+        indexer [index] => {
+            if (index < 0 || index > _length - 1) {
+                throw "ArrayList: Index out of bounds";
+            }
+            return _array[index];
+        },
+
+        indexer [index]<-value => {
+            if (index < 0 || index > _length - 1) {
+                throw "ArrayList: Index out of bounds";
+            }
+            _array[index] = value;
+        },
+
         operator ref[+]element => {
             ref.add(element);
             return ref;
@@ -514,8 +523,7 @@ Dictionary = () => {
     };
 
     _set = (key, value) => {
-        _throwIfKeyNull(key, "Dictionary._set");
-        __dict_set(_dict, key, value);
+        this[key] = value;
     };
 
     _set += keyValuePair => {
@@ -523,8 +531,7 @@ Dictionary = () => {
     };
 
     _get = (key) => {
-        _throwIfKeyNull(key, "Dictionary._get");
-        return __dict_get(_dict, key);
+        return this[key];
     };
 
     _contains = (key) => {
@@ -612,10 +619,7 @@ Dictionary = () => {
                 sb += kvp.key;
             }
             sb += "=";
-            if (kvp.value === null) {
-                sb += "null";
-            }
-            else if (kvp.value === this) {
+            if (kvp.value === this) {
                 sb += "<this dict>";
             }
             else if (__is_string(kvp.value)) {
@@ -647,6 +651,16 @@ Dictionary = () => {
         enumerator = _enumerator,
 
         toString = _toString,
+
+        indexer [key] => {
+            _throwIfKeyNull(key, "Dictionary");
+            return __dict_get(_dict, key);
+        },
+
+        indexer [key]<-value => {
+            _throwIfKeyNull(key, "Dictionary");
+            __dict_set(_dict, key, value);
+        },
 
         operator left[+]right => {
             left.set(right);
@@ -857,7 +871,9 @@ String = (s) => {
         substring = _substring,
         enumerator = _enumerator,
         toString = _toString,
-        toArray = _toArray
+        toArray = _toArray,
+
+        indexer [index] => _get(index)
     };
 };
 

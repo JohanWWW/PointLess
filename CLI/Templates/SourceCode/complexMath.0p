@@ -19,7 +19,7 @@ __COMPLEX_MATH_IMPL__ = () => {
         c = Math.abs(x.getReal());
         d = Math.abs(x.getImaginary());
 
-        val = null;
+        val = void;
         if (c > d) {
             r = d / c;
             val = c * Math.sqrt(1.0 + r * r);
@@ -51,10 +51,10 @@ __COMPLEX_MATH_IMPL__ = () => {
     //
     Complex = (real, imaginary) => {
 
-        if (__is_number(real) != true) {
+        if (!__is_number(real)) {
             throw "Real part of complex must be a number";
         }
-        if (__is_number(imaginary) != true) {
+        if (!__is_number(imaginary)) {
             throw "Imaginary part of complex must be a number";
         }
 
@@ -70,7 +70,7 @@ __COMPLEX_MATH_IMPL__ = () => {
                     sb += real + "";
                     if (hasIm) {
                         sb += imaginary < 0 ? MINUS_SYM : PLUS_SYM;
-                        sb += (imaginary == 1 || imaginary == Math.negate(1)) ? 
+                        sb += (imaginary == 1 || imaginary == -1) ? 
                             IM_SUFFIX : 
                             Math.abs(imaginary) + IM_SUFFIX;
                     }
@@ -80,7 +80,7 @@ __COMPLEX_MATH_IMPL__ = () => {
                     if (imaginary < 0) {
                         sb += MINUS_SYM;
                     }
-                    sb += (imaginary == 1 || imaginary == Math.negate(1)) ? 
+                    sb += (imaginary == 1 || imaginary == -1) ? 
                         IM_SUFFIX : 
                         Math.abs(imaginary) + IM_SUFFIX;
                 }
@@ -116,28 +116,28 @@ __COMPLEX_MATH_IMPL__ = () => {
                 c = right.getReal();
                 d = right.getImaginary();
 
-                complex = null;
+                complex = void;
                 if (Math.abs(d) < Math.abs(c)) {
                     dcQuot = d / c;
                     complex = Complex((a + b * dcQuot) / (c + d * dcQuot), (b - a * dcQuot) / (c + d * dcQuot));
                 }
                 else {
                     cdQuot = c / d;
-                    complex = Complex((b + a * cdQuot) / (d + c * cdQuot), (Math.negate(a) + b * cdQuot) / (d + c * cdQuot));
+                    complex = Complex((b + a * cdQuot) / (d + c * cdQuot), (-a + b * cdQuot) / (d + c * cdQuot));
                 }
 
                 return complex;
             },
 
             operator left[==]right => {
-                return right == null ? 
+                return right == void ? 
                     false : 
                     (left.getReal() == right.getReal()) && 
                         (left.getImaginary() == right.getImaginary());
             },
 
             operator left[!=]right => {
-                return right == null ?
+                return right == void ?
                     true :
                     (left.getReal() != right.getReal()) ||
                         (left.getImaginary() != right.getImaginary());

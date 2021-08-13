@@ -85,6 +85,12 @@ namespace Interpreter
             [ZeroPointParser.VOID]                  = LiteralType.Void
         };
 
+        private static readonly IReadOnlyDictionary<int, string> INDEXER_FUNC_NAMES = new Dictionary<int, string>
+        {
+            [ZeroPointParser.RULE_indexer_get_statement] = "__indexer_get__",
+            [ZeroPointParser.RULE_indexer_set_statement] = "__indexer_set__"
+        };
+
         // TODO: ObjectOperable has this too. Move to some static resource instead.
         private static readonly IReadOnlyDictionary<BinaryOperator, string> BINARY_OPERATOR_FUNC_NAMES = new Dictionary<BinaryOperator, string>
         {
@@ -181,10 +187,11 @@ namespace Interpreter
             {
                 ZeroPointParser.RULE_assign_statement           => EnterAssignStatement(context.assign_statement()),
                 ZeroPointParser.RULE_conditional_statement      => EnterConditionalStatement(context.conditional_statement()),
-                ZeroPointParser.RULE_function_call_statement    => EnterFunctionCall(context.function_call_statement()),
+                ZeroPointParser.RULE_method_call_statement      => EnterMethodCallStatement(context.method_call_statement()),
                 ZeroPointParser.RULE_loop_statement             => EnterLoopStatement(context.loop_statement()),
                 ZeroPointParser.RULE_try_catch_statement        => EnterTryCatchStatement(context.try_catch_statement()),
                 ZeroPointParser.RULE_throw_statement            => EnterThrowStatement(context.throw_statement()),
+                ZeroPointParser.RULE_indexer_set_call_statement => EnterIndexerSetCallStatement(context.indexer_set_call_statement()),
                 _                                               => throw new NotImplementedException($"Rule {ruleIndex} does not exist")
             };
         }
@@ -358,9 +365,9 @@ namespace Interpreter
                 };
             }
 
-            if (ctx.function_call_statement().IsPresent())
+            if (ctx.method_call_statement().IsPresent())
             {
-                return EnterFunctionCall(ctx.function_call_statement());
+                return EnterMethodCallStatement(ctx.method_call_statement());
             }
 
             if (ctx.object_initialization_expression().IsPresent())
@@ -717,25 +724,94 @@ namespace Interpreter
             return new BlockModel { Statements = statements };
         }
 
-        private FunctionCallStatement EnterFunctionCall(ZeroPointParser.Function_call_statementContext context)
+        private MethodCallStatementModel EnterMethodCallStatement(ZeroPointParser.Method_call_statementContext context)
         {
-            if (context.IDENTIFIER() != null)
+            int ruleIndex = context.GetRuleContext<ParserRuleContext>(0).RuleIndex;
+            switch (ruleIndex)
             {
-                return new FunctionCallStatement
+                case ZeroPointParser.RULE_paren_call:
+                    {
+                        var parenthesisCall = context.paren_call();
+
+                        if (parenthesisCall.IDENTIFIER().IsPresent())
+                        {
+                            return new MethodCallStatementModel
+                            {
+                                IdentifierPath = new[] { parenthesisCall.IDENTIFIER().GetText() },
+                                Arguments = parenthesisCall.argument_list() != null ? EnterArgumentList(parenthesisCall.argument_list()) : null,
+                                StartToken = context.Start,
+                                StopToken = context.Stop
+                            };
+                        }
+
+                        return new MethodCallStatementModel
+                        {
+                            IdentifierPath = EnterIdentifierAccess(parenthesisCall.identifier_access()),
+                            Arguments = parenthesisCall.argument_list() != null ? EnterArgumentList(parenthesisCall.argument_list()) : null,
+                            StartToken = context.Start,
+                            StopToken = context.Stop
+                        };
+                    }
+                case ZeroPointParser.RULE_indexer_get_call_statement: // Syntactic sugar
+                    {
+                        var indexerCall = context.indexer_get_call_statement();
+
+                        if (indexerCall.IDENTIFIER().IsPresent())
+                        {
+                            return new MethodCallStatementModel
+                            {
+                                IdentifierPath = new[] { indexerCall.IDENTIFIER().GetText(), INDEXER_FUNC_NAMES[ZeroPointParser.RULE_indexer_get_statement] },
+                                Arguments = EnterArgumentList(indexerCall.argument_list()),
+                                StartToken = indexerCall.Start,
+                                StopToken = indexerCall.Stop
+                            };
+                        }
+
+                        var path = new List<string>();
+                        path.AddRange(EnterIdentifierAccess(indexerCall.identifier_access()));
+                        path.Add(INDEXER_FUNC_NAMES[ZeroPointParser.RULE_indexer_get_statement]);
+
+                        return new MethodCallStatementModel
+                        {
+                            IdentifierPath = path.ToArray(),
+                            Arguments = EnterArgumentList(indexerCall.argument_list()),
+                            StartToken = indexerCall.Start,
+                            StopToken = indexerCall.Stop
+                        };
+                    }
+                default:
+                    throw new NotImplementedException($"Rule {ruleIndex} does not exist");
+            }
+        }
+
+        // Syntactic Sugar
+        private MethodCallStatementModel EnterIndexerSetCallStatement(ZeroPointParser.Indexer_set_call_statementContext ctx)
+        {
+            var args = new List<IExpressionModel>();
+            args.AddRange(EnterArgumentList(ctx.argument_list()));
+            args.Add(EnterExpression(ctx.expression()));
+
+            if (ctx.IDENTIFIER().IsPresent())
+            {
+                return new MethodCallStatementModel
                 {
-                    IdentifierPath = new[] { context.IDENTIFIER().GetText() },
-                    Arguments = context.argument_list() != null ? EnterArgumentList(context.argument_list()) : null,
-                    StartToken = context.Start,
-                    StopToken = context.Stop
+                    IdentifierPath = new[] { ctx.IDENTIFIER().GetText(), INDEXER_FUNC_NAMES[ZeroPointParser.RULE_indexer_set_statement] },
+                    Arguments = args.ToArray(),
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop
                 };
             }
 
-            return new FunctionCallStatement
+            var path = new List<string>();
+            path.AddRange(EnterIdentifierAccess(ctx.identifier_access()));
+            path.Add(INDEXER_FUNC_NAMES[ZeroPointParser.RULE_indexer_set_statement]);
+
+            return new MethodCallStatementModel
             {
-                IdentifierPath = EnterIdentifierAccess(context.identifier_access()),
-                Arguments = context.argument_list() != null ? EnterArgumentList(context.argument_list()) : null,
-                StartToken = context.Start,
-                StopToken = context.Stop
+                IdentifierPath = path.ToArray(),
+                Arguments = args.ToArray(),
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
             };
         }
 
@@ -821,6 +897,32 @@ namespace Interpreter
                                 throw new NotImplementedException();
                             break;
                         }
+                    case ZeroPointParser.RULE_indexer_method_statement:
+                        {
+                            var indexerMethodStatement = s as ZeroPointParser.Indexer_method_statementContext;
+
+                            if (indexerMethodStatement.indexer_get_statement().IsPresent())
+                            {
+                                var indexerGetStatement = indexerMethodStatement.indexer_get_statement();
+                                properties.Add(new ObjectPropertyExpressionModel
+                                {
+                                    Identifier = INDEXER_FUNC_NAMES[indexerGetStatement.RuleIndex],
+                                    Value = IndexerGetSyntaxSugarToFunctionStatement(indexerGetStatement)
+                                });
+                            }
+                            else if (indexerMethodStatement.indexer_set_statement().IsPresent())
+                            {
+                                var indexerSetStatement = indexerMethodStatement.indexer_set_statement();
+                                properties.Add(new ObjectPropertyExpressionModel
+                                {
+                                    Identifier = INDEXER_FUNC_NAMES[indexerSetStatement.RuleIndex],
+                                    Value = IndexerSetSyntaxSugarToConsumerStatement(indexerSetStatement)
+                                });
+                            }
+                            else
+                                throw new NotImplementedException();
+                            break;
+                        }
                     default:
                         throw new NotImplementedException($"Rule {s.RuleIndex} does not exist");
                 }
@@ -853,6 +955,36 @@ namespace Interpreter
                 Parameters = new[] { ctx.IDENTIFIER().GetText() },
                 Body = ctx.block().IsPresent() ? EnterBlock(ctx.block()) : null,
                 Return = ctx.expression().IsPresent() ? EnterExpression(ctx.expression()) : null,
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
+        }
+
+        private ConsumerStatementModel IndexerSetSyntaxSugarToConsumerStatement(ZeroPointParser.Indexer_set_statementContext ctx)
+        {
+            var parameters = new List<string>();
+            parameters.AddRange(EnterParameterList(ctx.parameter_list()));
+            parameters.Add(ctx.IDENTIFIER().GetText());
+            return new ConsumerStatementModel
+            {
+                IsIndexerConsumer = true,
+                Parameters = parameters.ToArray(),
+                Body = ctx.block().IsPresent() ? EnterBlock(ctx.block()) : null,
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
+        }
+
+        private FunctionStatementModel IndexerGetSyntaxSugarToFunctionStatement(ZeroPointParser.Indexer_get_statementContext ctx)
+        {
+            var parameters = new List<string>();
+            parameters.AddRange(EnterParameterList(ctx.parameter_list()));
+            return new FunctionStatementModel
+            {
+                IsIndexerFunction = true,
+                Parameters = parameters.ToArray(),
+                Body = ctx.block().IsPresent() ? EnterBlock(ctx.block()) : null,
+                Return = EnterExpression(ctx.expression()),
                 StartToken = ctx.Start,
                 StopToken = ctx.Stop
             };

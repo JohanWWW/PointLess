@@ -58,17 +58,6 @@ Hello World!
 Hello World!
 ```
 
-### Ternary Conditional Operator (?:)
-ZP supports this ternary conditional expressions which are basically if else statements with return value.
-```
-factorial = x => 
-    x >= 0 
-        ? x == 0 || x == 1
-            ? 1
-            : x * factorial(x - 1)
-        : (0 - 1);
-```
-
 ### Encapsulation
 Although classes are non-existent and more of a pattern in ZP it is still possible to simulate classes with functions which also allows for encapsulation. In the example below `firstName` and `lastName` become private and readonly values.
 ```
@@ -99,7 +88,7 @@ sayHello += () => sayHello("World");
 ```
 
 ### Operator Function Overriding
-Not only can you perform arithmetic operations between two numbers or strings. You can even perform operations between two objects or rather an object with a value of any type you wish, and you decide what should be returned from that operation. This is possible because operators in ZP are overridable functions that take two arguments and return a value. These operator functions are automatically called by the interpreter during runtime whenever corresponding operator is used. An example is ZP framework's complexMath library which makes use of operator overriding:
+Not only can you perform arithmetic operations between two numbers or strings. You can even perform operations between two objects or rather an object with a value of any type you wish, and you decide what should be returned from that operation. This is possible because operators in ZP are overridable functions that take two arguments and return a value. These operator functions are automatically called by the interpreter during runtime whenever corresponding operator is used. An example is ZP framework's complexMath library which makes use of operator overriding. The value returned by `complex` is an object:
 
 ```
 use std;
@@ -121,8 +110,9 @@ main = (args) => {
     println(a + " - " + b + " = " + difference);
     println(a + " * " + b + " = " + product);
     println(a + " / " + b + " = " + quotient);
+    println();
     println(product + " * conj" + product + " = " + (product * ComplexMath.conjugate(product)));
-    println("í^2 == -1 = " + ((complex(0.0, 1.0) * complex(0.0, 1.0)) == ComplexMath.negate(complex(1.0, 0.0))));
+    println("í^2 == -1 = " + ((complex(0.0, 1.0) * complex(0.0, 1.0)) == -complex(1.0, 0.0)));
 };
 ```
 
@@ -132,6 +122,7 @@ Output:
 (í) - (5+10í) = (-5-9í)
 (í) * (5+10í) = (-10+5í)
 (í) / (5+10í) = (0.08+0.04í)
+
 (-10+5í) * conj(-10+5í) = (125)
 í^2 == -1 = true
 ```
@@ -176,12 +167,14 @@ ZP's interpreter catches exceptions and can also tell you where these occurred a
 Unhandled runtime exception
 ---------------------------
         product = 2 * enumerator.next();
-$enumerator is defined but is null reference
+Cannot access members on void type $enumerator
         at C:\Users\me\project\source\program.0p:148:15
 ```
 
 ## CLI Installation
-.NET 5 SDK is recommended. Not tested on earlier .NET releases.
+
+### Prerequisties
+[.NET 5 SDK](https://dotnet.microsoft.com/download) is required in order to install and run this project. Even though it is not tested, it might work on earlier .NET releases.
 
 - Clone this repository and place it anywhere on your system.
 
@@ -215,3 +208,6 @@ To run the program, execute `zero run`.
 By default, the program's entry point is the function named *main*. You can change this at any time by modifying the project file.
 A program can consist of code that is split into multiple `.0p` files. If a new file is added to the project it needs to be manually included in the project file. The filename (extension omitted) also needs to be listed somewhere in the compile order list. The file that is listed first in the compile order is compiled first. The file that contains the program's entry point should always be the last to be compiled. The compile order needs to be ordered properly in order to avoid referencing problems. Reference code from another file with the `use <lib_name>;` keyword. The `use` statement should be placed at the top the referencer file.
 
+
+## Documentation
+There is no official documentation for ZP at the moment, other than the documentation written in ZP framework's source code.

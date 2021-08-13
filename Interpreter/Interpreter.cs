@@ -123,7 +123,17 @@ namespace Interpreter
         {
             if (value.OperableType == ObjectType.Method)
             {
-                MethodData md = new((value as IOperable<Method>).Value);
+                Method m = (value as IOperable<Method>).Value;
+
+                if (m.IsIndexerMethod && obj.ContainsMember(identifier)) // This prevents indexer methods from being overwritten
+                {
+                    MethodData indexer = (obj[identifier] as IOperable<MethodData>).Value;
+                    indexer.AddOverload(m); // TODO: Catch MethodOverloadException and provide details for InterpreterRuntimeException
+                    return true;
+                }
+
+                MethodData md = new(m);
+                
                 return obj.TrySetMember(identifier, (MethodDataOperable)md);
             }
 
@@ -214,8 +224,8 @@ namespace Interpreter
                 case ModelTypeCode.ConditionalStatement:
                     EnterConditionalStatement(statement as ConditionalStatementModel, scope);
                     break;
-                case ModelTypeCode.FunctionCallStatement:
-                    EnterFunctionCallStatement(statement as FunctionCallStatement, scope);
+                case ModelTypeCode.MethodCallStatement:
+                    EnterFunctionCallStatement(statement as MethodCallStatementModel, scope);
                     break;
                 case ModelTypeCode.WhileLoopStatement:
                     EnterWhileLoopStatement(statement as WhileLoopStatement, scope);
@@ -254,7 +264,7 @@ namespace Interpreter
             ModelTypeCode.NativeActionStatement             => EnterNativeActionStatement(expression as NativeActionStatementModel, scope),
             // --Methods--
 
-            ModelTypeCode.FunctionCallStatement             => EnterFunctionCallStatement(expression as FunctionCallStatement, scope),
+            ModelTypeCode.MethodCallStatement             => EnterFunctionCallStatement(expression as MethodCallStatementModel, scope),
             ModelTypeCode.ObjectInitializationExpression    => EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope),
             _                                               => throw new NotImplementedException($"Expression with type code '{expression.TypeCode}' is not implemented"),
         };
@@ -344,7 +354,7 @@ namespace Interpreter
             return (ObjectOperable)runtimeObject;
         }
 
-        public IOperable EnterFunctionCallStatement(FunctionCallStatement functionCall, Scoping scope)
+        public IOperable EnterFunctionCallStatement(MethodCallStatementModel functionCall, Scoping scope)
         {
             IOperable method = null;
 
@@ -538,7 +548,8 @@ namespace Interpreter
 
                     // Evaluate return expression
                     return EnterExpression(functionStatement.Return, blockScope);
-                })
+                }),
+                isIndexerMethod: true
             );
 
             return new MethodOperable(function);
@@ -594,7 +605,8 @@ namespace Interpreter
 
                     // Evaluate function body
                     EnterBlock(consumerStatement.Body, localScope);
-                })
+                }),
+                isIndexerMethod: true
             );
 
             return new MethodOperable(consumer);
@@ -827,6 +839,9 @@ namespace Interpreter
             IExpressionModel expression = assignStatement.Assignee;
             AssignmentOperator operatorCombination = assignStatement.OperatorCombination;
             IOperable rightOperand = EnterExpression(expression, scope);
+
+            if (rightOperand is null)
+                throw new InterpreterRuntimeException(assignStatement, _filePath, "Assignee has no return value");
 
             // Standalone identifier
             if (assignStatement.Identifier.Length is 1)

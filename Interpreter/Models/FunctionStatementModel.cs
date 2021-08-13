@@ -14,6 +14,8 @@ namespace Interpreter.Models
         public BlockModel Body { get; set; }
         public IExpressionModel Return { get; set; }
 
+        public bool IsIndexerFunction { get; set; } = false;
+
         public FunctionStatementModel() : base(Enums.ModelTypeCode.FunctionStatement)
         {
         }

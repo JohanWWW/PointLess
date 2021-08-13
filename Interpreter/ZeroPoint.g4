@@ -13,9 +13,10 @@ statement
 	: assign_statement SEMICOLON
 	| conditional_statement
 	| loop_statement
-	| function_call_statement SEMICOLON
+	| method_call_statement SEMICOLON
 	| try_catch_statement
 	| throw_statement SEMICOLON
+	| indexer_set_call_statement SEMICOLON
 	;
 	
 use_statement
@@ -143,34 +144,68 @@ anonymous_function_definition_statement
 		: NATIVE '(' ')' LAMBDA inject_statement
 		;
 
+
+	// ++Special Methods++
 	operator_function_statement
 		: binary_operator_function_statement
 		| unary_operator_function_statement
 		;
 
-	binary_operator_function_statement
-		: OPERATOR IDENTIFIER '[' 
-			op=(MULT|DIV|MOD|PLUS|MINUS|SHIFT_LEFT|SHIFT_RIGHT|LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL|EQUAL|NOTEQUAL|BITWISE_AND|BITWISE_XOR|BITWISE_OR|AND|OR) 
-		  ']' IDENTIFIER LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
-		;
+		binary_operator_function_statement
+			: OPERATOR IDENTIFIER '[' 
+				op=(MULT|DIV|MOD|PLUS|MINUS|SHIFT_LEFT|SHIFT_RIGHT|LESS_THAN|LESS_THAN_OR_EQUAL|GREATER_THAN|GREATER_THAN_OR_EQUAL|EQUAL|NOTEQUAL|BITWISE_AND|BITWISE_XOR|BITWISE_OR|AND|OR) 
+			  ']' IDENTIFIER LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
+			;
 
-	unary_operator_function_statement
-		: OPERATOR UNARY '[' op=(EXCLAMATION_MARK|MINUS) ']' IDENTIFIER LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
+		unary_operator_function_statement
+			: OPERATOR UNARY '[' op=(EXCLAMATION_MARK|MINUS) ']' IDENTIFIER LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
+			;
+
+	indexer_method_statement
+		: indexer_get_statement
+		| indexer_set_statement
 		;
+			
+			// Syntax: indexer [a1, a2, a3, ...] => { block return expression; }
+			//									  => expression
+			indexer_get_statement
+				: INDEXER '[' parameter_list ']' LAMBDA (('{' block RETURN expression SEMICOLON '}') | expression)
+				;
+
+			// Syntax: indexer [a1, a2, a3, ...]<-b => { block; }
+			//										 => expression
+			indexer_set_statement
+				: INDEXER '[' parameter_list ']' LEFT_POINT_ARROW IDENTIFIER LAMBDA (('{' block '}') | expression)
+				;
+
+	// --Special Methods--
 
 
 inject_statement
 	: '<' '@' STRING '>'
 	;
 	
-function_call_statement
-	: (IDENTIFIER|identifier_access) '(' argument_list? ')'
+method_call_statement
+	: paren_call
+	| indexer_get_call_statement
+	;
+
+	paren_call
+		: (IDENTIFIER|identifier_access) '(' argument_list? ')'
+		;
+
+	indexer_get_call_statement // expression (return value)
+		: (IDENTIFIER|identifier_access) '[' argument_list ']'
+		;
+
+indexer_set_call_statement // statement (no return value)
+	: (IDENTIFIER|identifier_access) '[' argument_list ']' ASSIGN expression
 	;
 	
 object_initialization_expression
 	: '{'
-			(assign_statement | operator_function_statement)
-			(',' (assign_statement | operator_function_statement))*
+			(assign_statement | operator_function_statement | indexer_method_statement)
+			(',' (assign_statement | operator_function_statement | indexer_method_statement))*
 	  '}'
 	| '{' '}'
 	;
@@ -202,7 +237,7 @@ atom
 	: literal								
 	| IDENTIFIER							
 	| identifier_access						
-	| function_call_statement				
+	| method_call_statement				
 	| object_initialization_expression		
 	| anonymous_function_definition_statement
 	;
@@ -354,6 +389,7 @@ IN: 'in';
 NATIVE: 'native';
 OPERATOR: 'operator';
 UNARY: 'unary';
+INDEXER: 'indexer';
 
 WHILE: 'while';
 
@@ -368,6 +404,7 @@ IDENTIFIER
 	;
 
 LAMBDA: '=>';
+LEFT_POINT_ARROW: '<-';
 QUESTION_MARK: '?';
 COLON: ':';
 EXCLAMATION_MARK: '!';

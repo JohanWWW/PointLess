@@ -13,6 +13,8 @@ namespace Interpreter.Models
         public string[] Parameters { get; set; }
         public BlockModel Body { get; set; }
 
+        public bool IsIndexerConsumer { get; set; } = false;
+
         public ConsumerStatementModel() : base(Enums.ModelTypeCode.ConsumerStatement)
         {
         }

@@ -15,7 +15,7 @@ namespace Interpreter.Models.Enums
         ConditionalStatement,
         ConditionalTernaryExpression,
         ConsumerStatement,
-        FunctionCallStatement,
+        MethodCallStatement,
         FunctionStatement,
         IdentifierExpression,
         LambdaFunctionStatement,

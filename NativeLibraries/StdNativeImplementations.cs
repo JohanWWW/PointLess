@@ -18,7 +18,7 @@ namespace NativeLibraries
     {
         private static string FormatPrintText(object obj)
         {
-                return obj.ToString();
+            return obj.ToString();
         }
     
 
@@ -28,13 +28,13 @@ namespace NativeLibraries
             NativeImplementation = args =>
             {
                 if (args.Count is 0)
-                    return null; // Do nothing
+                    return VoidOperable.Void; // Do nothing
 
                 IOperable obj = args[0];
 
                 Console.Write(FormatPrintText(obj));
 
-                return null;
+                return VoidOperable.Void;
             }
         };
 
@@ -50,7 +50,7 @@ namespace NativeLibraries
 
                 Console.WriteLine(FormatPrintText(obj));
 
-                return null;
+                return VoidOperable.Void;
             }
         };
 
@@ -171,7 +171,7 @@ namespace NativeLibraries
             NativeImplementation = millis =>
             {
                 Thread.Sleep((int)(millis[0] as IOperable<BigInteger>).Value);
-                return null;
+                return VoidOperable.Void;
             }
         };
 
@@ -245,7 +245,7 @@ namespace NativeLibraries
                     _ => throw new InvalidCastException($"Cannot cast type {indexNumber.Value.GetType()} to int")
                 };
                 arr[index] = args[2];
-                return null;
+                return VoidOperable.Void;
             }
         };
 

@@ -23,6 +23,9 @@ namespace Interpreter.Runtime
             set => _bindings[name] = value;
         }
 
+        public bool ContainsMember(string name) => 
+            _bindings.ContainsKey(name);
+
         public bool TryGetMember(string name, out IOperable value) =>
             _bindings.TryGetValue(name, out value);
 

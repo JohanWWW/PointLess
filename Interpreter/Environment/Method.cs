@@ -13,12 +13,18 @@ namespace Interpreter.Environment
 
         public int ParameterCount { get; }
         public MethodType MethodType { get; }
+        public bool IsIndexerMethod { get; }
 
         public Method(int parameterCount, object method, MethodType type)
         {
             ParameterCount = parameterCount;
             MethodType = type;
             _method = method;
+        }
+
+        public Method(int parameterCount, object method, MethodType type, bool isIndexerMethod) : this(parameterCount, method, type)
+        {
+            IsIndexerMethod = isIndexerMethod;
         }
 
         public FunctionMethod GetFunction()
