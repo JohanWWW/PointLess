@@ -103,26 +103,26 @@ __MATH_IMPL__ = () => {
 
     min = (a, b) => a <= b ? a : b;
 
-    round = (x, precision) => {
-        if (precision < 0 || __is_integer(precision) != true) {
-            throw "Precision must be a non negative integer";
+    round = (x, scale) => {
+        if (scale < 0 || !std.isInteger(scale)) {
+            throw "Scale must be a non negative integer";
         }
-        p = pow(10, precision);
+        p = pow(10, scale);
         return floor(x * p + .5) / p;
     };
 
     round += x => round(x, 0);
 
-    truncate = (x, precision) => {
-        if (precision < 0 || __is_integer(precision) != true) {
-            throw "Precision must be a non negative integer";
+    truncate = (x, scale) => {
+        if (scale < 0 || !std.isInteger(scale)) {
+            throw "scale must be a non negative integer";
         }
         s = 1;
         if (x < 0) {
             s = signum(x);
             x = abs(x);
         }
-        p = pow(10, precision);
+        p = pow(10, scale);
         return s * floor(x * p) / p;
     };
 
@@ -130,7 +130,7 @@ __MATH_IMPL__ = () => {
 
     pow = (x, n) => {
         p = null;
-        if (__is_integer(n)) {
+        if (std.isInteger(n)) {
             p = _primitive_pow(x, n);
         }
         else {

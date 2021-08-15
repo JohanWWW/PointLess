@@ -11,9 +11,11 @@ __COMPLEX_MATH_IMPL__ = () => {
     // Public
     conjugate = x => Complex(x.getReal(), Math.negate(x.getImaginary()));
 
-    reciprocal = x => ((x.getReal() == 0) && (x.getImaginary() == 0)) ? 
-        (__is_decimal(x) ? Complex(.0, .0) : Complex(0, 0)) : 
-        (__is_decimal(x) ? (Complex(1.0, .0) / x) : (Complex(1, 0) / x));
+    reciprocal = x => ((x.getReal() == 0) && (x.getImaginary() == 0)) 
+        ? Complex(.0, .0) 
+        : std.isInteger(x.getReal()) || std.isInteger(x.getImaginary())
+            ? Complex(1.0, .0) / Complex(x.getReal() + .0, x.getImaginary() + .0)
+            : Complex(1.0, .0) / x;
 
     abs = x => {
         c = Math.abs(x.getReal());
@@ -36,7 +38,7 @@ __COMPLEX_MATH_IMPL__ = () => {
         return Complex(val, 0.0);
     };
 
-    round = (x, precision) => Complex(Math.round(x.getReal(), precision), Math.round(x.getImaginary(), precision));
+    round = (x, scale) => Complex(Math.round(x.getReal(), scale), Math.round(x.getImaginary(), scale));
 
     round += x => round(x, 0);
 
@@ -51,10 +53,10 @@ __COMPLEX_MATH_IMPL__ = () => {
     //
     Complex = (real, imaginary) => {
 
-        if (!__is_number(real)) {
+        if (!std.isNumber(real)) {
             throw "Real part of complex must be a number";
         }
-        if (!__is_number(imaginary)) {
+        if (!std.isNumber(imaginary)) {
             throw "Imaginary part of complex must be a number";
         }
 
@@ -98,7 +100,7 @@ __COMPLEX_MATH_IMPL__ = () => {
             // Operator overloads
             operator left[+]right =>
                 // if right operand is string, return string
-                __is_string(right) ?
+                std.isString(right) ?
                     (left.toString() + right) :
                     Complex(left.getReal() + right.getReal(), left.getImaginary() + right.getImaginary()),
 
@@ -154,11 +156,11 @@ __COMPLEX_MATH_IMPL__ = () => {
     };
 
     Complex += real => {
-        if (!__is_number(real)) {
+        if (!std.isNumber(real)) {
             throw "Real part of complex must be a number";
         }
 
-        return __is_decimal(real) ? Complex(real, .0) : Complex(real, 0);
+        return std.isDecimal(real) ? Complex(real, .0) : Complex(real, 0);
     };
 
     return {

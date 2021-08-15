@@ -1,589 +1,376 @@
 ﻿
-// Warning: Modifying native functions in this file is not recommended
-//          and may lead to inconsistent results.
+__STD_IMPL__ = () => {
 
-// Dictionary natives
-__dict_allocate = native () => <@"std.__dict_allocate">;
+    // Warning: Modifying native functions in this file is not recommended
+    //          and may lead to inconsistent results.
 
-__dict_set = native (dictRef, key, value) => <@"std.__dict_set">;
+    // Dictionary natives
+    __dict_allocate = native () => <@"std.__dict_allocate">;
 
-__dict_get = native (dictRef, key) => <@"std.__dict_get">;
+    __dict_set = native (dictRef, key, value) => <@"std.__dict_set">;
 
-__dict_contains = native (dictRef, key) => <@"std.__dict_contains">;
+    __dict_get = native (dictRef, key) => <@"std.__dict_get">;
 
-__dict_remove = native (dictRef, key) => <@"std.__dict_remove">;
+    __dict_contains = native (dictRef, key) => <@"std.__dict_contains">;
 
-__dict_length = native (dictRef) => <@"std.__dict_length">;
+    __dict_remove = native (dictRef, key) => <@"std.__dict_remove">;
 
-__dict_get_key_array = native (dictRef) => <@"std.__dict_get_key_array">;
+    __dict_length = native (dictRef) => <@"std.__dict_length">;
 
-__dict_get_value_array = native (dictRef) => <@"std.__dict_get_value_array">;
+    __dict_get_key_array = native (dictRef) => <@"std.__dict_get_key_array">;
 
-// Array natives
-__array_allocate = native (s) => <@"std.__array_allocate">;
+    __dict_get_value_array = native (dictRef) => <@"std.__dict_get_value_array">;
 
-__array_length = native (ref) => <@"std.__array_length">;
+    // Array natives
+    __array_allocate = native (s) => <@"std.__array_allocate">;
 
-__array_get = native (ref, index) => <@"std.__array_get">;
+    __array_length = native (ref) => <@"std.__array_length">;
 
-__array_set = native (ref, index, value) => <@"std.__array_set">;
+    __array_get = native (ref, index) => <@"std.__array_get">;
 
-// String natives
-__string_array = native (s) => <@"std.String.__string_array">;
+    __array_set = native (ref, index, value) => <@"std.__array_set">;
 
-// Type check natives
-__is_number = native (value) => <@"std.__is_number">;
+    // String natives
+    __string_array = native (s) => <@"std.String.__string_array">;
 
-__is_integer = native (value) => <@"std.__is_integer">;
+    // Type check natives
+    __is_number = native (value) => <@"std.__is_number">;
 
-__is_decimal = native (value) => <@"std.__is_decimal">;
+    __is_integer = native (value) => <@"std.__is_integer">;
 
-__is_string = native (value) => <@"std.__is_string">;
+    __is_decimal = native (value) => <@"std.__is_decimal">;
 
-__is_bool = native (value) => <@"std.__is_bool">;
+    __is_string = native (value) => <@"std.__is_string">;
 
-__is_object = native (value) => <@"std.__is_object">;
+    __is_bool = native (value) => <@"std.__is_bool">;
 
-__is_method = native (value) => <@"std.__is_method">;
+    __is_object = native (value) => <@"std.__is_object">;
+
+    __is_method = native (value) => <@"std.__is_method">;
 
 
-//
-//
-print = native (obj) => <@"std.print">;
+    //
+    //
+    print = native (obj) => <@"std.print">;
 
-//
-//
-println = native (obj) => <@"std.println">;
+    //
+    //
+    println = native (obj) => <@"std.println">;
 
-println += () => println("");
+    println += () => println("");
 
-//
-//
-readln = native () => <@"std.readln">;
+    //
+    //
+    readln = native () => <@"std.readln">;
 
-//
-// DEPRECATED
-number = native (s) => <@"std.number">;
+    //
+    // DEPRECATED
+    number = native (s) => <@"std.number">;
 
-//
-//
-delay = native (millis) => <@"std.delay">;
+    //
+    //
+    delay = native (millis) => <@"std.delay">;
 
-//
-// Returns milliseconds elapsed since system start
-//
-systemMillis = native () => <@"std.systemMillis">;
+    //
+    // Returns milliseconds elapsed since system start
+    //
+    systemMillis = native () => <@"std.systemMillis">;
 
-//
-// Returns ticks elapsed since system start
-//
-systemTicks = () => {
-    return systemMillis() * 10000;
-};
+    //
+    // Returns ticks elapsed since system start
+    //
+    systemTicks = () => {
+        return systemMillis() * 10000;
+    };
 
-//
-// Returns elapsed time since 0001-01-01 00:00:00 in ticks.
-// 1 tick = 100 nanoseconds
-//
-ticks = native () => <@"std.ticks">;
+    //
+    // Returns elapsed time since 0001-01-01 00:00:00 in ticks.
+    // 1 tick = 100 nanoseconds
+    //
+    ticks = native () => <@"std.ticks">;
 
-//
-// Returns elapsed time since the beginning of unix time (1970-01-01 00:00:00) in ticks.
-// 1 tick = 100 nanoseconds
-//
-ticksUnix = () => {
-    return ticks() - __ticksUntilUnixStart__;
-};
+    //
+    // Returns elapsed time since the beginning of unix time (1970-01-01 00:00:00) in ticks.
+    // 1 tick = 100 nanoseconds
+    //
+    ticksUnix = () => {
+        return ticks() - __ticksUntilUnixStart__;
+    };
 
-//
-// A collection of common conversion functions
-//
-Convert = {
-    int = {
-        toDecimal = native (value) => <@"std.Convert.int.__to_decimal">,
+    //
+    // A collection of common conversion functions
+    //
+    Convert = {
+        int = {
+            toDecimal = native (value) => <@"std.Convert.int.__to_decimal">,
 
-        toString = (value) => {
-            return value + "";
-        }
-    },
-    decimal = {
-        toInt = native (value) => <@"std.Convert.decimal.__to_int">,
-
-        toString = (value) => {
-            return value + "";
-        }
-    },
-    string = {
-        //
-        // Parses string to integer.
-        // s: native string to parse
-        //
-        toInt = (s) => {
-            return __parseInt__(s);
+            toString = (value) => {
+                return value + "";
+            }
         },
+        decimal = {
+            toInt = native (value) => <@"std.Convert.decimal.__to_int">,
 
-        //
-        // Parses string to decimal
-        // s: native string to parse
-        //
-        toDecimal = (s) => {
-            return __parseDecimal__(s);
-        }
-    }
-};
-
-// Wrapper class for already allocated native arrays
-__ArrayInternal = (nativeArray) => {
-    _length = __array_length(nativeArray);
-
-    _isIndexOutOfBounds = (index) => {
-        return index < 0 || index > _length - 1;
-    };
-
-    _get = (index) => {
-        if (_isIndexOutOfBounds(index)) {
-            throw "__ArrayInternal._get: Index out of bounds";
-        }
-        return __array_get(nativeArray, index);
-    };
-
-    _set = (index, value) => {
-        if (_isIndexOutOfBounds(index)) {
-            throw "__ArrayInternal._set: Index out of bounds";
-        }
-        return __array_set(nativeArray, index, value);
-    };
-
-    _enumerator = () => {
-        return _Enumerator();
-    };
-
-    _Enumerator = () => {
-        i = -1;
-
-        return {
-            next = () => {
-                hasNext = null;
-                if (i >= _length - 1) {
-                    hasNext = false;
-                }
-                else {
-                    i += 1;
-                    hasNext = true;
-                }
-                return hasNext;
-            },
-            current = () => {
-                return _get(i);
+            toString = (value) => {
+                return value + "";
             }
-        };
-    };
-
-    return {
-        length = _length,
-        get = _get,
-        set = _set,
-        enumerator = _enumerator
-    };
-};
-
-//
-//
-Array = (size) => {
-    _array = __array_allocate(size);
-    _length = __array_length(_array);
-
-    _isIndexOutOfBounds = (index) => {
-        return index < 0 || index > _length - 1;
-    };
-
-    _get = (index) => this[index];
-
-    _set = (index, value) => {
-        this[index] = value;
-    };
-
-    _Enumerator = () => {
-        i = -1;
-
-        return {
-            next = () => {
-                hasNext = null;
-                if (i >= _length - 1) {
-                    hasNext = false;
-                }
-                else {
-                    i += 1;
-                    hasNext = true;
-                }
-                return hasNext;
-            },
-            current = () => {
-                return _get(i);
-            }
-        };
-    };
-
-    _enumerator = () => {
-        return _Enumerator();
-    };
-
-    // Creates a string of this array from given range
-    _toString = (start, end) => {
-        sb = "[";
-        i = start;
-        while (i < end) {
-            e = _get(i);
-            if (e === this) {
-                sb += "<this array>";
-            }
-            else if (__is_string(e)) {
-                sb += "\"" + __escapeSpecialChars__(e) + "\"";
-            }
-            else {
-                sb += e;
-            }
-
-            if (i != end - 1) {
-                sb += ",";
-            }
-            i += 1;
-        }
-        sb += "]";
-        return sb;
-    };
-
-    _toString += () => _toString(0, _length);
-
-    this = {
-        length = () => _length,
-        get = _get,
-        set = _set,
-        enumerator = _enumerator,
-        toString = _toString,
-
-        indexer [index]<-value => {
-            if (_isIndexOutOfBounds(index)) {
-                throw "Array: Index out of bounds";
-            }
-            __array_set(_array, index, value);
         },
+        string = {
+            //
+            // Parses string to integer.
+            // s: native string to parse
+            //
+            toInt = (s) => {
+                return __parseInt__(s);
+            },
 
-        indexer [index] => {
-            if (_isIndexOutOfBounds(index)) {
-                throw "Array: Index out of bounds";
+            //
+            // Parses string to decimal
+            // s: native string to parse
+            //
+            toDecimal = (s) => {
+                return __parseDecimal__(s);
             }
-            return __array_get(_array, index);
         }
     };
 
-    return this;
-};
+    // Wrapper class for already allocated native arrays
+    __ArrayInternal = (nativeArray) => {
+        _length = __array_length(nativeArray);
 
-Arrays = {
+        _isIndexOutOfBounds = (index) => {
+            return index < 0 || index > _length - 1;
+        };
 
-    //
-    // Allocates storage for a new array and populates it 
-    // with the elements from the input enumerable
-    //
-    from = enumerable => {
-        length = enumerable.length();
-        array = Array(length);
+        _get = (index) => {
+            if (_isIndexOutOfBounds(index)) {
+                throw "__ArrayInternal._get: Index out of bounds";
+            }
+            return __array_get(nativeArray, index);
+        };
 
-        e = enumerable.enumerator();
-        i = 0;
-        while (e.next()) {
-            array.set(i, e.current());
-            i += 1;
-        }
+        _set = (index, value) => {
+            if (_isIndexOutOfBounds(index)) {
+                throw "__ArrayInternal._set: Index out of bounds";
+            }
+            return __array_set(nativeArray, index, value);
+        };
 
-        return array;
-    },
+        _enumerator = () => {
+            return _Enumerator();
+        };
 
-    //
-    // Allocates storage for a new array
-    //
-    allocate =  
-                //
-                // Parameters:
-                //  size: The size of the array
-                //
-                (size => Array(size)) 
-                +
+        _Enumerator = () => {
+            i = -1;
 
-                //
-                // Parameters:
-                //  size: The size of the array
-                //  generator: A provider that returns an initial value to populate the array with
-                //
-                ((size, generator) => {
-                    array = Arrays.allocate(size);
-                    i = 0;
-                    while (i < size) {
-                        array.set(i, generator());
-                        i += 1;
+            return {
+                next = () => {
+                    hasNext = null;
+                    if (i >= _length - 1) {
+                        hasNext = false;
                     }
-                    return array;
-                }),
-
-    //
-    // Allocates storage for new array with zero index positions
-    //
-    empty = () => Array(0)
-};
-
-//
-// ArrayList implementation.
-// Uses array internally and allocates new ones when needed.
-//  
-// TODO: Implement insertAt method
-//
-ArrayList = (size) => {
-    _array = Array(size);
-    _length = 0;
-
-
-    _increase_size = (increment) => {
-        tmp = Array(_length + increment);
-        _copy_array(_array, tmp);
-        _array = tmp;
-    };
-
-    _decrease_size = (decrement) => {
-        tmp = Array(_length - decrement);
-        _copy_array(_array, tmp);
-        _array = tmp;
-    };
-
-    _copy_array = (src, dst) => {
-        i = 0;
-        while (i < src.length()) {
-            dst.set(i, src.get(i));
-            i += 1;
-        }
-    };
-
-    _Enumerator = () => {
-        i = -1;
-
-        _next = () => {
-            hasNext = null;
-            if (i >= _length - 1) {
-                hasNext = false;
-            }
-            else {
-                i += 1;
-                hasNext = true;
-            }
-            return hasNext;
-        };
-
-        _current = () => {
-            return _array.get(i);
+                    else {
+                        i += 1;
+                        hasNext = true;
+                    }
+                    return hasNext;
+                },
+                current = () => {
+                    return _get(i);
+                }
+            };
         };
 
         return {
-            next = _next,
-            current = _current
+            length = _length,
+            get = _get,
+            set = _set,
+            enumerator = _enumerator
         };
     };
 
-    _add = (value) => {
-        if (_length > _array.length() - 1) {
-            _increase_size(10);
-        }
+    //
+    //
+    Array = (size) => {
+        _array = __array_allocate(size);
+        _length = __array_length(_array);
 
-        _array.set(_length, value);
-        _length += 1;
-    };
+        _isIndexOutOfBounds = (index) => {
+            return index < 0 || index > _length - 1;
+        };
 
-    _set = (index, value) => {
-        this[index] = value;
-    };
+        _get = (index) => this[index];
 
-    _get = (index) => {
-        return _array[index];
-    };
+        _set = (index, value) => {
+            this[index] = value;
+        };
 
-    _removeAt = (index) => {
-        if (index < 0 || index > _length - 1) {
-            throw "ArrayList._removeAt: Index out of bounds";
-        }
-        entry = null;
-        if (index == _length - 1) {
-            entry = _array.get(_length - 1);
-            _array.set(_length - 1, null);
-            _length -= 1;
-        }
-        else {
-            i = index + 1;
-            entry = _array.get(index);
-            while (i < _length) {
-                _array.set(i - 1, _array.get(i));
+        _Enumerator = () => {
+            i = -1;
+
+            return {
+                next = () => {
+                    hasNext = null;
+                    if (i >= _length - 1) {
+                        hasNext = false;
+                    }
+                    else {
+                        i += 1;
+                        hasNext = true;
+                    }
+                    return hasNext;
+                },
+                current = () => {
+                    return _get(i);
+                }
+            };
+        };
+
+        _enumerator = () => {
+            return _Enumerator();
+        };
+
+        // Creates a string of this array from given range
+        _toString = (start, end) => {
+            sb = "[";
+            i = start;
+            while (i < end) {
+                e = _get(i);
+                if (e === this) {
+                    sb += "<this array>";
+                }
+                else if (__is_string(e)) {
+                    sb += "\"" + __escapeSpecialChars__(e) + "\"";
+                }
+                else {
+                    sb += e;
+                }
+
+                if (i != end - 1) {
+                    sb += ",";
+                }
                 i += 1;
             }
-            _length -= 1;
-        }
-        return entry;
+            sb += "]";
+            return sb;
+        };
+
+        _toString += () => _toString(0, _length);
+
+        this = {
+            length = () => _length,
+            get = _get,
+            set = _set,
+            enumerator = _enumerator,
+            toString = _toString,
+
+            indexer [index]<-value => {
+                if (_isIndexOutOfBounds(index)) {
+                    throw "Array: Index out of bounds";
+                }
+                __array_set(_array, index, value);
+            },
+
+            indexer [index] => {
+                if (_isIndexOutOfBounds(index)) {
+                    throw "Array: Index out of bounds";
+                }
+                return __array_get(_array, index);
+            }
+        };
+
+        return this;
     };
 
-    _enumerator = () => {
-        return _Enumerator();  
-    };
+    Arrays = {
 
-    _toArray = () => {
-        arr = null;
-        if (_array.length() == this.length()) {
-            arr = _array;
-        }
-        else {
-            newlen = this.length();
-            arr = Array(newlen);
+        //
+        // Allocates storage for a new array and populates it 
+        // with the elements from the input enumerable
+        //
+        from = enumerable => {
+            length = enumerable.length();
+            array = Array(length);
+
+            e = enumerable.enumerator();
             i = 0;
-            while (i < newlen) {
-                arr.set(i, _array.get(i));
+            while (e.next()) {
+                array.set(i, e.current());
                 i += 1;
             }
-        }
-        return arr;
-    };
 
-    _toString = () => {
-        sb = "[";
-        i = 0;
-        en = _enumerator();
-        while (en.next()) {
-            e = en.current();
-            if (e === this) {
-                sb += "<this list>";
-            }
-            else if (__is_string(e)) {
-                sb += "\"" + __escapeSpecialChars__(e) + "\"";
-            }
-            else {
-                sb += e;
-            }
-
-            if (i != _length - 1) {
-                sb += ",";
-            }
-
-            i += 1;
-        }
-        sb += "]";
-        return sb;
-    };
-
-    this = {
-        length = () => {
-            return _length;
-        },
-        add = _add,
-        set = _set,
-        get = _get,
-        removeAt = _removeAt,
-        enumerator = _enumerator,
-        toArray = _toArray,
-        toString = _toString,
-
-        indexer [index] => {
-            if (index < 0 || index > _length - 1) {
-                throw "ArrayList: Index out of bounds";
-            }
-            return _array[index];
+            return array;
         },
 
-        indexer [index]<-value => {
-            if (index < 0 || index > _length - 1) {
-                throw "ArrayList: Index out of bounds";
+        //
+        // Allocates storage for a new array
+        //
+        allocate =  
+                    //
+                    // Parameters:
+                    //  size: The size of the array
+                    //
+                    (size => Array(size)) 
+                    +
+
+                    //
+                    // Parameters:
+                    //  size: The size of the array
+                    //  generator: A provider that returns an initial value to populate the array with
+                    //
+                    ((size, generator) => {
+                        array = Arrays.allocate(size);
+                        i = 0;
+                        while (i < size) {
+                            array.set(i, generator());
+                            i += 1;
+                        }
+                        return array;
+                    }),
+
+        //
+        // Allocates storage for new array with zero index positions
+        //
+        empty = () => Array(0)
+    };
+
+    //
+    // ArrayList implementation.
+    // Uses array internally and allocates new ones when needed.
+    //  
+    // TODO: Implement insertAt method
+    //
+    ArrayList = (size) => {
+        _array = Array(size);
+        _length = 0;
+
+
+        _increase_size = (increment) => {
+            tmp = Array(_length + increment);
+            _copy_array(_array, tmp);
+            _array = tmp;
+        };
+
+        _decrease_size = (decrement) => {
+            tmp = Array(_length - decrement);
+            _copy_array(_array, tmp);
+            _array = tmp;
+        };
+
+        _copy_array = (src, dst) => {
+            i = 0;
+            while (i < src.length()) {
+                dst.set(i, src.get(i));
+                i += 1;
             }
-            _array[index] = value;
-        },
+        };
 
-        operator ref[+]element => {
-            ref.add(element);
-            return ref;
-        }
-    };
+        _Enumerator = () => {
+            i = -1;
 
-    return this;
-};
-
-ArrayList += () => ArrayList(10);
-
-//
-//
-Dictionary = () => {
-    _dict = __dict_allocate();
-
-    _throwIfKeyNull = (key, callerName) => {
-        if (key === null) {
-            throw callerName + ": Key cannot be null";
-        }
-    };
-
-    _set = (key, value) => {
-        this[key] = value;
-    };
-
-    _set += keyValuePair => {
-        _set(keyValuePair.key, keyValuePair.value);
-    };
-
-    _get = (key) => {
-        return this[key];
-    };
-
-    _contains = (key) => {
-        _throwIfKeyNull(key, "Dictionary._contains");
-        return __dict_contains(_dict, key);
-    };
-
-    _remove = (key) => {
-        _throwIfKeyNull(key, "Dictionary._remove");
-        return __dict_remove(_dict, key);
-    };
-
-    _length = () => {
-        return __dict_length(_dict);
-    };
-
-    _keys = () => {
-        return __ArrayInternal(__dict_get_key_array(_dict));
-    };
-
-    _values = () => {
-        return __ArrayInternal(__dict_get_value_array(_dict));
-    };
-
-    _pairs = () => {
-        ks = _keys();
-        vs = _values();
-        pairs = Array(_length());
-        i = 0;
-        while (i < pairs.length) {
-            pairs.set(i, {
-                key = ks.get(i),
-                value = vs.get(i)
-            });
-            i += 1;
-        }
-        return pairs;
-    };
-
-    _enumerator = () => {
-        return _DictEnumerator();
-    };
-
-    _DictEnumerator = () => {
-        i = -1;
-        len = _length();
-        ks = _keys();
-        vs = _values();
-        return {
-            next = () => {
+            _next = () => {
                 hasNext = null;
-                if (i >= len - 1) {
+                if (i >= _length - 1) {
                     hasNext = false;
                 }
                 else {
@@ -591,407 +378,653 @@ Dictionary = () => {
                     hasNext = true;
                 }
                 return hasNext;
+            };
+
+            _current = () => {
+                return _array.get(i);
+            };
+
+            return {
+                next = _next,
+                current = _current
+            };
+        };
+
+        _add = (value) => {
+            if (_length > _array.length() - 1) {
+                _increase_size(10);
+            }
+
+            _array.set(_length, value);
+            _length += 1;
+        };
+
+        _set = (index, value) => {
+            this[index] = value;
+        };
+
+        _get = (index) => {
+            return _array[index];
+        };
+
+        _removeAt = (index) => {
+            if (index < 0 || index > _length - 1) {
+                throw "ArrayList._removeAt: Index out of bounds";
+            }
+            entry = null;
+            if (index == _length - 1) {
+                entry = _array.get(_length - 1);
+                _array.set(_length - 1, null);
+                _length -= 1;
+            }
+            else {
+                i = index + 1;
+                entry = _array.get(index);
+                while (i < _length) {
+                    _array.set(i - 1, _array.get(i));
+                    i += 1;
+                }
+                _length -= 1;
+            }
+            return entry;
+        };
+
+        _enumerator = () => {
+            return _Enumerator();  
+        };
+
+        _toArray = () => {
+            arr = null;
+            if (_array.length() == this.length()) {
+                arr = _array;
+            }
+            else {
+                newlen = this.length();
+                arr = Array(newlen);
+                i = 0;
+                while (i < newlen) {
+                    arr.set(i, _array.get(i));
+                    i += 1;
+                }
+            }
+            return arr;
+        };
+
+        _toString = () => {
+            sb = "[";
+            i = 0;
+            en = _enumerator();
+            while (en.next()) {
+                e = en.current();
+                if (e === this) {
+                    sb += "<this list>";
+                }
+                else if (__is_string(e)) {
+                    sb += "\"" + __escapeSpecialChars__(e) + "\"";
+                }
+                else {
+                    sb += e;
+                }
+
+                if (i != _length - 1) {
+                    sb += ",";
+                }
+
+                i += 1;
+            }
+            sb += "]";
+            return sb;
+        };
+
+        this = {
+            length = () => {
+                return _length;
             },
-            current = () => {
-                // TODO: Cache
-                return {
+            add = _add,
+            set = _set,
+            get = _get,
+            removeAt = _removeAt,
+            enumerator = _enumerator,
+            toArray = _toArray,
+            toString = _toString,
+
+            indexer [index] => {
+                if (index < 0 || index > _length - 1) {
+                    throw "ArrayList: Index out of bounds";
+                }
+                return _array[index];
+            },
+
+            indexer [index]<-value => {
+                if (index < 0 || index > _length - 1) {
+                    throw "ArrayList: Index out of bounds";
+                }
+                _array[index] = value;
+            },
+
+            operator ref[+]element => {
+                ref.add(element);
+                return ref;
+            }
+        };
+
+        return this;
+    };
+
+    ArrayList += () => ArrayList(10);
+
+    //
+    //
+    Dictionary = () => {
+        _dict = __dict_allocate();
+
+        _throwIfKeyNull = (key, callerName) => {
+            if (key === null) {
+                throw callerName + ": Key cannot be null";
+            }
+        };
+
+        _set = (key, value) => {
+            this[key] = value;
+        };
+
+        _set += keyValuePair => {
+            _set(keyValuePair.key, keyValuePair.value);
+        };
+
+        _get = (key) => {
+            return this[key];
+        };
+
+        _contains = (key) => {
+            _throwIfKeyNull(key, "Dictionary._contains");
+            return __dict_contains(_dict, key);
+        };
+
+        _remove = (key) => {
+            _throwIfKeyNull(key, "Dictionary._remove");
+            return __dict_remove(_dict, key);
+        };
+
+        _length = () => {
+            return __dict_length(_dict);
+        };
+
+        _keys = () => {
+            return __ArrayInternal(__dict_get_key_array(_dict));
+        };
+
+        _values = () => {
+            return __ArrayInternal(__dict_get_value_array(_dict));
+        };
+
+        _pairs = () => {
+            ks = _keys();
+            vs = _values();
+            pairs = Array(_length());
+            i = 0;
+            while (i < pairs.length) {
+                pairs.set(i, {
                     key = ks.get(i),
                     value = vs.get(i)
-                };
+                });
+                i += 1;
             }
+            return pairs;
         };
-    };
 
-    _toString = () => {
-        len = _length();
-        sb = "[";
-        i = 0;
-        e = _enumerator();
-        while (e.next()) {
-            kvp = e.current();
-            if (kvp.key === this) {
-                sb += "<this dict>";
-            }
-            else if (__is_string(kvp.key)) {
-                sb += ("\"" + __escapeSpecialChars__(kvp.key) + "\"");
-            }
-            else {
-                sb += kvp.key;
-            }
-            sb += "=";
-            if (kvp.value === this) {
-                sb += "<this dict>";
-            }
-            else if (__is_string(kvp.value)) {
-                sb += ("\"" + __escapeSpecialChars__(kvp.value) + "\"");
-            }
-            else {
-                sb += kvp.value;
-            }
+        _enumerator = () => {
+            return _DictEnumerator();
+        };
 
-            if (i != len - 1) {
-                sb += ",";
-            }
+        _DictEnumerator = () => {
+            i = -1;
+            len = _length();
+            ks = _keys();
+            vs = _values();
+            return {
+                next = () => {
+                    hasNext = null;
+                    if (i >= len - 1) {
+                        hasNext = false;
+                    }
+                    else {
+                        i += 1;
+                        hasNext = true;
+                    }
+                    return hasNext;
+                },
+                current = () => {
+                    // TODO: Cache
+                    return {
+                        key = ks.get(i),
+                        value = vs.get(i)
+                    };
+                }
+            };
+        };
 
-            i += 1;
-        }
-        sb += "]";
-        return sb;
-    };
-
-    this = {
-        set = _set,
-        get = _get,
-        contains = _contains,
-        remove = _remove,
-        length = _length,
-        keys = _keys,
-        values = _values,
-        pairs = _pairs,
-        enumerator = _enumerator,
-
-        toString = _toString,
-
-        indexer [key] => {
-            _throwIfKeyNull(key, "Dictionary");
-            return __dict_get(_dict, key);
-        },
-
-        indexer [key]<-value => {
-            _throwIfKeyNull(key, "Dictionary");
-            __dict_set(_dict, key, value);
-        },
-
-        operator left[+]right => {
-            left.set(right);
-            return this;
-        }
-    };
-
-    return this;
-};
-
-//
-// Wrapper class for native strings
-//
-String = (s) => {
-    _string_array = __string_array(s);
-    _length = __array_length(_string_array);
-
-    _isIndexOutOfBounds = (index) => {
-        return index < 0 || index > _length - 1;
-    };
-
-    _Enumerator = () => {
-        i = 0 - 1;
-        return {
-            next = () => {
-                hasNext = null;
-                if (i >= _length - 1) {
-                    hasNext = false;
+        _toString = () => {
+            len = _length();
+            sb = "[";
+            i = 0;
+            e = _enumerator();
+            while (e.next()) {
+                kvp = e.current();
+                if (kvp.key === this) {
+                    sb += "<this dict>";
+                }
+                else if (__is_string(kvp.key)) {
+                    sb += ("\"" + __escapeSpecialChars__(kvp.key) + "\"");
                 }
                 else {
-                    i += 1;
-                    hasNext = true;
+                    sb += kvp.key;
                 }
-                return hasNext;
+                sb += "=";
+                if (kvp.value === this) {
+                    sb += "<this dict>";
+                }
+                else if (__is_string(kvp.value)) {
+                    sb += ("\"" + __escapeSpecialChars__(kvp.value) + "\"");
+                }
+                else {
+                    sb += kvp.value;
+                }
+
+                if (i != len - 1) {
+                    sb += ",";
+                }
+
+                i += 1;
+            }
+            sb += "]";
+            return sb;
+        };
+
+        this = {
+            set = _set,
+            get = _get,
+            contains = _contains,
+            remove = _remove,
+            length = _length,
+            keys = _keys,
+            values = _values,
+            pairs = _pairs,
+            enumerator = _enumerator,
+
+            toString = _toString,
+
+            indexer [key] => {
+                _throwIfKeyNull(key, "Dictionary");
+                return __dict_get(_dict, key);
             },
-            current = () => {
-                return _get(i);
+
+            indexer [key]<-value => {
+                _throwIfKeyNull(key, "Dictionary");
+                __dict_set(_dict, key, value);
+            },
+
+            operator left[+]right => {
+                left.set(right);
+                return this;
             }
         };
+
+        return this;
     };
 
-    _get = (index) => {
-        if (_isIndexOutOfBounds(index)) {
-            throw "String._get: Index out of bounds";
-        }
-        return __array_get(_string_array, index);
-    };
+    //
+    // Wrapper class for native strings
+    //
+    String = (s) => {
+        _string_array = __string_array(s);
+        _length = __array_length(_string_array);
 
-    _toString = () => {
-        sb = "";
-        enumerator = _Enumerator();
-        while (enumerator.next()) {
-            sb += enumerator.current();
-        }
-        return sb;
-    };
+        _isIndexOutOfBounds = (index) => {
+            return index < 0 || index > _length - 1;
+        };
 
-    _toArray = () => {
-        charArray = Array(_length);
-        i = 0;
-        while (i < charArray.length) {
-            charArray.set(i, _get(i));
-            i += 1;
-        }
-        return charArray;
-    };
+        _Enumerator = () => {
+            i = 0 - 1;
+            return {
+                next = () => {
+                    hasNext = null;
+                    if (i >= _length - 1) {
+                        hasNext = false;
+                    }
+                    else {
+                        i += 1;
+                        hasNext = true;
+                    }
+                    return hasNext;
+                },
+                current = () => {
+                    return _get(i);
+                }
+            };
+        };
 
-    _enumerator = () => {
-        return _Enumerator();
-    };
-
-    _split = (delimiter) => {
-        segmentCount = 0;
-        i = 0;
-        while (i < _length) {
-            if (_get(i) == delimiter) {
-                segmentCount += 1;
+        _get = (index) => {
+            if (_isIndexOutOfBounds(index)) {
+                throw "String._get: Index out of bounds";
             }
-            i += 1;
-        }
+            return __array_get(_string_array, index);
+        };
 
-        stringSegments = null;
-
-        if (segmentCount == 0) {
-            stringSegments = Array(1);
-            stringSegments.set(0, _toString());
-        }
-        else {
-            stringSegments = Array(segmentCount + 1);
-            insertIndex = 0;
+        _toString = () => {
             sb = "";
             enumerator = _Enumerator();
             while (enumerator.next()) {
-                char = enumerator.current();
-                if (char != delimiter) {
-                    sb += char;
+                sb += enumerator.current();
+            }
+            return sb;
+        };
+
+        _toArray = () => {
+            charArray = Array(_length);
+            i = 0;
+            while (i < charArray.length()) {
+                charArray.set(i, _get(i));
+                i += 1;
+            }
+            return charArray;
+        };
+
+        _enumerator = () => {
+            return _Enumerator();
+        };
+
+        _split = (delimiter) => {
+            segmentCount = 0;
+            i = 0;
+            while (i < _length) {
+                if (_get(i) == delimiter) {
+                    segmentCount += 1;
                 }
-                else {
-                    stringSegments.set(insertIndex, sb);
-                    sb = "";
-                    insertIndex += 1;
-                }
+                i += 1;
             }
-            stringSegments.set(insertIndex, sb);
-        }
 
-        return stringSegments;
-    };
+            stringSegments = null;
 
-    _containsChar = (char) => {
-        found = false;
-        i = 0;
-        while (i < _length && found != true) {
-            if (_get(i) === char) {
-                found = true;
+            if (segmentCount == 0) {
+                stringSegments = Array(1);
+                stringSegments.set(0, _toString());
             }
-            i += 1;
-        }
-        return found;
-    };
-
-    _countChar = (char) => {
-        charCount = 0;
-        i = 0;
-        while (i < _length) {
-            if (_get(i) === char) {
-                charCount += 1;
-            }
-            i += 1;
-        }
-        return charCount;
-    };
-
-    _replaceAll = (oldString, newString) => {
-
-        xOldString = String(oldString);
-        xNewString = String(newString);
-
-        occurrenceIndices = ArrayList(10); // TODO: Use queue instead
-
-        i = 0;
-        while (i < _length) {
-            j = 0;
-            continiousCharOccurrences = 0;
-            while (j < xOldString.length()) {
-                if (i + j < _length) {
-                    if (xOldString.get(j) == _get(i + j)) {
-                        continiousCharOccurrences += 1;
+            else {
+                stringSegments = Array(segmentCount + 1);
+                insertIndex = 0;
+                sb = "";
+                enumerator = _Enumerator();
+                while (enumerator.next()) {
+                    char = enumerator.current();
+                    if (char != delimiter) {
+                        sb += char;
+                    }
+                    else {
+                        stringSegments.set(insertIndex, sb);
+                        sb = "";
+                        insertIndex += 1;
                     }
                 }
-                j += 1;
+                stringSegments.set(insertIndex, sb);
             }
 
-            if (continiousCharOccurrences == xOldString.length()) {
-                occurrenceIndices.add(i);
+            return stringSegments;
+        };
+
+        _containsChar = (char) => {
+            found = false;
+            i = 0;
+            while (i < _length && found != true) {
+                if (_get(i) === char) {
+                    found = true;
+                }
+                i += 1;
+            }
+            return found;
+        };
+
+        _countChar = (char) => {
+            charCount = 0;
+            i = 0;
+            while (i < _length) {
+                if (_get(i) === char) {
+                    charCount += 1;
+                }
+                i += 1;
+            }
+            return charCount;
+        };
+
+        _replaceAll = (oldString, newString) => {
+
+            xOldString = String(oldString);
+            xNewString = String(newString);
+
+            occurrenceIndices = ArrayList(10); // TODO: Use queue instead
+
+            i = 0;
+            while (i < _length) {
+                j = 0;
+                continiousCharOccurrences = 0;
+                while (j < xOldString.length()) {
+                    if (i + j < _length) {
+                        if (xOldString.get(j) == _get(i + j)) {
+                            continiousCharOccurrences += 1;
+                        }
+                    }
+                    j += 1;
+                }
+
+                if (continiousCharOccurrences == xOldString.length()) {
+                    occurrenceIndices.add(i);
+                }
+
+                i += 1;
             }
 
-            i += 1;
-        }
+            stringLength = _length;
 
-        stringLength = _length;
+            sb = "";
+            cursor = 0;
+            while (occurrenceIndices.length() > 0) {
+                idx = occurrenceIndices.get(0);
+                occurrenceIndices.removeAt(0);
 
-        sb = "";
-        cursor = 0;
-        while (occurrenceIndices.length() > 0) {
-            idx = occurrenceIndices.get(0);
-            occurrenceIndices.removeAt(0);
+                while (cursor < idx) {
+                    sb += _get(cursor);
+                    cursor += 1;
+                }
 
-            while (cursor < idx) {
+                newStringEnumerator = xNewString.enumerator();
+                while (newStringEnumerator.next()) {
+                    sb += newStringEnumerator.current();
+                }
+
+                cursor += xOldString.length();
+            }
+
+            // Add remaining characters
+            while (cursor < _length) {
                 sb += _get(cursor);
                 cursor += 1;
             }
 
-            newStringEnumerator = xNewString.enumerator();
-            while (newStringEnumerator.next()) {
-                sb += newStringEnumerator.current();
+            return String(sb);
+        };
+
+        _substring = (start, end) => {
+            sb = "";
+            i = start;
+            while (i < end) {
+                sb += _get(i);
+                i += 1;
             }
+            return String(sb);
+        };
 
-            cursor += xOldString.length();
-        }
+        return {
+            get = _get,
+            length = () => _length,
+            split = _split,
+            containsChar = _containsChar,
+            countChar = _countChar,
+            replaceAll = _replaceAll,
+            substring = _substring,
+            enumerator = _enumerator,
+            toString = _toString,
+            toArray = _toArray,
 
-        // Add remaining characters
-        while (cursor < _length) {
-            sb += _get(cursor);
-            cursor += 1;
-        }
-
-        return String(sb);
+            indexer [index] => _get(index)
+        };
     };
 
-    _substring = (start, end) => {
-        sb = "";
-        i = start;
-        while (i < end) {
-            sb += _get(i);
+    // Not recommended for regular math operations
+    __intPow__ = (x, y) => {
+        if (y < 0) {
+            throw "std.__intPow__: Exponent was less than zero";
+        }
+        p = 1;
+        i = y;
+        while (i > 0) {
+            p *= x;
+            i -= 1;
+        }
+        return p;
+    };
+
+    __parseInt__ = (s) => {
+        s = String(s);
+        sum = 0;
+        signum = 1;
+        e = s.length() - 1;
+        i = 0;
+        if (s.get(0) == __minusSign__) {
+            signum = -1;
+            e -= 1;
             i += 1;
         }
-        return String(sb);
-    };
-
-    return {
-        get = _get,
-        length = () => _length,
-        split = _split,
-        containsChar = _containsChar,
-        countChar = _countChar,
-        replaceAll = _replaceAll,
-        substring = _substring,
-        enumerator = _enumerator,
-        toString = _toString,
-        toArray = _toArray,
-
-        indexer [index] => _get(index)
-    };
-};
-
-// Not recommended for regular math operations
-__intPow__ = (x, y) => {
-    if (y < 0) {
-        throw "std.__intPow__: Exponent was less than zero";
-    }
-    p = 1;
-    i = y;
-    while (i > 0) {
-        p *= x;
-        i -= 1;
-    }
-    return p;
-};
-
-__parseInt__ = (s) => {
-    s = String(s);
-    sum = 0;
-    signum = 1;
-    e = s.length() - 1;
-    i = 0;
-    if (s.get(0) == __minusSign__) {
-        signum = -1;
-        e -= 1;
-        i += 1;
-    }
-    while (i < s.length()) {
-        d = s.get(i);
-        if (__charToDigit__.contains(d)) {
-                sum += __charToDigit__.get(d) * __intPow__(10, e);
-        }
-        else {
-            throw "Found illegal character '" + d + "' at index " + i + " when parsing input string";
-        }
-        i += 1;
-        e -= 1;
-    }
-
-    return signum * sum;
-};
-
-// TODO: Maybe it should parse string as int and shift decimal point instead?
-__parseDecimal__ = (s) => {
-    chars = String(s);
-    dotSignCount = chars.countChar(__dotSign__);
-
-    if (dotSignCount > 1) {
-        throw "std.Convert.string.toDecimal: Illegal number format";
-    }
-
-    sum = .0;
-    hasDecimalPoint = (dotSignCount == 1);
-
-    if (hasDecimalPoint) {
-        segments = chars.split(__dotSign__);
-
-        integers = segments.get(0);
-        decimals = String(segments.get(1));
-
-        sum += __parseInt__(integers);
-        signum = 1;
-        if (sum < 0) {
-            signum *= -1;
-        }
-        decimalSum = .0;
-        e = 0;
-        while (e < decimals.length()) {
-            d = decimals.get(e);
+        while (i < s.length()) {
+            d = s.get(i);
             if (__charToDigit__.contains(d)) {
-                decimalSum += __charToDigit__.get(d) / (__intPow__(10, e) + .0);
+                    sum += __charToDigit__.get(d) * __intPow__(10, e);
             }
             else {
-                integerPartString = String(integers);
-                throw "Found illegal character '" + d + "' at index " + (integerPartString.length() + e + 1) + " when parsing input string";
+                throw "Found illegal character '" + d + "' at index " + i + " when parsing input string";
             }
-            e += 1;
+            i += 1;
+            e -= 1;
         }
 
-        sum += signum * decimalSum / 10;
-    }
-    else {
-        sum += __parseInt__(s);
-    }
+        return signum * sum;
+    };
 
-    return sum;
+    // TODO: Maybe it should parse string as int and shift decimal point instead?
+    __parseDecimal__ = (s) => {
+        chars = String(s);
+        dotSignCount = chars.countChar(__dotSign__);
+
+        if (dotSignCount > 1) {
+            throw "std.Convert.string.toDecimal: Illegal number format";
+        }
+
+        sum = .0;
+        hasDecimalPoint = (dotSignCount == 1);
+
+        if (hasDecimalPoint) {
+            segments = chars.split(__dotSign__);
+
+            integers = segments.get(0);
+            decimals = String(segments.get(1));
+
+            sum += __parseInt__(integers);
+            signum = 1;
+            if (sum < 0) {
+                signum *= -1;
+            }
+            decimalSum = .0;
+            e = 0;
+            while (e < decimals.length()) {
+                d = decimals.get(e);
+                if (__charToDigit__.contains(d)) {
+                    decimalSum += __charToDigit__.get(d) / (__intPow__(10, e) + .0);
+                }
+                else {
+                    integerPartString = String(integers);
+                    throw "Found illegal character '" + d + "' at index " + (integerPartString.length() + e + 1) + " when parsing input string";
+                }
+                e += 1;
+            }
+
+            sum += signum * decimalSum / 10;
+        }
+        else {
+            sum += __parseInt__(s);
+        }
+
+        return sum;
+    };
+
+    __escapeSpecialChars__ = s => {
+        s = String(s);
+        s = s.replaceAll("\\", "\\\\");
+        s = s.replaceAll("\"", "\\\"");
+        s = s.replaceAll("\n", "\\n");
+        s = s.replaceAll("\t", "\\t");
+        return s.toString();
+    };
+
+    // 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
+    __ticksUntilUnixStart__ = 621355968000000000;
+
+    // 0-9
+    __digits__ = String("0123456789");
+
+    __charToDigit__ = Dictionary();
+    __charToDigit__.set("0", 0);
+    __charToDigit__.set("1", 1);
+    __charToDigit__.set("2", 2);
+    __charToDigit__.set("3", 3);
+    __charToDigit__.set("4", 4);
+    __charToDigit__.set("5", 5);
+    __charToDigit__.set("6", 6);
+    __charToDigit__.set("7", 7);
+    __charToDigit__.set("8", 8);
+    __charToDigit__.set("9", 9);
+
+    __minusSign__ = "-";
+    __plusSign__ = "+";
+    __dotSign__ = ".";
+    __commaSign__ = ",";
+    __emptyString__ = "";
+
+    return {
+        isNumber = __is_number,
+        isInteger = __is_integer,
+        isDecimal = __is_decimal,
+        isString = __is_string,
+        isBool = __is_bool,
+        isObject = __is_object,
+        isMethod = __is_method,
+
+        print = print,
+        println = println,
+        readln = readln,
+        delay = delay,
+        systemMillis = systemMillis,
+        systemTicks = systemTicks,
+        ticks = ticks,
+        ticksUnix = ticksUnix,
+        Convert = Convert,
+        Arrays = Arrays,
+
+        Array = Array,
+        ArrayList = ArrayList,
+        Dictionary = Dictionary,
+        String = String,
+
+        escapeSpecialCharacters = __escapeSpecialChars__
+    };
 };
 
-__escapeSpecialChars__ = s => {
-    s = String(s);
-    s = s.replaceAll("\\", "\\\\");
-    s = s.replaceAll("\"", "\\\"");
-    s = s.replaceAll("\n", "\\n");
-    s = s.replaceAll("\t", "\\t");
-    return s.toString();
-};
-
-// 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
-__ticksUntilUnixStart__ = 621355968000000000;
-
-// 0-9
-__digits__ = String("0123456789");
-
-__charToDigit__ = Dictionary();
-__charToDigit__.set("0", 0);
-__charToDigit__.set("1", 1);
-__charToDigit__.set("2", 2);
-__charToDigit__.set("3", 3);
-__charToDigit__.set("4", 4);
-__charToDigit__.set("5", 5);
-__charToDigit__.set("6", 6);
-__charToDigit__.set("7", 7);
-__charToDigit__.set("8", 8);
-__charToDigit__.set("9", 9);
-
-__minusSign__ = "-";
-__plusSign__ = "+";
-__dotSign__ = ".";
-__commaSign__ = ",";
-__emptyString__ = "";
+std = __STD_IMPL__();

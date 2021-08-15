@@ -293,8 +293,8 @@ __COLLECTIONS_IMPL__ = () => {
 				i = 0;
 				while (e.next()) {
 					current = e.current();
-					if (__is_string(current)) {
-						sb += ("\"" + __escapeSpecialChars__(current) + "\"");
+					if (std.isString(current)) {
+						sb += ("\"" + std.escapeSpecialCharacters(current) + "\"");
 					}
 					// Do not toString self reference to avoid infinite loop
 					else if (current === callerList) {
