@@ -240,15 +240,36 @@ atom
 	| method_call_statement				
 	| object_initialization_expression		
 	| anonymous_function_definition_statement
+	| array_literal_notation
+	| dictionary_literal_notation
 	;
 
 literal
 	: lit=STRING
+	| lit=CHAR
 	| lit=BOOLEAN
 	| lit=NUMBER
 	| lit=NULL
 	| lit=VOID
 	;
+
+array_literal_notation
+	: '[' argument_list ']'
+	| '[' ']'
+	;
+
+dictionary_literal_notation
+	: '{' dictionary_arguments '}'
+	;
+	
+	dictionary_arguments
+		: '[' dictionary_key ']' ASSIGN dictionary_value
+			(',' '[' dictionary_key ']' ASSIGN dictionary_value)*
+		;
+		
+		dictionary_key: expression;
+
+		dictionary_value: expression;
 	
 assignment_operator
 	: op=ASSIGN
@@ -374,6 +395,11 @@ NUMBER
 STRING
 	: '"' (~('"' | '\\' | '\n') | '\\' ('"' | '\\' | 'n' | 't'))+ '"'
 	| '""'
+	;
+
+CHAR
+	: '\'' (~('\'' | '\\' | '\n') | '\\' ('\'' | '\\' | 'n' | 't' | 'x'))+ '\''
+	| '\'\''
 	;
 	
 NULL

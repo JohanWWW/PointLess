@@ -107,7 +107,10 @@ namespace ZeroPointCLI
                                 whitespace += ' ';
                             }
                             Console.WriteLine(whitespace + '^');
-                            Console.WriteLine(whitespace + "Unexpected proceeding token");
+                            if (e?.LanguageSyntaxException?.AdditionalMessage != null)
+                                Console.WriteLine(whitespace + e.LanguageSyntaxException.AdditionalMessage);
+                            else
+                                Console.WriteLine(whitespace + "Unexpected proceeding token");
                         }
                     }
                 }

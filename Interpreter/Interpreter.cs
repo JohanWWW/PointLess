@@ -21,7 +21,7 @@ namespace Interpreter
         private readonly RuntimeEnvironment _environment;
         private readonly string _filePath;
 
-        private readonly IReadOnlyDictionary<AssignmentOperator, BinaryOperator> _ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT = new Dictionary<AssignmentOperator, BinaryOperator>
+        private static readonly IReadOnlyDictionary<AssignmentOperator, BinaryOperator> _ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT = new Dictionary<AssignmentOperator, BinaryOperator>
         {
             [AssignmentOperator.AddAssign]          = BinaryOperator.Add,
             [AssignmentOperator.SubAssign]          = BinaryOperator.Sub,
@@ -264,9 +264,11 @@ namespace Interpreter
             ModelTypeCode.NativeActionStatement             => EnterNativeActionStatement(expression as NativeActionStatementModel, scope),
             // --Methods--
 
-            ModelTypeCode.MethodCallStatement             => EnterFunctionCallStatement(expression as MethodCallStatementModel, scope),
+            ModelTypeCode.MethodCallStatement               => EnterFunctionCallStatement(expression as MethodCallStatementModel, scope),
             ModelTypeCode.ObjectInitializationExpression    => EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope),
-            _                                               => throw new NotImplementedException($"Expression with type code '{expression.TypeCode}' is not implemented"),
+            ModelTypeCode.ArrayLiteralNotation              => EnterArrayLiteralNotation(expression as ArrayLiteralNotationModel, scope),
+            ModelTypeCode.DictionaryLiteralNotation         => EnterDictionaryObjectOperable(expression as DictionaryLiteralNotation, scope),
+            _                                               => throw new InterpreterRuntimeException(expression, _filePath, $"Expression with type code '{expression.TypeCode}' is not implemented"),
         };
 
         public IOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
@@ -370,7 +372,10 @@ namespace Interpreter
 
                 RuntimeObject obj = value.OperableType switch
                 {
-                    ObjectType.Object => (value as IOperable<RuntimeObject>).Value,
+                    ObjectType.Object or 
+                    ObjectType.StringObject or 
+                    ObjectType.ArrayObject or
+                    ObjectType.DictionaryObject => (value as IOperable<RuntimeObject>).Value,
                     ObjectType.Void => throw new InterpreterRuntimeException(functionCall, _filePath, $"Cannot access members on void type ${functionCall.IdentifierPath[0]}"),
                     _ => throw new InterpreterRuntimeException(functionCall, _filePath, $"Attempted to access member on atom type '{value.OperableType}'")
                 };
@@ -421,79 +426,87 @@ namespace Interpreter
             IExpressionModel[] args = functionCall.Arguments;
             int argumentCount = functionCall.Arguments?.Length ?? 0;
             
-            if (method is IOperable<MethodData> mdOp)
+            try
             {
-                MethodData md = mdOp.Value;
-
-                if (!md.ContainsOverload(argumentCount))
-                    throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Could not find suitable overload with parameter count {argumentCount}.");
-
-                Method overload = md.GetOverload(argumentCount);
-
-                switch (overload.MethodType)
+                if (method is IOperable<MethodData> mdOp)
                 {
-                    case MethodType.Function:
-                        {
-                            IOperable[] evalArgs = new IOperable[argumentCount];
-                            for (int i = 0; i < argumentCount; i++)
+                    MethodData md = mdOp.Value;
+
+                    if (!md.ContainsOverload(argumentCount))
+                        throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Could not find suitable overload with parameter count {argumentCount}.");
+
+                    Method overload = md.GetOverload(argumentCount);
+
+                    switch (overload.MethodType)
+                    {
+                        case MethodType.Function:
                             {
-                                evalArgs[i] = EnterExpression(args[i], scope);
+                                IOperable[] evalArgs = new IOperable[argumentCount];
+                                for (int i = 0; i < argumentCount; i++)
+                                {
+                                    evalArgs[i] = EnterExpression(args[i], scope);
+                                }
+                                return overload.GetFunction().Invoke(evalArgs);
                             }
-                            return overload.GetFunction().Invoke(evalArgs);
-                        }
-                    case MethodType.Action:
-                        overload.GetAction().Invoke();
-                        return null;
-                    case MethodType.Consumer:
-                        {
-                            IOperable[] evalArgs = new IOperable[argumentCount];
-                            for (int i = 0; i < argumentCount; i++)
-                            {
-                                evalArgs[i] = EnterExpression(args[i], scope);
-                            }
-                            overload.GetConsumer().Invoke(evalArgs);
+                        case MethodType.Action:
+                            overload.GetAction().Invoke();
                             return null;
-                        }
-                    case MethodType.Provider:
-                        return overload.GetProvider().Invoke();
-                    default:
-                        throw new NotImplementedException($"Method type {overload.MethodType} not implemented");
+                        case MethodType.Consumer:
+                            {
+                                IOperable[] evalArgs = new IOperable[argumentCount];
+                                for (int i = 0; i < argumentCount; i++)
+                                {
+                                    evalArgs[i] = EnterExpression(args[i], scope);
+                                }
+                                overload.GetConsumer().Invoke(evalArgs);
+                                return null;
+                            }
+                        case MethodType.Provider:
+                            return overload.GetProvider().Invoke();
+                        default:
+                            throw new NotImplementedException($"Method type {overload.MethodType} not implemented");
+                    }
+                }
+                else if (method is IOperable<Method> overloadOp)
+                {
+                    Method overload = overloadOp.Value;
+
+                    switch (overload.MethodType)
+                    {
+                        case MethodType.Function:
+                            {
+                                IOperable[] evalArgs = new IOperable[argumentCount];
+                                for (int i = 0; i < argumentCount; i++)
+                                {
+                                    evalArgs[i] = EnterExpression(args[i], scope);
+                                }
+                                return overload.GetFunction().Invoke(evalArgs);
+                            }
+                        case MethodType.Action:
+                            overload.GetAction().Invoke();
+                            return null;
+                        case MethodType.Consumer:
+                            {
+                                IOperable[] evalArgs = new IOperable[argumentCount];
+                                for (int i = 0; i < argumentCount; i++)
+                                {
+                                    evalArgs[i] = EnterExpression(args[i], scope);
+                                }
+                                overload.GetConsumer().Invoke(evalArgs);
+                                return null;
+                            }
+                        case MethodType.Provider:
+                            return overload.GetProvider().Invoke();
+                        default:
+                            throw new NotImplementedException($"Method type {overload.MethodType} not implemented");
+                    }
                 }
             }
-            else if (method is IOperable<Method> overloadOp)
+            catch (OperableException e)
             {
-                Method overload = overloadOp.Value;
-
-                switch (overload.MethodType)
-                {
-                    case MethodType.Function:
-                        {
-                            IOperable[] evalArgs = new IOperable[argumentCount];
-                            for (int i = 0; i < argumentCount; i++)
-                            {
-                                evalArgs[i] = EnterExpression(args[i], scope);
-                            }
-                            return overload.GetFunction().Invoke(evalArgs);
-                        }
-                    case MethodType.Action:
-                        overload.GetAction().Invoke();
-                        return null;
-                    case MethodType.Consumer:
-                        {
-                            IOperable[] evalArgs = new IOperable[argumentCount];
-                            for (int i = 0; i < argumentCount; i++)
-                            {
-                                evalArgs[i] = EnterExpression(args[i], scope);
-                            }
-                            overload.GetConsumer().Invoke(evalArgs);
-                            return null;
-                        }
-                    case MethodType.Provider:
-                        return overload.GetProvider().Invoke();
-                    default:
-                        throw new NotImplementedException($"Method type {overload.MethodType} not implemented");
-                }
+                throw new InterpreterRuntimeException(functionCall, _filePath, e.Message, e);
             }
+
 
             throw new NotImplementedException("The provided method atom type is not implemented");
         }
@@ -995,5 +1008,21 @@ namespace Interpreter
 
         public void EnterThrowStatement(ThrowStatement statement, Scoping scope) =>
             throw new LanguageException(EnterExpression(statement.Expression, scope), statement, _filePath);
+
+        public ArrayObjectOperable EnterArrayLiteralNotation(ArrayLiteralNotationModel expression, Scoping scope)
+        {
+            if (expression.Arguments is null)
+                return new ArrayObjectOperable();
+
+            return new ArrayObjectOperable(expression.Arguments.Select(arg => EnterExpression(arg, scope)).ToArray());
+        }
+
+        public DictionaryObjectOperable EnterDictionaryObjectOperable(DictionaryLiteralNotation expression, Scoping scope)
+        {
+            if (expression.Arguments is null)
+                return new DictionaryObjectOperable();
+
+            return new DictionaryObjectOperable(expression.Arguments.ToDictionary(tup => EnterExpression(tup.key, scope), tup => EnterExpression(tup.value, scope)));
+        }
     }
 }

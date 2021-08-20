@@ -31,6 +31,8 @@ namespace Interpreter.Models.Enums
         TryCatchStatement,
         UnaryExpression,
         UseStatement,
-        WhileLoopStatement
+        WhileLoopStatement,
+        ArrayLiteralNotation,
+        DictionaryLiteralNotation
     }
 }

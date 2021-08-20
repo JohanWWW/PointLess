@@ -334,7 +334,7 @@ namespace Interpreter.Runtime
 
             MethodData toStringData = (value as IOperable<MethodData>).Value;
             Method toString = toStringData.GetOverload(0);
-            return toString.GetProvider().Invoke().Value.ToString();
+            return toString.GetProvider().Invoke().ToString();
         }
     }
 }

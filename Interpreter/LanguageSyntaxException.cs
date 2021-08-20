@@ -11,12 +11,18 @@ namespace Interpreter
         public int Line { get; private set; }
         public int StartColumn { get; private set; }
         public int EndColumn { get; private set; }
+        public string AdditionalMessage { get; private set; }
 
         public LanguageSyntaxException(int line, int startColumn, int endColumn) : base($"Syntax error at {line}:{startColumn}")
         {
             Line = line;
             StartColumn = startColumn;
             EndColumn = endColumn;
+        }
+
+        public LanguageSyntaxException(int line, int startColumn, int endColumn, string additionalMessage) : this(line, startColumn, endColumn)
+        {
+            AdditionalMessage = additionalMessage;
         }
 
         public override string ToString() => Message ?? base.ToString();

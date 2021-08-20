@@ -17,7 +17,11 @@ namespace Interpreter.Runtime
         Boolean,
         Void,
         Array,
+        ArrayObject,
         Dictionary,
-        UnsignedByte
+        UnsignedByte,
+        StringObject,
+        Utf32Character,
+        DictionaryObject
     }
 }

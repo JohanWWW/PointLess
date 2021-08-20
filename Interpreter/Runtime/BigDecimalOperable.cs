@@ -1,4 +1,5 @@
 ﻿using Interpreter.Models.Enums;
+using Interpreter.Types;
 using Singulink.Numerics;
 using System;
 using System.Collections.Generic;
@@ -26,11 +27,13 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryPrecisionDecimal => new BigDecimalOperable(Value + (operand as IOperable<BigDecimal>).Value),
-                ObjectType.ArbitraryBitInteger => new BigDecimalOperable(Value + (operand as IOperable<BigInteger>).Value),
-                ObjectType.UnsignedByte => new BigDecimalOperable(Value + (uint)(operand as IOperable<byte>).Value),
-                ObjectType.String => new StringOperable(ToString() + operand.ToString()),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.ArbitraryPrecisionDecimal => (BigDecimalOperable)(Value + (operand as IOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => (BigDecimalOperable)(Value + (operand as IOperable<BigInteger>).Value),
+                ObjectType.UnsignedByte => (BigDecimalOperable)(Value + (uint)(operand as IOperable<byte>).Value),
+                ObjectType.String => (StringOperable)(ToString() + operand.ToString()),
+                ObjectType.StringObject => (StringObjectOperable)(ToString() + operand.ToString()),
+                ObjectType.Utf32Character => (BigDecimalOperable)(Value + (operand as IOperable<Utf32Character>).Value.Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Add)
             };
         }
 
@@ -38,10 +41,11 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryPrecisionDecimal => new BigDecimalOperable(Value / (operand as IOperable<BigDecimal>).Value),
-                ObjectType.ArbitraryBitInteger => new BigDecimalOperable(Value / (operand as IOperable<BigInteger>).Value),
-                ObjectType.UnsignedByte => new BigDecimalOperable(Value / (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.ArbitraryPrecisionDecimal => (BigDecimalOperable)(Value / (operand as IOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => Value / (operand as IOperable<BigInteger>).Value,
+                ObjectType.UnsignedByte => Value / (uint)(operand as IOperable<byte>).Value,
+                ObjectType.Utf32Character => Value / (operand as IOperable<Utf32Character>).Value.Value,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Div)
             };
         }
 
@@ -52,8 +56,9 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value == (operand as IOperable<BigDecimal>).Value),
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value == (operand as IOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value == (uint)(operand as IOperable<byte>).Value),
+                ObjectType.Utf32Character => BoolOperable.FromBool(Value == (operand as IOperable<Utf32Character>).Value.Value),
                 ObjectType.Void => BoolOperable.False,
-                _ => throw new MissingOperatorOverrideException()
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
         }
 
@@ -64,7 +69,8 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value > (operand as IOperable<BigDecimal>).Value),
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value > (operand as IOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value > (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.Utf32Character => BoolOperable.FromBool(Value > (operand as IOperable<Utf32Character>).Value.Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThan)
             };
         }
 
@@ -75,7 +81,8 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value >= (operand as IOperable<BigDecimal>).Value),
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value >= (operand as IOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value >= (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.Utf32Character => BoolOperable.FromBool(Value >= (operand as IOperable<Utf32Character>).Value.Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.GreaterThanOrEqual)
             };
         }
 
@@ -86,7 +93,8 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value < (operand as IOperable<BigDecimal>).Value),
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value < (operand as IOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value < (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.Utf32Character => BoolOperable.FromBool(Value < (operand as IOperable<Utf32Character>).Value.Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThan)
             };
         }
 
@@ -97,7 +105,8 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value <= (operand as IOperable<BigDecimal>).Value),
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value <= (operand as IOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value <= (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.Utf32Character => BoolOperable.FromBool(Value <= (operand as IOperable<Utf32Character>).Value.Value),
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.LessThanOrEqual)
             };
         }
 
@@ -105,10 +114,11 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryPrecisionDecimal => new BigDecimalOperable(Value % (operand as IOperable<BigDecimal>).Value),
-                ObjectType.ArbitraryBitInteger => new BigDecimalOperable(Value % (operand as IOperable<BigInteger>).Value),
-                ObjectType.UnsignedByte => new BigDecimalOperable(Value % (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.ArbitraryPrecisionDecimal => (BigDecimalOperable)(Value % (operand as IOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => Value % (operand as IOperable<BigInteger>).Value,
+                ObjectType.UnsignedByte => Value % (uint)(operand as IOperable<byte>).Value,
+                ObjectType.Utf32Character => Value % (operand as IOperable<Utf32Character>).Value.Value,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mod)
             };
         }
 
@@ -116,10 +126,11 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryPrecisionDecimal => new BigDecimalOperable(Value * (operand as IOperable<BigDecimal>).Value),
-                ObjectType.ArbitraryBitInteger => new BigDecimalOperable(Value * (operand as IOperable<BigInteger>).Value),
-                ObjectType.UnsignedByte => new BigDecimalOperable(Value * (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.ArbitraryPrecisionDecimal => (BigDecimalOperable)(Value * (operand as IOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => Value * (operand as IOperable<BigInteger>).Value,
+                ObjectType.UnsignedByte => Value * (uint)(operand as IOperable<byte>).Value,
+                ObjectType.Utf32Character => Value * (operand as IOperable<Utf32Character>).Value.Value,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Mult)
             };
         }
 
@@ -130,8 +141,9 @@ namespace Interpreter.Runtime
                 ObjectType.ArbitraryPrecisionDecimal => BoolOperable.FromBool(Value != (operand as IOperable<BigDecimal>).Value),
                 ObjectType.ArbitraryBitInteger => BoolOperable.FromBool(Value != (operand as IOperable<BigInteger>).Value),
                 ObjectType.UnsignedByte => BoolOperable.FromBool(Value != (uint)(operand as IOperable<byte>).Value),
+                ObjectType.Utf32Character => BoolOperable.FromBool(Value != (operand as IOperable<Utf32Character>).Value.Value),
                 ObjectType.Void => BoolOperable.True,
-                _ => throw new MissingOperatorOverrideException()
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
         }
 
@@ -139,10 +151,11 @@ namespace Interpreter.Runtime
         {
             return operand.OperableType switch
             {
-                ObjectType.ArbitraryPrecisionDecimal => new BigDecimalOperable(Value - (operand as IOperable<BigDecimal>).Value),
-                ObjectType.ArbitraryBitInteger => new BigDecimalOperable(Value - (operand as IOperable<BigInteger>).Value),
-                ObjectType.UnsignedByte => new BigDecimalOperable(Value - (uint)(operand as IOperable<byte>).Value),
-                _ => throw new MissingOperatorOverrideException()
+                ObjectType.ArbitraryPrecisionDecimal => (BigDecimalOperable)(Value - (operand as IOperable<BigDecimal>).Value),
+                ObjectType.ArbitraryBitInteger => Value - (operand as IOperable<BigInteger>).Value,
+                ObjectType.UnsignedByte => Value - (uint)(operand as IOperable<byte>).Value,
+                ObjectType.Utf32Character => Value - (operand as IOperable<Utf32Character>).Value.Value,
+                _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Sub)
             };
         }
 
@@ -170,7 +183,7 @@ namespace Interpreter.Runtime
 
         #endregion
 
-        public static implicit operator BigDecimalOperable(BigDecimal value) => new BigDecimalOperable(value);
+        public static implicit operator BigDecimalOperable(BigDecimal value) => new(value);
 
         public override string ToString() => Value.ToString(DECIMAL_FORMAT, DECIMAL_CULTURE);
     }

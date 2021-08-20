@@ -16,7 +16,7 @@ namespace NativeLibraries
 {
     public class StdNativeImplementations : NativeImplementationBase
     {
-        private static string FormatPrintText(object obj)
+        private static string FormatPrintText(IOperable obj)
         {
             return obj.ToString();
         }
@@ -141,6 +141,18 @@ namespace NativeLibraries
         public static readonly NativeFunctionStatementModel IsString = new NativeFunctionStatementModel("value")
         {
             NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.String)
+        };
+
+        [ImplementationIdentifier("std.__is_string_object")]
+        public static readonly NativeFunctionStatementModel IsStringObject = new("value")
+        {
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.StringObject)
+        };
+
+        [ImplementationIdentifier("std.__is_character")]
+        public static readonly NativeFunctionStatementModel IsCharacter = new("value")
+        {
+            NativeImplementation = args => BoolOperable.FromBool(args[0].OperableType == ObjectType.Utf32Character)
         };
 
         [ImplementationIdentifier("std.__is_bool")]

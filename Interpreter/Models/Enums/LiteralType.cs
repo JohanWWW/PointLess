@@ -9,6 +9,7 @@ namespace Interpreter.Models.Enums
     public enum LiteralType
     {
         String,
+        Char,
         Boolean,
         Number,
         Null,

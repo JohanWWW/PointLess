@@ -8,13 +8,18 @@ namespace Interpreter.Runtime
 {
     public class RuntimeObject
     {
-        private readonly IDictionary<string, IOperable> _bindings;
+        protected readonly IDictionary<string, IOperable> _bindings;
 
         public ICollection<string> MemberNames => _bindings.Keys;
 
         public RuntimeObject()
         {
             _bindings = new Dictionary<string, IOperable>();
+        }
+
+        public RuntimeObject(IDictionary<string, IOperable> initialBindings) // Note by ref
+        {
+            _bindings = initialBindings;
         }
 
         public IOperable this[string name]
@@ -39,5 +44,8 @@ namespace Interpreter.Runtime
 
             return _bindings.TryAdd(name, value);
         }
+
+        public bool TryAddMember(string name, IOperable value) =>
+            _bindings.TryAdd(name, value);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Interpreter.Models.Enums;
+using Interpreter.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,7 @@ namespace Interpreter.Runtime
             return operand.OperableType switch
             {
                 ObjectType.String => BoolOperable.FromBool(Value == (operand as IBinaryOperable<string>).Value),
+                ObjectType.StringObject => BoolOperable.FromBool(Value == operand.ToString()),
                 ObjectType.Void => BoolOperable.FromBool(Value == null),
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
@@ -37,6 +39,7 @@ namespace Interpreter.Runtime
             return operand.OperableType switch
             {
                 ObjectType.String => BoolOperable.FromBool(Value != (operand as IBinaryOperable<string>).Value),
+                ObjectType.StringObject => BoolOperable.FromBool(Value != operand.ToString()),
                 ObjectType.Void => BoolOperable.FromBool(Value != null),
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.NotEqual)
             };
@@ -58,6 +61,6 @@ namespace Interpreter.Runtime
             return BoolOperable.FromBool(Value != (string)operand.Value);
         }
 
-        public static implicit operator StringOperable(string value) => new StringOperable(value);
+        public static implicit operator StringOperable(string value) => new(value);
     }
 }

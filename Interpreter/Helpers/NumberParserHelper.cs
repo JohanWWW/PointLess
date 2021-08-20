@@ -137,5 +137,22 @@ namespace Interpreter.Helpers
             }
             return value;
         }
+
+        public static int HexToInt(ReadOnlySpan<char> hex)
+        {
+            int value = 0;
+            int exponent = hex.Length - 1;
+            var enumerator = hex.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                if (!HEX_VALUES.TryGetValue(enumerator.Current, out byte hexVal))
+                    throw new FormatException("Invalid character: " + enumerator.Current);
+
+                value += hexVal * HEX_BASE.Pow(exponent);
+
+                exponent--;
+            }
+            return value;
+        }
     }
 }

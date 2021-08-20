@@ -79,6 +79,7 @@ namespace Interpreter
         private static readonly IReadOnlyDictionary<int, LiteralType> LITERALS = new Dictionary<int, LiteralType>
         {
             [ZeroPointParser.STRING]                = LiteralType.String,
+            [ZeroPointParser.CHAR]                  = LiteralType.Char,
             [ZeroPointParser.BOOLEAN]               = LiteralType.Boolean,
             [ZeroPointParser.NUMBER]                = LiteralType.Number,
             [ZeroPointParser.NULL]                  = LiteralType.Null,
@@ -144,7 +145,7 @@ namespace Interpreter
 
             var parser = new ZeroPointParser(tokenStream);
 
-            // Listen for syntax errors
+            // Listen for syntax errors detected by antlr
             var errorListener = new ParserErrorListener();
             parser.AddErrorListener(errorListener);
             
@@ -380,7 +381,17 @@ namespace Interpreter
                 return EnterFunctionDefinitionExpression(ctx.anonymous_function_definition_statement());
             }
 
-            throw new NotImplementedException("Invalid atom type");
+            if (ctx.array_literal_notation().IsPresent())
+            {
+                return EnterArrayLiteralNotation(ctx.array_literal_notation());
+            }
+
+            if (ctx.dictionary_literal_notation().IsPresent())
+            {
+                return EnterDictionaryLiteralNotation(ctx.dictionary_literal_notation());
+            }
+
+            throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Invalid atom type");
         }
 
         /// <summary>
@@ -481,6 +492,7 @@ namespace Interpreter
             return LITERALS[literalType] switch
             {
                 LiteralType.String => ParseString(context),
+                LiteralType.Char => ParseChar(context),
                 LiteralType.Boolean => new LiteralExpressionModel(BoolOperable.FromBool(bool.Parse(context.BOOLEAN().GetText())), context.Start, context.Stop),
                 LiteralType.Number => ParseNumber(context),
                 LiteralType.Null or LiteralType.Void => new LiteralExpressionModel(VoidOperable.Void),
@@ -536,7 +548,7 @@ namespace Interpreter
                 var tmp = (ByteOperable)NumberParserHelper.HexToUByte(hex);
                 return new LiteralExpressionModel(tmp, value.Start, value.Stop);
             }
-            else throw new FormatException($"Could not recognize {nameof(ZeroPointParser.NUMBER)}: {numberText}");
+            else throw new LanguageSyntaxException(value.Start.Line, value.Start.Column, value.Stop.Column, $"Could not recognize {numberText} as number literal because it was either too large or formatted incorrectly");
         }
 
         private LiteralExpressionModel ParseString(ZeroPointParser.LiteralContext value)
@@ -546,7 +558,7 @@ namespace Interpreter
             if (s.Length is 2)
             {
                 s = string.Empty;
-                return new LiteralExpressionModel(new StringOperable(s), value.Start, value.Stop);
+                return new LiteralExpressionModel((StringObjectOperable)s, value.Start, value.Stop);
             }
             else
                 s = s[1..^1];
@@ -592,7 +604,46 @@ namespace Interpreter
 
             s = s.Replace("\\\\", "\\");
 
-            return new LiteralExpressionModel((StringOperable)s, value.Start, value.Stop);
+            return new LiteralExpressionModel((StringObjectOperable)s, value.Start, value.Stop);
+        }
+
+        private LiteralExpressionModel ParseChar(ZeroPointParser.LiteralContext ctx)
+        {
+            string c = ctx.CHAR().GetText();
+
+            // Account for two extra characters in string -> ''
+            if (c.Length is 2)
+                throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Character literal cannot be empty");
+
+            c = c[1..^1];
+
+            if (c.Length > 1)
+            {
+                if (c[0] != '\\')
+                    throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Character literal cannot contain more than one character or escape sequence");
+
+                switch (c[1])
+                {
+                    case 'n':
+                        return new((CharacterOperable)'\n', ctx.Start, ctx.Stop);
+                    case 't':
+                        return new((CharacterOperable)'\t', ctx.Start, ctx.Stop);
+                    case '\\':
+                        return new((CharacterOperable)'\\', ctx.Start, ctx.Stop);
+                    case '\'':
+                        return new((CharacterOperable)'\'', ctx.Start, ctx.Stop);
+                    case 'x':
+                        var hex = c.AsSpan()[2..];
+                        var hexRegx = new Regex("^[0-9A-Fa-f]+$");
+                        if (!hexRegx.IsMatch(hex.ToString()))
+                            throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Illegal character present in hex sequence");
+                        return new((CharacterOperable)NumberParserHelper.HexToInt(hex), ctx.Start, ctx.Stop);
+                    default:
+                        throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Could not recognize escape sequence");
+                }
+            }
+
+            return new((CharacterOperable)c.First());
         }
 
         private FunctionStatementModel EnterFunctionStatement(ZeroPointParser.Function_statementContext context)
@@ -988,6 +1039,52 @@ namespace Interpreter
                 StartToken = ctx.Start,
                 StopToken = ctx.Stop
             };
+        }
+
+        private ArrayLiteralNotationModel EnterArrayLiteralNotation(ZeroPointParser.Array_literal_notationContext ctx)
+        {
+            if (!ctx.argument_list().IsPresent())
+                return new ArrayLiteralNotationModel
+                {
+                    Arguments = null,
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop
+                };
+
+            return new ArrayLiteralNotationModel
+            {
+                Arguments = EnterArgumentList(ctx.argument_list()),
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
+        }
+
+        private DictionaryLiteralNotation EnterDictionaryLiteralNotation(ZeroPointParser.Dictionary_literal_notationContext ctx)
+        {
+            if (!ctx.dictionary_arguments().IsPresent())
+                return new DictionaryLiteralNotation
+                {
+                    Arguments = null,
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop
+                };
+
+            var arguments = EnterDictionaryArguments(ctx.dictionary_arguments());
+            return new DictionaryLiteralNotation
+            {
+                Arguments = arguments.ToArray(),
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
+        }
+
+        private IEnumerable<(IExpressionModel key, IExpressionModel value)> EnterDictionaryArguments(ZeroPointParser.Dictionary_argumentsContext ctx)
+        {
+            var dictKeys = ctx.dictionary_key();
+            var dictValues = ctx.dictionary_value();
+            for (int i = 0; i < dictKeys.Length; i++)
+                yield return (EnterExpression(dictKeys[i].expression()), EnterExpression(dictValues[i].expression()));
+
         }
     }
 
