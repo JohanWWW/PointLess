@@ -18,12 +18,18 @@ namespace Interpreter.Runtime
         private const string METHOD_NAME_LENGTH                 = "length";
         private const string METHOD_NAME_REPLACE_ALL            = "replaceAll";
         private const string METHOD_NAME_SPLIT                  = "split";
+        private const string METHOD_NAME_SUBSTRING              = "substring";
+        private const string METHOD_NAME_CONTAINS               = "contains";
+        private const string METHOD_NAME_TO_LOWER               = "toLower";
+        private const string METHOD_NAME_TO_UPPER               = "toUpper";
         private const string METHOD_NAME_ENUMERATOR             = "enumerator";
         private const string METHOD_NAME_INDEXER_GET            = "__indexer_get__";
         private const string METHOD_NAME_OPERATOR_ADD           = "__operator_add__";
         private const string METHOD_NAME_OPERATOR_EQUALS        = "__operator_equals__";
         private const string METHOD_NAME_OPERATOR_NOT_EQUALS    = "__operator_not_equals__";
         private const string METHOD_NAME_TO_OBJECT              = "toObject";
+        private const string METHOD_NAME_GET_CHARS              = "getChars";
+        private const string METHOD_NAME_GET_BYTES              = "getBytes";
         #endregion
 
         private readonly string _stringValue;
@@ -41,9 +47,15 @@ namespace Interpreter.Runtime
             obj[METHOD_NAME_LENGTH] = GenerateStringLengthMethod(value);
             obj[METHOD_NAME_REPLACE_ALL] = GenerateReplaceAllMethod(value);
             obj[METHOD_NAME_SPLIT] = GenerateSplitMethod(value);
+            obj[METHOD_NAME_SUBSTRING] = GenerateSubstringMethod(value);
+            obj[METHOD_NAME_CONTAINS] = GenerateContainsMethod(value);
+            obj[METHOD_NAME_TO_LOWER] = GenerateToLowerMethod(value);
+            obj[METHOD_NAME_TO_UPPER] = GenerateToUpperMethod(value);
             obj[METHOD_NAME_ENUMERATOR] = GenerateStringEnumeratorMethod(value);
             obj[METHOD_NAME_INDEXER_GET] = GenerateIndexerGetMethod(value);
             obj[METHOD_NAME_TO_OBJECT] = GenerateToObjectMethod(obj);
+            obj[METHOD_NAME_GET_CHARS] = GenerateGetChars(value);
+            obj[METHOD_NAME_GET_BYTES] = GenerateGetBytes(value);
 
             return obj;
         }
@@ -173,13 +185,13 @@ namespace Interpreter.Runtime
                         {
                             string tmp = (arg as StringObjectOperable)._stringValue;
                             string[] segments = value.Split(tmp);
-                            return new ArrayOperable(segments.Select(s => (StringObjectOperable)s).ToArray());
+                            return new ArrayObjectOperable(segments.Select(s => (StringObjectOperable)s).ToArray());
                         }
                     case ObjectType.Utf32Character:
                         {
                             Utf32Character tmp = (arg as IOperable<Utf32Character>).Value;
                             string[] segments = value.Split((char)tmp.Value);
-                            return new ArrayOperable(segments.Select(s => (StringObjectOperable)s).ToArray());
+                            return new ArrayObjectOperable(segments.Select(s => (StringObjectOperable)s).ToArray());
                         }
                     default:
                         throw new OperableException($"An argument with illegal type '{arg.OperableType}' was provided");
@@ -187,6 +199,69 @@ namespace Interpreter.Runtime
             };
             Method splitMethod = new(1, split, MethodType.Function);
             return new MethodData(splitMethod);
+        }
+
+        private static MethodDataOperable GenerateSubstringMethod(string value)
+        {
+            FunctionMethod substring = args =>
+            {
+                IOperable startArg = args[0];
+                IOperable stopArg = args[1];
+
+                int start = startArg.OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(startArg as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (startArg as IOperable<byte>).Value,
+                    _ => throw new OperableException("First argument is not a valid number type"),
+                };
+                int stop = stopArg.OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(stopArg as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (stopArg as IOperable<byte>).Value,
+                    _ => throw new OperableException("Second argument is not a valid number type"),
+                };
+
+                if (start < 0 || stop < 0)
+                    throw new OperableException("Argument out of range");
+                if (start > stop)
+                    throw new OperableException("First argument must be smaller than second argument");
+                if (stop > value.Length)
+                    throw new OperableException("Argument out of range");
+
+                return (StringObjectOperable)value[start..stop];
+            };
+            Method substringMethod = new(2, substring, MethodType.Function);
+            return new MethodData(substringMethod);
+        }
+
+        private static MethodDataOperable GenerateContainsMethod(string value)
+        {
+            FunctionMethod contains = args =>
+            {
+                return args[0].OperableType switch
+                {
+                    ObjectType.StringObject => BoolOperable.FromBool(value.Contains((args[0] as StringObjectOperable)._stringValue)),
+                    ObjectType.String => BoolOperable.FromBool(value.Contains((args[0] as IOperable<string>).Value)),
+                    ObjectType.Utf32Character => BoolOperable.FromBool(value.Contains((char)(args[0] as IOperable<Utf32Character>).Value.Value)),
+                    _ => throw new OperableException("Method requires an argument of type string"),
+                };
+            };
+            Method containsMethod = new(1, contains, MethodType.Function);
+            return new MethodData(containsMethod);
+        }
+
+        private static MethodDataOperable GenerateToLowerMethod(string value)
+        {
+            ProviderMethod toLower = () => (StringObjectOperable)value.ToLower();
+            Method toLowerMethod = new(0, toLower, MethodType.Provider);
+            return new MethodData(toLowerMethod);
+        }
+
+        private static MethodDataOperable GenerateToUpperMethod(string value)
+        {
+            ProviderMethod toUpper = () => (StringObjectOperable)value.ToUpper();
+            Method toUpperMethod = new(0, toUpper, MethodType.Provider);
+            return new MethodData(toUpperMethod);
         }
 
         private static MethodDataOperable GenerateOperatorAddMethod()
@@ -233,6 +308,33 @@ namespace Interpreter.Runtime
             ProviderMethod toObject = () => (ObjectOperable)obj;
             Method toObjectMethod = new(0, toObject, MethodType.Provider);
             return new MethodData(toObjectMethod);
+        }
+
+        private static MethodDataOperable GenerateGetChars(string value)
+        {
+            ProviderMethod getChars = () => new ArrayObjectOperable(value.Select(c => (CharacterOperable)c).ToArray());
+            Method getCharsMethod = new(0, getChars, MethodType.Provider);
+            return new MethodData(getCharsMethod);
+        }
+
+        private static MethodDataOperable GenerateGetBytes(string value)
+        {
+            ProviderMethod getBytes = () =>
+            {
+                IOperable[] bytes = new IOperable[value.Length * 4];
+                for (int i = 0, b = 0; i < value.Length; i++, b += 4)
+                {
+                    int c = value[i];
+
+                    bytes[b]        = (ByteOperable)(c & 0xff);
+                    bytes[b + 1]    = (ByteOperable)((c >> 8) & 0xff);
+                    bytes[b + 2]    = (ByteOperable)((c >> 16) & 0xff);
+                    bytes[b + 3]    = (ByteOperable)(c >> 21);
+                }
+                return (ArrayObjectOperable)bytes;
+            };
+            Method getBytesMethod = new(0, getBytes, MethodType.Provider);
+            return new MethodData(getBytesMethod);
         }
 
         #endregion
@@ -289,5 +391,13 @@ namespace Interpreter.Runtime
         public static implicit operator StringObjectOperable(string value) => new(value);
 
         public override string ToString() => _stringValue;
+
+        private bool Equals(StringObjectOperable other) => 
+            _stringValue == other._stringValue;
+
+        public override bool Equals(object obj) => Equals((StringObjectOperable)obj);
+
+        // base.Value should not be included in hash because it has a variable hash code
+        public override int GetHashCode() => HashCode.Combine(_stringValue, OperableType);
     }
 }

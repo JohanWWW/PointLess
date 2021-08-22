@@ -16,6 +16,7 @@ namespace Interpreter.Runtime
         private const string METHOD_NAME_GET                    = "get";
         private const string METHOD_NAME_SET                    = "set";
         private const string METHOD_NAME_ENUMERATOR             = "enumerator";
+        private const string METHOD_NAME_RANGE                  = "range";
         private const string METHOD_NAME_TO_STRING              = "toString";
         private const string METHOD_NAME_INDEXER_GET            = "__indexer_get__";
         private const string METHOD_NAME_INDEXER_SET            = "__indexer_set__";
@@ -46,6 +47,7 @@ namespace Interpreter.Runtime
             obj[METHOD_NAME_GET] = indexGet;
             obj[METHOD_NAME_SET] = indexSet;
             obj[METHOD_NAME_ENUMERATOR] = GenerateEnumeratorMethod(array);
+            obj[METHOD_NAME_RANGE] = GenerateRangeMethod(array);
             obj[METHOD_NAME_TO_STRING] = GenerateToStringMethod(array);
             obj[METHOD_NAME_INDEXER_GET] = indexGet;
             obj[METHOD_NAME_INDEXER_SET] = indexSet;
@@ -169,6 +171,36 @@ namespace Interpreter.Runtime
             };
             Method eMethod = new(0, e, MethodType.Provider);
             return new MethodData(eMethod);
+        }
+
+        private static MethodDataOperable GenerateRangeMethod(IOperable[] array)
+        {
+            FunctionMethod range = args =>
+            {
+                int start = args[0].OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(args[0] as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (args[0] as IOperable<byte>).Value,
+                    _ => throw new OperableException("First argument is not a valid number type")
+                };
+                int stop = args[1].OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(args[1] as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (args[1] as IOperable<byte>).Value,
+                    _ => throw new OperableException("Second argument is not a valid number type")
+                };
+
+                if (start < 0 || stop < 0)
+                    throw new OperableException("Argument out of range");
+                if (start > stop)
+                    throw new OperableException("First argument must be smaller than the seconds argument");
+                if (stop > array.Length)
+                    throw new OperableException("Argument out of range");
+
+                return (ArrayObjectOperable)array[start..stop];
+            };
+            Method rangeMethod = new(2, range, MethodType.Function);
+            return new MethodData(rangeMethod);
         }
 
         private static MethodDataOperable GenerateToStringMethod(IOperable[] array)
@@ -316,6 +348,30 @@ namespace Interpreter.Runtime
 
             Method tsMethod = (ts as IOperable<MethodData>).Value.GetOverload(0);
             return tsMethod.GetProvider().Invoke().ToString();
+        }
+
+        public static ArrayObjectOperable Allocate(ulong size) => Allocate(VoidOperable.Void, size).ToArray();
+
+        public static ArrayObjectOperable Allocate(int size) => Allocate(VoidOperable.Void, size).ToArray();
+
+        public static ArrayObjectOperable Allocate(byte size) => Allocate(VoidOperable.Void, size).ToArray();
+
+        private static IEnumerable<IOperable> Allocate(IOperable initial, ulong size)
+        {
+            for (ulong i = 0; i < size; i++)
+                yield return initial;
+        }
+
+        private static IEnumerable<IOperable> Allocate(IOperable initial, int size)
+        {
+            for (int i = 0; i < size; i++)
+                yield return initial;
+        }
+
+        private static IEnumerable<IOperable> Allocate(IOperable initial, byte size)
+        {
+            for (byte i = 0; i < size; i++)
+                yield return initial;
         }
 
         public static implicit operator ArrayObjectOperable(IOperable[] value) => new(value);

@@ -1,4 +1,5 @@
 ﻿using Antlr4.Runtime;
+using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -19,20 +20,32 @@ namespace Interpreter.Models
         }
     }
 
-    public class IfStatementModel
+    public class IfStatementModel : ModelBase
     {
         public IExpressionModel Condition { get; set; }
         public BlockModel Body { get; set; }
+
+        public IfStatementModel() : base(ModelTypeCode.IfClause)
+        {
+        }
     }
 
-    public class ElseIfStatementModel
+    public class ElseIfStatementModel : ModelBase
     {
         public IExpressionModel Condition { get; set; }
         public BlockModel Body { get; set; }
+
+        public ElseIfStatementModel() : base(ModelTypeCode.ElseIfClause)
+        {
+        }
     }
 
-    public class ElseStatementModel
+    public class ElseStatementModel : ModelBase
     {
         public BlockModel Body { get; set; }
+
+        public ElseStatementModel() : base(ModelTypeCode.ElseClause)
+        {
+        }
     }
 }

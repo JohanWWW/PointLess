@@ -42,6 +42,9 @@ namespace Interpreter.Environment
             return _overloads[parameterCount];
         }
 
+        public bool TryGetOverload(int parameterCount, out Method value) =>
+            _overloads.TryGetValue(parameterCount, out value);
+
         public Method GetSingle() => _overloads.Single().Value;
 
         public bool TryGetSingle(out Method value)

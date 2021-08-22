@@ -153,11 +153,11 @@ namespace Interpreter.Runtime
                 RuntimeObject obj = new();
 
                 bool hasNext = true;
-                bool isDestructed = false;
+                bool isDisposed = false;
                 ProviderMethod next = () =>
                 {
-                    if (isDestructed)
-                        throw new OperableException("Enumerator is destructed");
+                    if (isDisposed)
+                        throw new OperableException("Enumerator is disposed");
                     if (!enumerator.MoveNext())
                     {
                         hasNext = false;
@@ -170,8 +170,8 @@ namespace Interpreter.Runtime
 
                 ProviderMethod current = () =>
                 {
-                    if (isDestructed)
-                        throw new OperableException("Enumerator is destructed");
+                    if (isDisposed)
+                        throw new OperableException("Enumerator is disposed");
                     if (!hasNext)
                         throw new OperableException("Enumeration already finished");
 
@@ -186,20 +186,20 @@ namespace Interpreter.Runtime
                 Method currentMethod = new(0, current, MethodType.Provider);
                 MethodData currentMethodData = new(currentMethod);
 
-                ActionMethod destruct = () =>
+                ActionMethod dispose = () =>
                 {
-                    if (!isDestructed)
+                    if (!isDisposed)
                     {
                         enumerator.Dispose();
-                        isDestructed = true;
+                        isDisposed = true;
                     }
                 };
-                Method destructMethod = new(0, destruct, MethodType.Action);
-                MethodData destructMethodData = new(destructMethod);
+                Method disposeMethod = new(0, dispose, MethodType.Action);
+                MethodData disposeMethodData = new(disposeMethod);
 
                 obj["next"] = (MethodDataOperable)nextMethodData;
                 obj["current"] = (MethodDataOperable)currentMethodData;
-                obj["destruct"] = (MethodDataOperable)destructMethodData;
+                obj["dispose"] = (MethodDataOperable)disposeMethodData;
 
                 return (ObjectOperable)obj;
             };

@@ -32,7 +32,11 @@ namespace Interpreter.Models.Enums
         UnaryExpression,
         UseStatement,
         WhileLoopStatement,
+        ForeachLoopStatement,
         ArrayLiteralNotation,
-        DictionaryLiteralNotation
+        DictionaryLiteralNotation,
+        IfClause,
+        ElseIfClause,
+        ElseClause
     }
 }

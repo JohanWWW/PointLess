@@ -60,7 +60,76 @@ namespace NativeLibraries
             NativeImplementation = () =>
             {
                 string input = Console.ReadLine();
-                return new StringOperable(input);
+                return (StringObjectOperable)input;
+            }
+        };
+
+        [ImplementationIdentifier("std.setCursorPosition")]
+        public static readonly NativeFunctionStatementModel SetCursorPosition = new NativeFunctionStatementModel("x", "y")
+        {
+            NativeImplementation = (args) =>
+            {
+                if (args.Count != 2)
+                    throw new NativeImplementationException("Method requires two parameters");
+
+                int x = args[0].OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(args[0] as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (args[0] as IOperable<byte>).Value,
+                    _ => throw new NativeImplementationException("$x was not a valid number")
+                };
+                if (x < 0)
+                    throw new NativeImplementationException("$x must be greater than or equal to zero");
+
+                int y = args[1].OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(args[1] as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (args[1] as IOperable<byte>).Value,
+                    _ => throw new NativeImplementationException("$y was not a valid number")
+                };
+                if (y < 0)
+                    throw new NativeImplementationException("$y must be greater than or equal to zero");
+
+                Console.SetCursorPosition(x, y);
+
+                return VoidOperable.Void;
+            }
+        };
+
+        [ImplementationIdentifier("std.setCursorVisibility")]
+        public static readonly NativeFunctionStatementModel SetCursorVisibility = new NativeFunctionStatementModel("visibility")
+        {
+            NativeImplementation = (args) =>
+            {
+                if (args.Count != 1)
+                    throw new NativeImplementationException("Argument count mismatch: One argument required");
+                if (args[0].OperableType != ObjectType.Boolean)
+                    throw new NativeImplementationException("Provided argument was not a boolean");
+                Console.CursorVisible = (bool)args[0].Value;
+                return VoidOperable.Void;
+            }
+        };
+
+        [ImplementationIdentifier("std.setBackgroundColor")]
+        public static readonly NativeFunctionStatementModel SetBackgroundColor = new NativeFunctionStatementModel("color")
+        {
+            NativeImplementation = (args) =>
+            {
+                if (args.Count != 1)
+                    throw new NativeImplementationException("Argument cound mismatch: One argument required");
+
+                int intColor = args[0].OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => (int)(args[0] as IOperable<BigInteger>).Value,
+                    ObjectType.UnsignedByte => (args[0] as IOperable<byte>).Value,
+                    _ => throw new NativeImplementationException("$color is not a valid number")
+                };
+
+                ConsoleColor color = (ConsoleColor)intColor;
+
+                Console.BackgroundColor = color;
+
+                return VoidOperable.Void;
             }
         };
 

@@ -10,6 +10,7 @@ using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -230,6 +231,9 @@ namespace Interpreter
                 case ModelTypeCode.WhileLoopStatement:
                     EnterWhileLoopStatement(statement as WhileLoopStatement, scope);
                     break;
+                case ModelTypeCode.ForeachLoopStatement:
+                    EnterForeachLoopStatement(statement as ForeachLoopStatement, scope);
+                    break;
                 case ModelTypeCode.UseStatement:
                     EnterUseStatementModel(statement as UseStatementModel, scope);
                     break;
@@ -296,21 +300,20 @@ namespace Interpreter
 
         public IOperable EnterIdentifierExpression(IdentifierExpressionModel expression, Scoping scope)
         {
+            IOperable __out;
             if (expression.Identifier.Length is 1)
             {
-                if (scope.ContainsGlobalBinding(expression.Identifier[0]))
-                    return scope.GetGlobalValue(expression.Identifier[0]);
-                else if (_namespace.GetImportedBindings().ContainsKey(expression.Identifier[0]))
-                    return _namespace.GetImportedValue(expression.Identifier[0]);
+                if (scope.TryGetGlobalBinding(expression.Identifier[0], out __out))
+                    return __out;
+                else if (_namespace.TryGetImportedBinding(expression.Identifier[0], out __out))
+                    return __out;
 
                 throw new InterpreterRuntimeException(expression, _filePath, $"${expression.Identifier[0]} is not defined in current scope");
             }
 
             IOperable value =
-                scope.ContainsGlobalBinding(expression.Identifier[0]) ?
-                    scope.GetGlobalValue(expression.Identifier[0]) :
-                _namespace.GetImportedBindings().ContainsKey(expression.Identifier[0]) ?
-                    _namespace.GetImportedValue(expression.Identifier[0]) :
+                scope.TryGetGlobalBinding(expression.Identifier[0], out __out) ? __out :
+                _namespace.TryGetImportedBinding(expression.Identifier[0], out __out) ? __out :
                 throw new InterpreterRuntimeException(expression, _filePath, $"${expression.Identifier[0]} is not defined");
 
             RuntimeObject obj = value.OperableType switch
@@ -338,7 +341,7 @@ namespace Interpreter
             if (TryGetRuntimeObjectMember(obj, expression.Identifier.Last(), out IOperable outerMemberValue))
                 return outerMemberValue;
 
-            throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[expression.Identifier.Length - 2]}->{expression.Identifier.Last()} is not defined");
+            throw new InterpreterRuntimeException(expression, _filePath, $"Member ${expression.Identifier[^2]}->{expression.Identifier.Last()} is not defined");
 
         }
 
@@ -358,25 +361,23 @@ namespace Interpreter
 
         public IOperable EnterFunctionCallStatement(MethodCallStatementModel functionCall, Scoping scope)
         {
-            IOperable method = null;
+            IOperable method;
 
             // Variable is object
             if (functionCall.IdentifierPath.Length > 1)
             {
-                IOperable value = 
-                    scope.ContainsGlobalBinding(functionCall.IdentifierPath[0]) ?
-                        scope.GetGlobalValue(functionCall.IdentifierPath[0]) :
-                    _namespace.GetImportedBindings().ContainsKey(functionCall.IdentifierPath[0]) ?
-                        _namespace.GetImportedValue(functionCall.IdentifierPath[0]) :
-                    throw new InterpreterRuntimeException(functionCall, _filePath, $"${functionCall.IdentifierPath[0]} is not defined");
+                IOperable value =
+                    scope.TryGetGlobalBinding(functionCall.IdentifierPath.First(), out IOperable __out) ? __out :
+                    _namespace.TryGetImportedBinding(functionCall.IdentifierPath.First(), out __out) ? __out :
+                    throw new InterpreterRuntimeException(functionCall, _filePath, $"${functionCall.IdentifierPath.First()} is not defined");
 
                 RuntimeObject obj = value.OperableType switch
                 {
-                    ObjectType.Object or 
-                    ObjectType.StringObject or 
+                    ObjectType.Object or
+                    ObjectType.StringObject or
                     ObjectType.ArrayObject or
                     ObjectType.DictionaryObject => (value as IOperable<RuntimeObject>).Value,
-                    ObjectType.Void => throw new InterpreterRuntimeException(functionCall, _filePath, $"Cannot access members on void type ${functionCall.IdentifierPath[0]}"),
+                    ObjectType.Void => throw new InterpreterRuntimeException(functionCall, _filePath, $"Cannot access members on void type ${functionCall.IdentifierPath.First()}"),
                     _ => throw new InterpreterRuntimeException(functionCall, _filePath, $"Attempted to access member on atom type '{value.OperableType}'")
                 };
 
@@ -402,13 +403,11 @@ namespace Interpreter
                     throw new InterpreterRuntimeException(functionCall, _filePath, $"Member ${string.Join("->", functionCall.IdentifierPath)} is not defined");
             }
             // Variable is single variable
-            else if (scope.ContainsGlobalBinding(functionCall.IdentifierPath[0]))
+            else if (scope.TryGetGlobalBinding(functionCall.IdentifierPath.First(), out method))
             {
-                method = scope.GetGlobalValue(functionCall.IdentifierPath[0]);
             }
-            else if (_namespace.GetImportedBindings().ContainsKey(functionCall.IdentifierPath[0]))
+            else if (_namespace.TryGetImportedBinding(functionCall.IdentifierPath.First(), out method))
             {
-                method = _namespace.GetImportedValue(functionCall.IdentifierPath[0]);
             }
 
             if (method is null)
@@ -428,14 +427,12 @@ namespace Interpreter
             
             try
             {
-                if (method is IOperable<MethodData> mdOp)
+                if (method.OperableType == ObjectType.MethodData)
                 {
-                    MethodData md = mdOp.Value;
+                    MethodData md = (method as IOperable<MethodData>).Value;
 
-                    if (!md.ContainsOverload(argumentCount))
+                    if (!md.TryGetOverload(argumentCount, out Method overload))
                         throw new InterpreterRuntimeException(functionCall, _filePath, $"Argument count mismatch: Could not find suitable overload with parameter count {argumentCount}.");
-
-                    Method overload = md.GetOverload(argumentCount);
 
                     switch (overload.MethodType)
                     {
@@ -467,9 +464,9 @@ namespace Interpreter
                             throw new NotImplementedException($"Method type {overload.MethodType} not implemented");
                     }
                 }
-                else if (method is IOperable<Method> overloadOp)
+                else if (method.OperableType == ObjectType.Method)
                 {
-                    Method overload = overloadOp.Value;
+                    Method overload = (method as IOperable<Method>).Value;
 
                     switch (overload.MethodType)
                     {
@@ -503,6 +500,10 @@ namespace Interpreter
                 }
             }
             catch (OperableException e)
+            {
+                throw new InterpreterRuntimeException(functionCall, _filePath, e.Message, e);
+            }
+            catch (NativeImplementationException e)
             {
                 throw new InterpreterRuntimeException(functionCall, _filePath, e.Message, e);
             }
@@ -796,9 +797,86 @@ namespace Interpreter
             loopScope.SetOuterScope(outerScope);
 
             // Expression must be evaluated for each iteration!!
-            while ((bool)EnterExpression(loop.Condition, loopScope).Value)
+            IOperable condition = EnterExpression(loop.Condition, outerScope);
+            if (condition.OperableType != ObjectType.Boolean)
+                throw new InterpreterRuntimeException(loop, _filePath, $"While loop condition expression was not a boolean");
+
+            while ((bool)condition.Value)
             {
                 EnterBlock(loop.Body, loopScope);
+
+                // Reevaluate the condition
+                condition = EnterExpression(loop.Condition, outerScope);
+                if (condition.OperableType != ObjectType.Boolean)
+                    throw new InterpreterRuntimeException(loop, _filePath, $"While loop condition expression was not a boolean");
+            }
+        }
+
+        // Syntactic sugar
+        public void EnterForeachLoopStatement(ForeachLoopStatement loop, Scoping outerScope)
+        {
+            Scoping loopScope = new();
+            loopScope.SetOuterScope(outerScope);
+
+            IOperable evaluatedEnumerable = EnterExpression(loop.EnumerableExpression, outerScope);
+            if (!(evaluatedEnumerable is IOperable<RuntimeObject>))
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Right expression was not an object");
+
+            RuntimeObject enumerable = (evaluatedEnumerable as IOperable<RuntimeObject>).Value;
+            if (!enumerable.TryGetMember("enumerator", out IOperable enumeratorMethodOp))
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Foreach loop requires an enumerator which was not present in the enumerable");
+            if (!(enumeratorMethodOp is IOperable<MethodData>))
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: The enumerator present in the enumerable was not an object");
+
+            if (!(enumeratorMethodOp as IOperable<MethodData>).Value.TryGetOverload(0, out Method m) && m.MethodType != MethodType.Provider)
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Enumerable does not contain an enumerator provider overload with parameter count 0");
+            ProviderMethod enumeratorMethod = m.GetProvider();
+
+            IOperable enumeratorOp = enumeratorMethod.Invoke();
+            if (enumeratorOp.OperableType != ObjectType.Object)
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Enumerator is not an object");
+
+            RuntimeObject enumerator = (enumeratorOp as IOperable<RuntimeObject>).Value;
+
+            if (!enumerator.TryGetMember("next", out IOperable nextMethodOp))
+                throw new InterpreterRuntimeException(loop, _filePath, " foreach loop: Enumerator does not contain method 'next'");
+            if (!enumerator.TryGetMember("current", out IOperable currentMethodOp))
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Enumerator does not contain method 'current'");
+
+
+            if (!(nextMethodOp as IOperable<MethodData>).Value.TryGetOverload(0, out m) && m.MethodType != MethodType.Provider)
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Enumerator does not contain a next provider overload with parameter count 0");
+            ProviderMethod nextMethod = m.GetProvider();
+
+            if (!(currentMethodOp as IOperable<MethodData>).Value.TryGetOverload(0, out m) && m.MethodType != MethodType.Provider)
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Enumerator does not contain a current provider overload with parameter count 0");
+            ProviderMethod currentMethod = m.GetProvider();
+
+            IOperable hasNextOp = nextMethod.Invoke();
+            if (hasNextOp.OperableType != ObjectType.Boolean)
+                throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Value returned from $next was not a boolean");
+            
+            while ((bool)hasNextOp.Value)
+            {
+                // Sets the iterator variable to current
+                IOperable currentValue = currentMethod.Invoke();
+                loopScope.UpdateLocalBinding(loop.Identifier, currentValue);
+
+                EnterBlock(loop.Body, loopScope);
+
+                hasNextOp = nextMethod.Invoke();
+                if (hasNextOp.OperableType != ObjectType.Boolean)
+                    throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Value returned from $next was not a boolean");
+            }
+
+            // If enumerator contains a dispose action, then call it
+            if (enumerator.TryGetMember("dispose", out IOperable disposeMethodOp) && disposeMethodOp.OperableType == ObjectType.MethodData)
+            {
+                if ((disposeMethodOp as IOperable<MethodData>).Value.TryGetOverload(0, out m) && m.MethodType == MethodType.Action)
+                {
+                    ActionMethod disposeMethod = m.GetAction();
+                    disposeMethod.Invoke();
+                }
             }
         }
 
@@ -822,7 +900,11 @@ namespace Interpreter
 
         public bool EnterIfStatement(IfStatementModel ifStatement, Scoping scope)
         {
-            if ((bool)EnterExpression(ifStatement.Condition, scope).Value)
+            IOperable condition = EnterExpression(ifStatement.Condition, scope);
+            if (condition.OperableType != ObjectType.Boolean)
+                throw new InterpreterRuntimeException(ifStatement, _filePath, "If clause condition was not of a boolean type");
+
+            if ((bool)condition.Value)
             {
                 EnterBlock(ifStatement.Body, scope);
                 return true;
@@ -833,7 +915,11 @@ namespace Interpreter
 
         public bool EnterElseIfStatement(ElseIfStatementModel elseIfStatement, Scoping scope)
         {
-            if ((bool)EnterExpression(elseIfStatement.Condition, scope).Value)
+            IOperable condition = EnterExpression(elseIfStatement.Condition, scope);
+            if (condition.OperableType != ObjectType.Boolean)
+                throw new InterpreterRuntimeException(elseIfStatement, _filePath, "Else if clause condition was not of a boolean type");
+
+            if ((bool)condition.Value)
             {
                 EnterBlock(elseIfStatement.Body, scope);
                 return true;
@@ -853,6 +939,8 @@ namespace Interpreter
             AssignmentOperator operatorCombination = assignStatement.OperatorCombination;
             IOperable rightOperand = EnterExpression(expression, scope);
 
+            IOperable __out;
+
             if (rightOperand is null)
                 throw new InterpreterRuntimeException(assignStatement, _filePath, "Assignee has no return value");
 
@@ -861,7 +949,7 @@ namespace Interpreter
             {
                 string identifier = assignStatement.Identifier[0];
 
-                if (scope.ContainsGlobalBinding(identifier))
+                if (scope.TryGetGlobalBinding(identifier, out __out))
                 {
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
@@ -870,21 +958,21 @@ namespace Interpreter
                     else
                     {
                         IOperable evaluatedResult =
-                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)scope.GetGlobalValue(identifier), (Func<IOperable>)(() => rightOperand), assignStatement);
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)__out, () => rightOperand, assignStatement);
 
                         AddGlobalBinding(identifier, evaluatedResult, scope);
                     }
                 }
-                else if (_namespace.GetImportedBindings().ContainsKey(identifier))
+                else if (_namespace.TryGetImportedBinding(identifier, out __out))
                 {
                     if (operatorCombination == AssignmentOperator.Assign)
                     {
-                        _namespace.GetImportedBindings().Add(identifier, rightOperand);
+                        _namespace.AddOrUpdateBinding(identifier, rightOperand);
                     }
                     else
                     {
                         IOperable evaluatedResult =
-                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)_namespace.GetImportedValue(identifier), (Func<IOperable>)(() => rightOperand), assignStatement);
+                                AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)__out, () => rightOperand, assignStatement);
 
                         _namespace.AddOrUpdateBinding(identifier, evaluatedResult);
                     }
@@ -902,16 +990,14 @@ namespace Interpreter
             }
 
             IOperable value =
-                scope.ContainsGlobalBinding(assignStatement.Identifier[0]) ?
-                    scope.GetGlobalValue(assignStatement.Identifier[0]) :
-                _namespace.GetImportedBindings().ContainsKey(assignStatement.Identifier[0]) ?
-                    _namespace.GetImportedValue(assignStatement.Identifier[0]) :
-                throw new InterpreterRuntimeException(assignStatement, _filePath, $"${assignStatement.Identifier[0]} is not defined");
+                scope.TryGetGlobalBinding(assignStatement.Identifier.First(), out __out) ? __out :
+                _namespace.TryGetImportedBinding(assignStatement.Identifier.First(), out __out) ? __out :
+                throw new InterpreterRuntimeException(assignStatement, _filePath, $"${assignStatement.Identifier.First()} is not defined");
 
             RuntimeObject obj = value.OperableType switch
             {
                 ObjectType.Object => (RuntimeObject)value.Value,
-                ObjectType.Void => throw new InterpreterRuntimeException(expression, _filePath, $"Cannot access member on void type ${assignStatement.Identifier[0]}"),
+                ObjectType.Void => throw new InterpreterRuntimeException(expression, _filePath, $"Cannot access member on void type ${assignStatement.Identifier.First()}"),
                 _ => throw new InterpreterRuntimeException(expression, _filePath, $"Attempted to access member of atom type '{value.OperableType}'")
             };
 
@@ -951,28 +1037,23 @@ namespace Interpreter
                 }
                 else
                 {
-                    IOperable evaluatedResult = AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)member, (Func<IOperable>)(() => rightOperand), assignStatement);
+                    IOperable evaluatedResult = AttemptToEvaluateExpression(_ASSIGNMENT_TO_BINARY_OPERATOR_EQUIVALENT[operatorCombination], (IBinaryOperable)member, () => rightOperand, assignStatement);
                     TrySetRuntimeObjectMember(obj, idLast, evaluatedResult);
                     return;
                 }
             }
 
-            throw new InterpreterRuntimeException(assignStatement, _filePath, $"${assignStatement.Identifier[0]} is not defined in current scope");
+            throw new InterpreterRuntimeException(assignStatement, _filePath, $"${assignStatement.Identifier.First()} is not defined in current scope");
         }
 
         public void EnterUseStatementModel(UseStatementModel statement, Scoping scope)
         {
             string nsPath = statement.PathToNamespace[0];
-            try
-            {
-                Namespace ns = _environment.GetNamespace(nsPath);
-                _namespace.Import(ns);
-            }
-            catch (KeyNotFoundException e)
-            {
-                throw new InterpreterRuntimeException(statement, _filePath, $"Could not find namespace '{nsPath}' in current environment", e);
-            }
 
+            if (!_environment.TryGetNamespace(nsPath, out Namespace ns))
+                throw new InterpreterRuntimeException(statement, _filePath, $"Namespace '{nsPath}' does not exist in current environment");
+
+            _namespace.Import(ns);
         }
 
         public void EnterTryCatchStatement(TryCatchStatementModel statement, Scoping scope)
@@ -1011,6 +1092,20 @@ namespace Interpreter
 
         public ArrayObjectOperable EnterArrayLiteralNotation(ArrayLiteralNotationModel expression, Scoping scope)
         {
+            if (expression.IsAllocSyntax)
+            {
+                if (expression.Arguments.Length != 1)
+                    throw new InterpreterRuntimeException(expression, _filePath, "Array alloc statement cannot contain more than one argument");
+
+                IOperable sizeArg = EnterExpression(expression.Arguments[0], scope);
+                return sizeArg.OperableType switch
+                {
+                    ObjectType.ArbitraryBitInteger => ArrayObjectOperable.Allocate((ulong)(sizeArg as IOperable<BigInteger>).Value),
+                    ObjectType.UnsignedByte => ArrayObjectOperable.Allocate((sizeArg as IOperable<byte>).Value),
+                    _ => throw new InterpreterRuntimeException(expression, _filePath, $"Illegal argument type '{sizeArg.OperableType}'"),
+                };
+            }
+
             if (expression.Arguments is null)
                 return new ArrayObjectOperable();
 
@@ -1022,7 +1117,18 @@ namespace Interpreter
             if (expression.Arguments is null)
                 return new DictionaryObjectOperable();
 
-            return new DictionaryObjectOperable(expression.Arguments.ToDictionary(tup => EnterExpression(tup.key, scope), tup => EnterExpression(tup.value, scope)));
+            int i = 0;
+            var dictionary = new Dictionary<IOperable, IOperable>();
+            foreach (var (keyExpr, valueExpr, start, stop) in expression.Arguments)
+            {
+                IOperable key = EnterExpression(keyExpr, scope);
+                IOperable value = EnterExpression(valueExpr, scope);
+                if (!dictionary.TryAdd(key, value))
+                    throw new InterpreterRuntimeException(start, stop, _filePath, $"Could not allocate dictionary due to duplicate key at index {i}");
+                i++;
+            }
+
+            return new DictionaryObjectOperable(dictionary);
         }
     }
 }

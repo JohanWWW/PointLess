@@ -7,7 +7,6 @@ __COLLECTIONS_IMPL__ = () => {
 	//
 	LinkedList = () => {
 
-		// Private fields
 		__length = 0;
 		__root = void;
 		__head = void;
@@ -43,13 +42,15 @@ __COLLECTIONS_IMPL__ = () => {
 
 				current = () => {
 					return current.value;
-				}
+				},
+
+				dispose = () => { }
 			};
 		};
 
 		// Adds provided value to the end of the chain
 		//
-		_add = (e) => {
+		add = (e) => {
 			if (__length == 0) {
 				n = _Node(e);
 				__root = n;
@@ -63,10 +64,13 @@ __COLLECTIONS_IMPL__ = () => {
 			__length += 1;
 		};
 
-		// Inserts provided value after a node at 
-		// provided index
+		// Inserts provided value as a node at 
+		// provided index pushing existing node to the right
 		//
-		_insertAt = (index, e) => {
+		insertAt = (index, e) => {
+			if (index < 0 || index > __length) {
+				throw "LinkedList.insertAt: Index out of bounds";
+			}
 			if (index == 0) {
 				node = _Node(e);
 				node.next = __root;
@@ -97,9 +101,9 @@ __COLLECTIONS_IMPL__ = () => {
 		// TODO: Implement O(1) when removing head node
 		// Removes and returns value of node at provided index
 		//
-		_removeAt = (index) => {
+		removeAt = (index) => {
 			if (index < 0 || index > __length - 1) {
-				throw "LinkedList._removeAt: Index out of bounds";
+				throw "LinkedList.removeAt: Index out of bounds";
 			}
 
 			e = void;
@@ -139,7 +143,7 @@ __COLLECTIONS_IMPL__ = () => {
 		// Returns true if the node was found and removed, otherwise
 		// returns false.
 		//
-		_remove = (e) => {
+		remove = (e) => {
 			previous = void;
 			current = __root;
 			found = false;
@@ -187,9 +191,9 @@ __COLLECTIONS_IMPL__ = () => {
 
 		// Returns the value of a node at provided index
 		//
-		_get = (index) => {
+		get = (index) => {
 			if (index < 0 || index > __length - 1) {
-				throw "LinkedList._get: Index out of bounds";
+				throw "LinkedList.get: Index out of bounds";
 			}
 			
 			e = void;
@@ -214,9 +218,9 @@ __COLLECTIONS_IMPL__ = () => {
 
 		// Updates value of an existing node
 		//
-		_set = (index, value) => {
+		set = (index, value) => {
 			if (index < 0 || index > __length - 1) {
-				throw "LinkedList._set: Index out of bounds";
+				throw "LinkedList.set: Index out of bounds";
 			}
 
 			e = void;
@@ -242,7 +246,7 @@ __COLLECTIONS_IMPL__ = () => {
 		// Returns true if the chain contains a node whose value is strictly equal
 		// to the value provided as an argument
 		//
-		_contains = (e) => {
+		contains = (e) => {
 			found = false;
 
 			if (__length > 0) {
@@ -269,43 +273,42 @@ __COLLECTIONS_IMPL__ = () => {
 
 		// Returns the node count of the chain
 		//
-		_length = () => {
+		length = () => {
 			return __length;
 		};
 
 		// Creates an returns an enumerator that iterates through the chain
 		//
-		_enumerator = () => {
+		enumerator = () => {
 			return _Enumerator(__root);
 		};
 
 		// Returns a reference to this list
 		//
-		_toList = () => {
+		toList = () => {
 			return this;
 		};
 
 		// This overload should be called by classes that implement LinkedList
-		_toString = callerList => {
+		toString = callerList => {
 			sb = "[";
 			if (__length > 0) {
 				e = _Enumerator(__root);
 				i = 0;
 				while (e.next()) {
 					current = e.current();
-					if (std.isString(current)) {
-						sb += ("\"" + std.escapeSpecialCharacters(current) + "\"");
-					}
-					// Do not toString self reference to avoid infinite loop
-					else if (current === callerList) {
+					if (current === callerList) {
 						sb += "<this list>";
+					}
+					else if (std.isStringObject(current)) {
+						sb += ('"' + std.escapeSpecialCharacters(current) + '"');
 					}
 					else {
 						sb += current;
 					}
 
 					if (i != __length - 1) {
-						sb += ",";
+						sb += ',';
 					}
 					i += 1;
 				}
@@ -314,27 +317,27 @@ __COLLECTIONS_IMPL__ = () => {
 			return sb;
 		};
 
-		_toString += () => _toString(this);
+		toString += () => toString(this);
 
 		this = {
-			add = _add,
-			insertAt = _insertAt,
-			removeAt = _removeAt,
-			remove = _remove,
-			get = _get,
-			set = _set,
-			contains = _contains,
-			length = _length,
-			enumerator = _enumerator,
-			toList = _toList,
+			add = add,
+			insertAt = insertAt,
+			removeAt = removeAt,
+			remove = remove,
+			get = get,
+			set = set,
+			contains = contains,
+			length = length,
+			enumerator = enumerator,
+			toList = toList,
 
 			// Overrides / Overloads
-			toString = _toString,
+			toString = toString,
 
-			indexer [index] => _get(index),
+			indexer [index] => get(index),
 
 			indexer [index]<-value => {
-				_set(index, value);
+				set(index, value);
 			},
 			
 			// Adds element to list
@@ -356,6 +359,17 @@ __COLLECTIONS_IMPL__ = () => {
 		};
 
 		return this;
+	};
+
+	// See docs for LinkedList([0]).
+	// Creates a linked list and populates it with initial values.
+	//
+	LinkedList += enumerable => {
+		list = LinkedList();
+		foreach (e in enumerable) {
+			list.add(e);
+		}
+		return list;
 	};
 
 
@@ -442,6 +456,17 @@ __COLLECTIONS_IMPL__ = () => {
 		return this;
 	};
 
+	// See docs for Stack([0]).
+	// Creates a stack and populates it with initial values.
+	//
+	Stack += enumerable => {
+		stack = Stack();
+		foreach (e in enumerable) {
+			stack.push(e);
+		}
+		return stack;
+	};
+
 
 	// Queue implementation
 	// A dynamic data structure which follows First In, First Out (FIFO) principle
@@ -522,6 +547,17 @@ __COLLECTIONS_IMPL__ = () => {
 		};
 
 		return this;
+	};
+
+	// See docs for Queue([0]).
+	// Creates a queue and populates it with initial values.
+	//
+	Queue += enumerable => {
+		queue = Queue();
+		foreach (e in enumerable) {
+			queue.enqueue(e);
+		}
+		return queue;
 	};
 
 	return {

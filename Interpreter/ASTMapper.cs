@@ -227,10 +227,13 @@ namespace Interpreter
 
         private ConditionalStatementModel EnterConditionalStatement(ZeroPointParser.Conditional_statementContext context)
         {
+            var ifStatementCtx = context.if_statement();
             var ifStatement = new IfStatementModel
             {
-                Condition = EnterExpression(context.if_statement().expression()),
-                Body = EnterBlock(context.if_statement().block()),
+                Condition = EnterExpression(ifStatementCtx.expression()),
+                Body = EnterBlock(ifStatementCtx.block()),
+                StartToken = ifStatementCtx.Start,
+                StopToken = ifStatementCtx.Stop
             };
 
             List<ElseIfStatementModel> elseIfStatement = null;
@@ -243,17 +246,22 @@ namespace Interpreter
                     elseIfStatement.Add(new ElseIfStatementModel
                     {
                         Condition = EnterExpression(ei.expression()),
-                        Body = EnterBlock(ei.block())
+                        Body = EnterBlock(ei.block()),
+                        StartToken = ei.Start,
+                        StopToken = ei.Stop
                     });
                 }
             }
 
             ElseStatementModel elseStatement = null;
-            if (context.else_statement() != null)
+            if (context.else_statement().IsPresent())
             {
+                var elseStatementCtx = context.else_statement();
                 elseStatement = new ElseStatementModel
                 {
-                    Body = EnterBlock(context.else_statement().block())
+                    Body = EnterBlock(elseStatementCtx.block()),
+                    StartToken = elseStatementCtx.Start,
+                    StopToken = elseStatementCtx.Stop
                 };
             }
 
@@ -269,9 +277,14 @@ namespace Interpreter
 
         private ILoopStatementModel EnterLoopStatement(ZeroPointParser.Loop_statementContext context)
         {
-            if (context.while_loop_statement() != null)
+            if (context.while_loop_statement().IsPresent())
             {
                 return EnterWhileLoop(context.while_loop_statement());
+            }
+
+            if (context.foreach_loop_statement().IsPresent())
+            {
+                return EnterForeachLoop(context.foreach_loop_statement());
             }
 
             throw new NotImplementedException();
@@ -282,6 +295,18 @@ namespace Interpreter
             return new WhileLoopStatement
             {
                 Condition = EnterExpression(context.expression()),
+                Body = EnterBlock(context.block()),
+                StartToken = context.Start,
+                StopToken = context.Stop
+            };
+        }
+
+        private ForeachLoopStatement EnterForeachLoop(ZeroPointParser.Foreach_loop_statementContext context)
+        {
+            return new ForeachLoopStatement
+            {
+                Identifier = context.IDENTIFIER().GetText(),
+                EnumerableExpression = EnterExpression(context.expression()),
                 Body = EnterBlock(context.block()),
                 StartToken = context.Start,
                 StopToken = context.Stop
@@ -1043,6 +1068,20 @@ namespace Interpreter
 
         private ArrayLiteralNotationModel EnterArrayLiteralNotation(ZeroPointParser.Array_literal_notationContext ctx)
         {
+            if (ctx.ALLOC().IsPresent())
+            {
+                if (ctx.argument_list().expression().Length > 1)
+                    throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Array allocate statement contains more than one argument");
+
+                return new ArrayLiteralNotationModel
+                {
+                    IsAllocSyntax = true,
+                    Arguments = EnterArgumentList(ctx.argument_list()),
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop
+                };
+            }
+
             if (!ctx.argument_list().IsPresent())
                 return new ArrayLiteralNotationModel
                 {
@@ -1078,12 +1117,12 @@ namespace Interpreter
             };
         }
 
-        private IEnumerable<(IExpressionModel key, IExpressionModel value)> EnterDictionaryArguments(ZeroPointParser.Dictionary_argumentsContext ctx)
+        private IEnumerable<(IExpressionModel key, IExpressionModel value, IToken start, IToken stop)> EnterDictionaryArguments(ZeroPointParser.Dictionary_argumentsContext ctx)
         {
             var dictKeys = ctx.dictionary_key();
             var dictValues = ctx.dictionary_value();
             for (int i = 0; i < dictKeys.Length; i++)
-                yield return (EnterExpression(dictKeys[i].expression()), EnterExpression(dictValues[i].expression()));
+                yield return (EnterExpression(dictKeys[i].expression()), EnterExpression(dictValues[i].expression()), dictKeys[i].Start, dictValues[i].Stop);
 
         }
     }

@@ -21,5 +21,8 @@ namespace Interpreter.Environment
         }
 
         public Namespace GetNamespace(string name) => _namespaces[name];
+
+        public bool TryGetNamespace(string name, out Namespace value) =>
+            _namespaces.TryGetValue(name, out value);
     }
 }

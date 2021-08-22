@@ -10,6 +10,7 @@ namespace Interpreter.Models
     public class ArrayLiteralNotationModel : ModelBase, IExpressionModel
     {
         public IExpressionModel[] Arguments { get; set; }
+        public bool IsAllocSyntax { get; set; }
 
         public ArrayLiteralNotationModel() : base(Enums.ModelTypeCode.ArrayLiteralNotation)
         {

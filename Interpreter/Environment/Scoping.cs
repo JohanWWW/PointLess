@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Environment
 {
-    // TODO: Implement TryGet
     public class Scoping
     {
         private readonly IDictionary<string, IOperable> _bindings;
@@ -34,6 +33,9 @@ namespace Interpreter.Environment
 
         public IOperable GetLocalValue(string identifier) => _bindings[identifier];
 
+        public bool TryGetLocalValue(string identifier, out IOperable value) =>
+            _bindings.TryGetValue(identifier, out value);
+
         public IOperable GetGlobalValue(string identifier)
         {
             Scoping currentScope = this;
@@ -46,6 +48,21 @@ namespace Interpreter.Environment
             }
 
             throw new KeyNotFoundException($"Could not find variable named '{identifier}'");
+        }
+
+        public bool TryGetGlobalBinding(string identifier, out IOperable value)
+        {
+            Scoping currentScope = this;
+            while (currentScope != null)
+            {
+                if (currentScope.TryGetLocalValue(identifier, out value))
+                    return true;
+
+                currentScope = currentScope._outer;
+            }
+
+            value = null;
+            return false;
         }
 
         public void SetGlobalBinding(string identifier, IOperable value)
@@ -69,6 +86,12 @@ namespace Interpreter.Environment
         {
             _bindings.Add(identifier, value);
         }
+
+        public bool TryAddLocalBinding(string identifier, IOperable value) =>
+            _bindings.TryAdd(identifier, value);
+
+        public void UpdateLocalBinding(string identifier, IOperable value) =>
+            _bindings[identifier] = value;
 
         public void ConsumeScope(Scoping scope)
         {

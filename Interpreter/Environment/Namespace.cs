@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Environment
 {
-    // TODO: Implement TryGet
     public class Namespace
     {
         private IDictionary<string, IOperable> _importedBindings;
@@ -43,9 +42,15 @@ namespace Interpreter.Environment
 
         public IDictionary<string, IOperable> GetImportedBindings() => _importedBindings;
 
+        public bool TryGetImportedBinding(string identifier, out IOperable value) =>
+            _importedBindings.TryGetValue(identifier, out value);
+
         public IOperable GetImportedValue(string identifier) => _importedBindings[identifier];
 
         public void AddOrUpdateBinding(string identifier, IOperable value) => _importedBindings[identifier] = value;
+
+        public bool TryAddImportedBinding(string identifier, IOperable value) =>
+            _importedBindings.TryAdd(identifier, value);
 
         public override string ToString() => $"{nameof(Namespace)}(\"{Name}\")";
     }

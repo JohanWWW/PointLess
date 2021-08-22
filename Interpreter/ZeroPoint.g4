@@ -55,10 +55,17 @@ else_statement
 	
 loop_statement
 	: while_loop_statement
+	| foreach_loop_statement
 	;
 	
 while_loop_statement
 	: WHILE '(' expression ')' '{'
+		block
+	  '}'
+	;
+
+foreach_loop_statement
+	: FOREACH '(' IDENTIFIER IN expression ')' '{'
 		block
 	  '}'
 	;
@@ -256,6 +263,7 @@ literal
 array_literal_notation
 	: '[' argument_list ']'
 	| '[' ']'
+	| ALLOC '[' argument_list ']'
 	;
 
 dictionary_literal_notation
@@ -416,8 +424,10 @@ NATIVE: 'native';
 OPERATOR: 'operator';
 UNARY: 'unary';
 INDEXER: 'indexer';
+ALLOC: 'alloc';
 
 WHILE: 'while';
+FOREACH: 'foreach';
 
 RETURN: 'return';
 

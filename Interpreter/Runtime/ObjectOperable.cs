@@ -301,12 +301,30 @@ namespace Interpreter.Runtime
                 stringBuilder.Append(memberName).Append('=');
                 switch (memberValue.OperableType)
                 {
+                    case ObjectType.StringObject:
+                        {
+                            string str = memberValue.ToString()
+                                .Replace("\\", "\\\\")
+                                .Replace("\"", "\\\"");
+                            stringBuilder.Append('"').Append(str).Append('"');
+                            break;
+                        }
                     case ObjectType.String:
-                        string str = memberValue.ToString()
-                            .Replace("\\", "\\\\")
-                            .Replace("\"", "\\\"");
-                        stringBuilder.Append('"').Append(str).Append('"');
-                        break;
+                        {
+                            string str = memberValue.ToString()
+                                .Replace("\\", "\\\\")
+                                .Replace("\"", "\\\"");
+                            stringBuilder.Append('"').Append(str).Append('"');
+                            break;
+                        }
+                    case ObjectType.Utf32Character:
+                        {
+                            string ch = memberValue.ToString()
+                                .Replace("\\", "\\\\")
+                                .Replace("'", "\\'");
+                            stringBuilder.Append('\'').Append(ch).Append('\'');
+                            break;
+                        }
                     default:
                         stringBuilder.Append(memberValue.ToString());
                         break;
