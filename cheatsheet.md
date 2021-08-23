@@ -86,7 +86,7 @@ Extensions of the ' `=` ' operator. The following operators only works on define
 - `>>=` right shift assignment
 
 ## Operators
-Different flavours of operators. The majority of ZP's operators are overridable.
+The majority of ZP's operators are overridable.
 
 ### Binary Operators
 Usage `<expression> <op> <expression>` where `<op>` is a binary operator. Operations that are performed by the binary operators varies depending on the type of the operands and their operator implementations. Following operators are grouped by precedence.
@@ -178,6 +178,7 @@ Actions do not have any parameters and does not return a value.
 `<code>` The program to be executed when calling the action.
 
 ### Provider
+Providers return values but does not have any parameters.
 ```
 <id> = () => {
     <code>
