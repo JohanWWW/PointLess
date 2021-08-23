@@ -268,6 +268,7 @@ array_literal_notation
 
 dictionary_literal_notation
 	: '{' dictionary_arguments '}'
+	| ALLOC '{' '}'
 	;
 	
 	dictionary_arguments

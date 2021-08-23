@@ -1,4 +1,4 @@
-# ZeroPoint (Programming Language)
+# Zeropoint (Programming Language)
 ZP is a dynamic and object oriented programming language built in C#.
 
 ## Examples
@@ -210,4 +210,4 @@ A program can consist of code that is split into multiple `.0p` files. If a new 
 
 
 ## Documentation
-There is no official documentation for ZP at the moment, other than the documentation written in ZP framework's source code.
+See [zeropoint cheatsheet](cheatsheet.md). Documentation for framework code exists in the framework's source code.
