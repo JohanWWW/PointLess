@@ -22,7 +22,7 @@ myObject = {
 ### Method Definitions
 ```
 action = () => {
-    println("action was called");
+    Console.println("action was called");
 };
 
 function = (a, b) => {
@@ -30,7 +30,7 @@ function = (a, b) => {
 };
 
 consumer = (x) => {
-    println("result: " + x);
+    Console.println("result: " + x);
 };
 
 provider = () => {
@@ -43,7 +43,7 @@ lambda = x => x * 2;
 repeat = (message, count) => {
     i = 0;
     while (i < count) {
-        println(message);
+        Console.println(message);
         i += 1;
     }
 };
@@ -81,7 +81,7 @@ Person = (firstName, lastName) => {
 ### Method Overloading
 Methods in ZP are overloadable. Just use the `+=` operator or add two or more method statements together with the `+` operator and assign to variable. The method overrides must differ in parameter count.
 ```
-sayHello = name => println("Hello " + name + "!");
+sayHello = name => Console.println("Hello " + name + "!");
 
 // Default behaviour
 sayHello += () => sayHello("World");
@@ -95,6 +95,7 @@ use std;
 use complexMath;
 
 complex = ComplexMath.Complex;
+println = Console.println;
 
 main = (args) => {
     a = complex(0.0, 1.0);
@@ -140,10 +141,10 @@ divide = (x, y) => {
 
 try {
     q = divide(5, 0);
-    println(q);
+    Console.println(q);
 }
 catch e => {
-    println("Following error occurred: " + e);
+    Console.println("Following error occurred: " + e);
 }
 ```
 
