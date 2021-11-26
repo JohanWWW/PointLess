@@ -793,9 +793,6 @@ namespace Interpreter
 
         public void EnterWhileLoopStatement(WhileLoopStatement loop, Scoping outerScope)
         {
-            var loopScope = new Scoping();
-            loopScope.SetOuterScope(outerScope);
-
             // Expression must be evaluated for each iteration!!
             IOperable condition = EnterExpression(loop.Condition, outerScope);
             if (condition.OperableType != ObjectType.Boolean)
@@ -803,7 +800,10 @@ namespace Interpreter
 
             while ((bool)condition.Value)
             {
-                EnterBlock(loop.Body, loopScope);
+                Scoping localScope = new();
+                localScope.SetOuterScope(outerScope);
+
+                EnterBlock(loop.Body, localScope);
 
                 // Reevaluate the condition
                 condition = EnterExpression(loop.Condition, outerScope);
@@ -815,9 +815,6 @@ namespace Interpreter
         // Syntactic sugar
         public void EnterForeachLoopStatement(ForeachLoopStatement loop, Scoping outerScope)
         {
-            Scoping loopScope = new();
-            loopScope.SetOuterScope(outerScope);
-
             IOperable evaluatedEnumerable = EnterExpression(loop.EnumerableExpression, outerScope);
             if (!(evaluatedEnumerable is IOperable<RuntimeObject>))
                 throw new InterpreterRuntimeException(loop, _filePath, "foreach loop: Right expression was not an object");
@@ -858,11 +855,14 @@ namespace Interpreter
             
             while ((bool)hasNextOp.Value)
             {
+                Scoping localScope = new();
+                localScope.SetOuterScope(outerScope);
+
                 // Sets the iterator variable to current
                 IOperable currentValue = currentMethod.Invoke();
-                loopScope.UpdateLocalBinding(loop.Identifier, currentValue);
+                localScope.UpdateLocalBinding(loop.Identifier, currentValue);
 
-                EnterBlock(loop.Body, loopScope);
+                EnterBlock(loop.Body, localScope);
 
                 hasNextOp = nextMethod.Invoke();
                 if (hasNextOp.OperableType != ObjectType.Boolean)
