@@ -243,6 +243,9 @@ namespace Interpreter
                 case ModelTypeCode.ThrowStatement:
                     EnterThrowStatement(statement as ThrowStatement, scope);
                     break;
+                case ModelTypeCode.CompilerConstDefinition:
+                    // Don't interpret because it has already been processed by the compiler
+                    break;
                 default:
                     throw new NotImplementedException($"Statement with type code '{statement.TypeCode}' is not implemented");
             }

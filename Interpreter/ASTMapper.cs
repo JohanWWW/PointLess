@@ -18,6 +18,7 @@ namespace Interpreter
     public class ASTMapper
     {
         private readonly IReadOnlyDictionary<string, IFunctionModel> _nativeImplementations;
+        private readonly IDictionary<string, CompilerConstDefinition> _compilerConstDefinitions;
 
         private static readonly Regex _integerNumberPattern = new(@"^\d+$");
         private static readonly Regex _integerBinaryPattern = new(@"^0b[01]+$");
@@ -125,11 +126,13 @@ namespace Interpreter
         public ASTMapper(params NativeImplementationBase[] implementations)
         {
             _nativeImplementations = implementations.SelectMany(i => i.GetImplementationMap()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            _compilerConstDefinitions = new Dictionary<string, CompilerConstDefinition>();
         }
 
         public ASTMapper()
         {
             _nativeImplementations = null;
+            _compilerConstDefinitions = new Dictionary<string, CompilerConstDefinition>();
         }
 
         /// <summary>
@@ -193,8 +196,26 @@ namespace Interpreter
                 ZeroPointParser.RULE_try_catch_statement        => EnterTryCatchStatement(context.try_catch_statement()),
                 ZeroPointParser.RULE_throw_statement            => EnterThrowStatement(context.throw_statement()),
                 ZeroPointParser.RULE_indexer_set_call_statement => EnterIndexerSetCallStatement(context.indexer_set_call_statement()),
+                ZeroPointParser.RULE_compiler_const_definition  => EnterCompilerConstDefinition(context.compiler_const_definition()),
                 _                                               => throw new NotImplementedException($"Rule {ruleIndex} does not exist")
             };
+        }
+
+        private IStatementModel EnterCompilerConstDefinition(ZeroPointParser.Compiler_const_definitionContext context)
+        {
+            string id = context.IDENTIFIER().GetText();
+
+            CompilerConstDefinition statement = new()
+            {
+                Identifier = id,
+                Expression = EnterExpression(context.expression()),
+                StartToken = context.Start,
+                StopToken = context.Stop
+            };
+
+            _compilerConstDefinitions.Add(id, statement);
+
+            return statement;
         }
 
         private IStatementModel EnterAssignStatement(ZeroPointParser.Assign_statementContext context)
@@ -373,9 +394,16 @@ namespace Interpreter
 
             if (ctx.IDENTIFIER().IsPresent())
             {
+                CompilerConstDefinition ics;
+                string id = ctx.IDENTIFIER().GetText();
+
+                if (_compilerConstDefinitions.TryGetValue(id, out ics))
+                    // Paste/Apply constant
+                    return ics.Expression;
+
                 return new IdentifierExpressionModel
                 {
-                    Identifier = new[] { ctx.IDENTIFIER().GetText() },
+                    Identifier = new[] { id },
                     StartToken = ctx.Start,
                     StopToken = ctx.Stop,
                 };

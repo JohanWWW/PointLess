@@ -17,6 +17,7 @@ statement
 	| try_catch_statement
 	| throw_statement SEMICOLON
 	| indexer_set_call_statement SEMICOLON
+	| compiler_const_definition
 	;
 	
 use_statement
@@ -190,6 +191,10 @@ anonymous_function_definition_statement
 
 inject_statement
 	: '<' '@' STRING '>'
+	;
+
+compiler_const_definition
+	: CTCONST IDENTIFIER expression
 	;
 	
 method_call_statement
@@ -435,6 +440,8 @@ RETURN: 'return';
 TRY: 'try';
 CATCH: 'catch';
 THROW: 'throw';
+
+CTCONST: '#const';
 
 IDENTIFIER
 	: [A-Za-z0-9_]+

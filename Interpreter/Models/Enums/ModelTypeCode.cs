@@ -37,6 +37,7 @@ namespace Interpreter.Models.Enums
         DictionaryLiteralNotation,
         IfClause,
         ElseIfClause,
-        ElseClause
+        ElseClause,
+        CompilerConstDefinition
     }
 }
