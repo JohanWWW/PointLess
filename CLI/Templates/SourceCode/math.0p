@@ -1,18 +1,41 @@
 ﻿use std;
 
-__MATH_IMPL__ = () => {
+#const __FILENAME__         "math"
+#const __FILENAME_FULL__    "math.0p"
+#const __LIB_NAME__         "Math"
 
-    // Private
+#const __N_DECIMAL_TO_INT__ native (value) => <@"std.Convert.decimal.__to_int">
+#const __N_INT_TO_DECIMAL__ native (value) => <@"std.Convert.int.__to_decimal">
 
-    _decimal_to_int = native (value) => <@"std.Convert.decimal.__to_int">;
-    _int_to_decimal = native (value) => <@"std.Convert.int.__to_decimal">;
+#const DOT_SYM              "."
+#const COLON_SYM            ":"
+#const STRING_EMPTY         ""
 
-    _minus_one = 0 - 1;
+#const PI                   3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196
+#const E                    2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642749193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383
+#const NaN                  void
 
-    _pi = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196;
-    _e = 2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642749193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383;
+// Begin __MATH_LIB_EXPORTS__
+#const __MATH_LIB_EXPORTS__() => {
 
-    _primitive_pow = (x, n) => {
+    dtoi = __N_DECIMAL_TO_INT__;
+    itod = __N_INT_TO_DECIMAL__;
+
+    MAKE_EXCEPTION_MSG = (idArr, exceptionMsg) => {
+        i = 0;
+        len = idArr.length();
+        idPath = STRING_EMPTY;
+        while (i < len) {
+            idPath += idArr[i];
+            if (i != len - 1) {
+                idPath += DOT_SYM;
+            }
+            i += 1;
+        }
+        return idPath + COLON_SYM + " " + exceptionMsg;
+    };
+
+    PRIMITIVE_POW = (x, n) => {
         p = 1;
         if (n >= 0) {
             i = n;
@@ -22,15 +45,13 @@ __MATH_IMPL__ = () => {
             }
         }
         else {
-            p = signum(x) * (1.0 / _primitive_pow(abs(x), abs(n)));
+            p = signum(x) * (1.0 / PRIMITIVE_POW(abs(x), abs(n)));
         }
         return p;
     };
 
-    // Public
-
     coef = n => {
-        t = null;
+        t = NaN;
         if (n == 0) {
             t = 0;
         }
@@ -56,7 +77,7 @@ __MATH_IMPL__ = () => {
 
     factorial = x => {
         if (x < 0) {
-            throw "Attempted to factorialize a negative number";
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(factorial)], "Attempted to factorialize a negative number");
         }
         p = 1;
         i = x;
@@ -68,9 +89,9 @@ __MATH_IMPL__ = () => {
     };
 
     sqrt = x => {
-        r = null;
+        r = NaN;
         if (x < 0) {
-            throw "No real solution";
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(sqrt)], "No real solution");
         }
         else {
             if (x == 0) {
@@ -88,9 +109,9 @@ __MATH_IMPL__ = () => {
         return r;
     };
 
-    negate = x => _minus_one * x;
+    negate = x => -1 * x;
 
-    signum = x => x < 0 ? _minus_one : 1;
+    signum = x => x < 0 ? -1 : 1;
 
     abs = x => x < 0 ? negate(x) : x;
 
@@ -105,7 +126,7 @@ __MATH_IMPL__ = () => {
 
     round = (x, scale) => {
         if (scale < 0 || !std.isInteger(scale)) {
-            throw "Scale must be a non negative integer";
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(round)], "Scale must be a non negative integer");
         }
         p = pow(10, scale);
         return floor(x * p + .5) / p;
@@ -115,7 +136,7 @@ __MATH_IMPL__ = () => {
 
     truncate = (x, scale) => {
         if (scale < 0 || !std.isInteger(scale)) {
-            throw "scale must be a non negative integer";
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(truncate)], "Scale must be a non negative integer");
         }
         s = 1;
         if (x < 0) {
@@ -129,19 +150,21 @@ __MATH_IMPL__ = () => {
     truncate += x => truncate(x, 0);
 
     pow = (x, n) => {
-        p = null;
+        p = NaN;
         if (std.isInteger(n)) {
-            p = _primitive_pow(x, n);
+            p = PRIMITIVE_POW(x, n);
         }
         else {
-            throw "Number raised to the power of a decimal is not yet supported";
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(pow)], "Number raised to the power of a decimal is not yet supported");
         }
         return p;
     };
 
-    return {
-        pi = _pi,
-        e = _e,
+    this_lib = {
+        coef = coef,
+        horner = horner,
+        factorial = factorial,
+        sqrt = sqrt,
         negate = negate,
         signum = signum,
         abs = abs,
@@ -149,14 +172,16 @@ __MATH_IMPL__ = () => {
         ceiling = ceiling,
         max = max,
         min = min,
-        factorial = factorial,
-        sqrt = sqrt,
-        coef = coef,
-        horner = horner,
-        pow = pow,
         round = round,
-        truncate = truncate
-    };
-};
+        truncate = truncate,
+        pow = pow,
 
-Math = __MATH_IMPL__();
+        pi = () => PI,
+        e = () => E
+    };
+
+    return this_lib;
+} // End __MATH_LIB_EXPORTS__
+
+Math = __MATH_LIB_EXPORTS__;
+Math = Math();

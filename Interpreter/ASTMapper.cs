@@ -387,6 +387,11 @@ namespace Interpreter
 
         private IExpressionModel EnterAtom(ZeroPointParser.AtomContext ctx)
         {
+            if (ctx.nameof_expression().IsPresent())
+            {
+                return EnterNameofExpression(ctx.nameof_expression());
+            }
+
             if (ctx.literal().IsPresent())
             {
                 return EnterLiteral(ctx.literal());
@@ -445,6 +450,21 @@ namespace Interpreter
             }
 
             throw new LanguageSyntaxException(ctx.Start.Line, ctx.Start.Column, ctx.Stop.Column, "Invalid atom type");
+        }
+
+        private IExpressionModel EnterNameofExpression(ZeroPointParser.Nameof_expressionContext ctx)
+        {
+            return new NameofExpression
+            {
+                IdentifierModel = new IdentifierExpressionModel
+                {
+                    Identifier = ctx.IDENTIFIER().IsPresent() ? new string[] { ctx.IDENTIFIER().GetText() } : EnterIdentifierAccess(ctx.identifier_access()),
+                    StartToken = ctx.Start,
+                    StopToken = ctx.Stop
+                },
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
         }
 
         /// <summary>

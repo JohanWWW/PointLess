@@ -1,360 +1,392 @@
 ﻿use std;
 
-__COLLECTIONS_IMPL__ = () => {
+#const __FILENAME__ 		"collections"
+#const __FILENAME_FULL__ 	"collections.0p"
+#const __LIB_NAME__			"Collections"
+
+// Begin __COLLECTIONS_LIB_EXPORTS__
+#const __COLLECTIONS_LIB_EXPORTS__() => {
+
+#const __ACCESSOR_SYM__		'.'
+
+#const __LLIST_TCODE__ 		1706029405
+#const __STACK_TCODE__ 		1910834486
+#const __QUEUE_TCODE__ 		1783385193
+
+	__collections_tcode_set__ = {
+		[__LLIST_TCODE__]=void,
+		[__STACK_TCODE__]=void,
+		[__QUEUE_TCODE__]=void
+	};
+
+	__is_collections_lib_type = obj =>
+		std.containsMember(obj, "typeCode") && 
+		std.isMethod(obj.typeCode) && 
+		__collections_tcode_set__.contains(obj.typeCode());
+
+	__construct_id_path = strings => {
+		sb = "";
+		i = 0;
+		while (i < strings.length()) {
+			sb += strings[i];
+			if (i != strings.length() - 1) {
+				sb += __ACCESSOR_SYM__;
+			}
+			i += 1;
+		}
+		return sb;
+	};
+
+	__construct_exception_message = (idPath, msg) => {
+		idPath = __construct_id_path(idPath);
+		return idPath + ": " + msg;
+	};
 
 	// Linked list implementation
 	// A dynamic data structure that stores elements as nodes in a structure resembling a chain.
 	//
-	LinkedList = () => {
-
-		__length = 0;
-		__root = void;
-		__head = void;
-
-		_Node = (value) => {
-			return {
-				value = value,
-				next = void
-			};
+	LinkedList_t = () => {
+		_len = 0;
+		_head = void; // First node (index 0)
+		_tail = void; // Last node
+		
+		Node_t = value => {
+			value = value,
+			prev = void,
+			next = void
 		};
 
-		_Enumerator = (startNode) => {
-			current = startNode;
+		Node_t += (value, prev, next) => {
+			value = value,
+			prev = prev,
+			next = next
+		};
+
+		Enumerator_t = stn => {
+			isDisposed = false;
+			cnode = stn;
 			skip = true;
 			return {
 				next = () => {
+					if (isDisposed) {
+						throw __construct_exception_message([nameof(LinkedList_t), nameof(Enumerator_t)], "Enumerator is already disposed");
+					}
 					b = void;
-					// Has reached end?
-					if (current == void) {
+					// Reached end?
+					if (cnode === void) {
 						b = false;
 					}
-					// First call should not update value of current
 					else if (skip) {
 						skip = false;
 						b = true;
 					}
 					else {
-						current = current.next;
-						b = current != void;
+						cnode = cnode.next;
+						b = cnode !== void;
 					}
 					return b;
 				},
-
 				current = () => {
-					return current.value;
+					if (isDisposed) {
+						throw __construct_exception_message([nameof(LinkedList_t), nameof(Enumerator_t)], "Enumerator is already disposed");
+					}
+					return cnode.value;
 				},
-
-				dispose = () => { }
+				dispose = () => {
+					cnode = void;
+					isDisposed = true;
+				}
 			};
 		};
 
-		// Adds provided value to the end of the chain
-		//
-		add = (e) => {
-			if (__length == 0) {
-				n = _Node(e);
-				__root = n;
-				__head = n;
-			}
-			else {
-				n = _Node(e);
-				__head.next = n;
-				__head = n;
-			}
-			__length += 1;
-		};
-
-		// Inserts provided value as a node at 
-		// provided index pushing existing node to the right
-		//
-		insertAt = (index, e) => {
-			if (index < 0 || index > __length) {
-				throw "LinkedList.insertAt: Index out of bounds";
-			}
-			if (index == 0) {
-				node = _Node(e);
-				node.next = __root;
-				__root = node;
-			}
-			else if (index == __length) {
-				n = _Node(e);
-				__head.next = n;
-				__head = n;
-			}
-			else {
-				i = 1;
-				previous = __root;
-				current = previous.next;
-				while (i < index) {
-					previous = current;
-					current = current.next;
-					i += 1;
-				}
-				
-				node = _Node(e);
-				node.next = current;
-				previous.next = node;
-			}
-			__length += 1;
-		};
-
-		// TODO: Implement O(1) when removing head node
-		// Removes and returns value of node at provided index
-		//
-		removeAt = (index) => {
-			if (index < 0 || index > __length - 1) {
-				throw "LinkedList.removeAt: Index out of bounds";
-			}
-
-			e = void;
-			if (index == 0) {
-				e = __root.value;
-				__root = __root.next;
-			}
-			else {
-				i = 1;
-				previous = __root;
-				current = previous.next;
-				while (i < index) {
-					previous = current;
-					current = current.next;
-					i += 1;
-				}
-
-				e = current.value;
-				
-				// If current node is last
-				if (i == __length) {
-					previous.next = void;
-				}
-				else {
-					n = current.next;
-					previous.next = n;
-				}
-			}
-
-			__length -= 1;
-
-			return e;
-		};
-
-		// Removes a node from chain whose value is strictly equal to the value 
-		// of the provided argument.
-		// Returns true if the node was found and removed, otherwise
-		// returns false.
-		//
-		remove = (e) => {
-			previous = void;
-			current = __root;
-			found = false;
-
-			// First value is e
-			if (current.value === e) {
-				if (current.next === void) {
-					__root = void;
-				}
-				else {
-					n = current.next;
-					__root = n;
-				}
-			}
-			else {
-				previous = current;
-				current = current.next;
-				while (current !== void && !found) {
-					if (current.value === e) {
-						found = true;
-					}
-					else {
-						previous = current;
-						current = current.next;
-					}
-				}
-
-				if (found) {
-					if (current.next === void) {
-						previous.next = void;
-					}
-					else {
-						n = current.next;
-						previous.next = n;
-					}
-				}
-			}
-
-			if (found) {
-				__length -= 1;
-			}
-
-			return found;
-		};
-
-		// Returns the value of a node at provided index
-		//
-		get = (index) => {
-			if (index < 0 || index > __length - 1) {
-				throw "LinkedList.get: Index out of bounds";
-			}
-			
-			e = void;
-			if (index == 0) {
-				e = __root.value;
-			}
-			else if (index == __length - 1) {
-				e = __head.value;
-			}
-			else {
+		// Time complexity O(n/2)
+		__find_n = idx => {
+			n = void;
+			if (idx <= _len / 2) {
+				halfLen = _len / 2;
+				n = _head;
 				i = 0;
-				n = __root;
-				while (i < index) {
+				while (i < halfLen) {
 					n = n.next;
 					i += 1;
 				}
-				e = n.value;
-			}
-
-			return e;
-		};
-
-		// Updates value of an existing node
-		//
-		set = (index, value) => {
-			if (index < 0 || index > __length - 1) {
-				throw "LinkedList.set: Index out of bounds";
-			}
-
-			e = void;
-			if (index == 0) {
-				e = __root;
-			}
-			else if (index == __length - 1) {
-				e = __head;
 			}
 			else {
-				i = 0;
-				n = __root;
-				while (i < index) {
-					n = n.next;
-					i += 1;
+				halfLen = _len / 2;
+				n = _tail;
+				i = (_len - 1) - idx;
+				while (i >= halfLen) {
+					n = n.prev;
+					i -= 1;
 				}
-				e = n;
 			}
+			return n;
+		};	
 
-			e.value = value;
-		};
+		this = {
+			// Returns the node count of the chain
+			//
+			length = () => _len,
 
-		// Returns true if the chain contains a node whose value is strictly equal
-		// to the value provided as an argument
-		//
-		contains = (e) => {
-			found = false;
-
-			if (__length > 0) {
-				if (__root.value === e) {
-					found = true;
+			// Adds provided value to the end of the chain
+			//
+			add = e => {
+				if (_len == 0) {
+					n = Node_t(e);
+					_head = n;
+					_tail = n;
 				}
 				else {
-					i = 0;
-					n = __root;
-					while (i < __length && !found) {
+					n = Node_t(e, _tail, void);
+					_tail.next = n;
+					_tail = n;
+				}
+				_len += 1;
+			},
+
+			// Returns the value of a node at specified index
+			//
+			get = idx => {
+				if (idx < 0 || idx >= _len) {
+					throw __construct_exception_message([nameof(LinkedList_t), nameof(this.get)], "Argument out of range");
+				}
+
+				n = void;
+				if (idx == 0) {
+					n = _head;
+				}
+				else if (idx == _len - 1) {
+					n = _tail;
+				}
+				else {
+					n = __find_n(idx);
+				}
+
+				return n.value;
+			},
+
+			// Updates value of an existing node
+			//
+			set = (idx, e) => {
+				if (idx < 0 || idx >= _len) {
+					throw __construct_exception_message([nameof(LinkedList_t), nameof(this.set)], "Argument out of range");
+				}
+
+				n = void;
+				if (idx == 0) {
+					n = _head;
+				}
+				else if (idx == _len - 1) {
+					n = _tail;
+				}
+				else {
+					n = __find_n(idx);
+				}
+
+				n.value = e;
+			},
+
+			// Removes a node from chain whose value is strictly equal to the value 
+			// of the provided argument.
+			// Returns true if the node was found and removed, otherwise
+			// returns false.
+			//
+			remove = e => {
+				found = false;
+				if (_len > 0) {
+					n = _head;
+					while (n !== void && !found) {
 						if (n.value === e) {
 							found = true;
 						}
 						else {
 							n = n.next;
-							i += 1;
+						}
+					}
+					if (found) {
+						if (n === _head) {
+							_head = _head.next;
+							if (_head !== void) {
+								_head.prev = void;
+							}
+						}
+						else if (n === _tail) {
+							_tail = _tail.prev;
+							if (_tail !== void) {
+								_tail.next = void;
+							}
+						}
+						else {
+							prev = n.prev;
+							next = n.next;
+
+							prev.next = next;
+							next.prev = prev;
+						}
+						_len -= 1;
+					}				
+				}
+				return found;
+			},
+
+			// Removes and returns value of node at specified index
+			//
+			removeAt = idx => {
+				if (idx < 0 || idx >= _len) {
+					throw __construct_exception_message([nameof(LinkedList_t), nameof(this.removeAt)], "Argument out of range");
+				}
+
+				n = void;
+				if (idx == 0) {
+					n = _head;
+					if (_head.next !== void) {
+						_head.next.prev = void;
+					}
+					_head = _head.next;
+				}
+				else if (idx == _len - 1) {
+					n = _tail;
+					_tail.prev.next = void;
+					_tail = _tail.prev;
+				}
+				else {
+					n = __find_n(idx);
+					prev = n.prev;
+					next = n.next;
+
+					prev.next = next;
+					if (next != void) {
+						next.prev = prev;
+					}
+				}
+
+				_len -= 1;
+
+				return n.value;
+			},
+
+			// Inserts provided value as a node at 
+			// specified index pushing existing node to the right
+			//
+			insertAt = (idx, e) => {
+				if (idx < 0 || idx > _len) {
+					throw __construct_exception_message([nameof(LinkedList_t), nameof(this.insertAt)], "Argument out of range");
+				}
+				if (_len == 0 && idx == 0) {
+					n = Node_t(e);
+					n.prev = void;
+					n.next = void;
+					_head = n;
+					_tail = n;
+				}
+				else if (idx == 0) {
+					n = Node_t(e);
+					n.prev = void;
+					n.next = _head;
+					_head.prev = n;
+					_head = n;
+				}
+				else if (idx == _len) {
+					n = Node_t(e);
+					n.prev = _tail;
+					n.next = void;
+					_tail.next = n;
+					_tail = n;
+				}
+				else {
+					natidx = __find_n(idx);
+
+					n = Node_t(e);
+					n.prev = natidx.prev;
+					n.next = natidx;
+
+					n.prev.next = n;
+					n.next.prev = n;
+				}
+				_len += 1;
+			},
+
+			// Returns true if the chain contains a node whose value is strictly equal
+			// to the value provided as an argument
+			//
+			contains = e => {
+				found = false;
+				if (_len > 0) {
+					n = _head;
+					while (n !== void && !found) {
+						if (n.value === e) {
+							found = true;
+						}
+						else {
+							n = n.next;
 						}
 					}
 				}
-			}
-
-			return found;
-		};
-
-		// Returns the node count of the chain
-		//
-		length = () => {
-			return __length;
-		};
-
-		// Creates an returns an enumerator that iterates through the chain
-		//
-		enumerator = () => {
-			return _Enumerator(__root);
-		};
-
-		// Returns a reference to this list
-		//
-		toList = () => {
-			return this;
-		};
-
-		// This overload should be called by classes that implement LinkedList
-		toString = callerList => {
-			sb = "[";
-			if (__length > 0) {
-				e = _Enumerator(__root);
-				i = 0;
-				while (e.next()) {
-					current = e.current();
-					if (current === callerList) {
-						sb += "<this list>";
-					}
-					else if (std.isStringObject(current)) {
-						sb += ('"' + std.escapeSpecialCharacters(current) + '"');
-					}
-					else {
-						sb += current;
-					}
-
-					if (i != __length - 1) {
-						sb += ',';
-					}
-					i += 1;
-				}
-			}
-			sb += "]";
-			return sb;
-		};
-
-		toString += () => toString(this);
-
-		this = {
-			add = add,
-			insertAt = insertAt,
-			removeAt = removeAt,
-			remove = remove,
-			get = get,
-			set = set,
-			contains = contains,
-			length = length,
-			enumerator = enumerator,
-			toList = toList,
-
-			// Overrides / Overloads
-			toString = toString,
-
-			indexer [index] => get(index),
-
-			indexer [index]<-value => {
-				set(index, value);
-			},
-			
-			// Adds element to list
-			//
-			operator ref[+]element => {
-				ref.add(element);
-				return this;
+				return found;
 			},
 
-			// Removes provided element from the list. Throws exception
-			// if not found.
+			// Creates an returns an enumerator that iterates through the chain
 			//
-			operator ref[-]element => {
-				if (!ref.remove(element)) {
-					throw "LinkedList: Element not found";
+			enumerator = () => Enumerator_t(_head),
+
+			// Returns a reference to this list
+			//
+			toList = () => this,
+
+			toString = (callerList => {
+				sb = "[";
+				if (_len > 0) {
+					it = Enumerator_t(_head);
+					i = 0;
+					while (it.next()) {
+						c = it.current();
+						if (c === this) {
+							sb += "<circular ref>";
+						}
+						else if (std.isObject(c) && __is_collections_lib_type(c)) {
+							innls = c.toList();
+							if (innls.contains(this)) {
+								sb += "[...]";
+							}
+							else {
+								sb += c;
+							}
+						}
+						else if (std.isStringObject(c)) {
+							sb += ('"' + std.escapeSpecialCharacters(c) + '"');
+						}
+						else {
+							sb += c;
+						}
+						if (i != _len - 1) {
+							sb += ',';
+						}
+						i += 1;
+					} 
 				}
-				return ref;
+				sb += "]";
+				return sb;
+			}) 
+			+ (() => this.toString(this)),
+
+			typeCode = () => __LLIST_TCODE__,
+
+			indexer [idx] => get(idx),
+
+			indexer [idx] <- value => {
+				set(idx, value);
+			},
+
+			operator self [+] e => {
+				self.add(e);
+				return self;
+			},
+
+			operator self [-] e => {
+				if (!self.remove(e)) {
+					throw __construct_exception_message([nameof(LinkedList_t), nameof(this.__operator_sub__)], "The provided value was not present in the list");
+				}
+				return self;
 			}
 		};
 
@@ -364,12 +396,12 @@ __COLLECTIONS_IMPL__ = () => {
 	// See docs for LinkedList([0]).
 	// Creates a linked list and populates it with initial values.
 	//
-	LinkedList += enumerable => {
-		list = LinkedList();
+	LinkedList_t += enumerable => {
+		_llist = LinkedList_t();
 		foreach (e in enumerable) {
-			list.add(e);
+			_llist.add(e);
 		}
-		return list;
+		return _llist;
 	};
 
 
@@ -378,78 +410,60 @@ __COLLECTIONS_IMPL__ = () => {
 	// dependencies:
 	//	LinkedList
 	//
-	Stack = () => {
-		
-		__list = LinkedList();
+	Stack_t = () => {
+		_list = LinkedList_t();
 
-		// Adds provided value to the top of the stack
-		//
-		push = (e) => {
-			__list.insertAt(0, e);
-		};
-
-		// Removes and returns the top element of the stack
-		//
-		pop = () => {
-			if (__list.length() == 0) {
-				throw "Stack.pop: Stack empty";
-			}
-			return __list.removeAt(0);
-		};
-
-		// Returns the top value on the stack
-		//
-		peek = () => {
-			if (__list.length() == 0) {
-				throw "Stack.peek: Stack empty";
-			}
-			return __list.get(0);
-		};
-
-		// Returns true if there are no elements
-		// present in the stack, otherwise false
-		//
-		isEmpty = () => __list.length() == 0;
-
-		// Returns the element count of this stack
-		//
-		length = () => {
-			return __list.length();
-		};
-
-		// Creates and returns an enumerator for this stack
-		//
-		enumerator = () => {
-			return __list.enumerator();
-		};
-
-		// Returns the underlying enumerable 
-		// that makes up this stack
-		//
-		toList = () => {
-			return __list;
-		};
-
-		// The constructed stack
-		//
-		this = { 
-			push = push,
-			pop = pop,
-			peek = peek,
-			isEmpty = isEmpty,
-			length = length,
-			enumerator = enumerator,
-			toList = toList,
-			toString = () => __list.toString(this),
-
-			// Pushes a new element to stack.
-			// 	params:
-			//			ref: Self reference
-			//		element: Element to push
+		this = {
+			// Adds provided value to the top of the stack
 			//
-			operator ref[+]element => {
-				ref.push(element);
-				return this;
+			push = e => {
+				_list.insertAt(0, e);
+			},
+
+			// Removes and returns the top element of the stack
+			//
+			pop = () => {
+				if (_list.length() == 0) {
+					throw __construct_exception_message([nameof(Stack_t), nameof(this.pop)], "Stack is empty");
+				}
+				return _list.removeAt(0);
+			},
+
+			// Returns the top value on the stack
+			//
+			peek = () => {
+				if (_list.length() == 0) {
+					throw __construct_exception_message([nameof(Stack_t), nameof(this.peek)], "Stack is empty");
+				}
+				return _list.get(0);
+			},
+
+			// Returns true if there are no elements
+			// present in the stack, otherwise false
+			//
+			isEmpty = () => _list.length() == 0,
+
+			// Returns the element count of this stack
+			//
+			length = _list.length,
+
+			// Creates and returns an enumerator for this stack
+			//
+			enumerator = _list.enumerator,
+
+			// Returns the underlying enumerable 
+			// that makes up this stack
+			//
+			toList = () => _list,
+
+			//
+			toString = () => _list.toString(this),
+
+			typeCode = () => __STACK_TCODE__,
+
+			operator self [+] e => {
+				self.push(e);
+				return self;
 			}
 		};
 
@@ -459,12 +473,12 @@ __COLLECTIONS_IMPL__ = () => {
 	// See docs for Stack([0]).
 	// Creates a stack and populates it with initial values.
 	//
-	Stack += enumerable => {
-		stack = Stack();
+	Stack_t += enumerable => {
+		_stack = Stack_t();
 		foreach (e in enumerable) {
-			stack.push(e);
+			_stack.push(e);
 		}
-		return stack;
+		return _stack;
 	};
 
 
@@ -473,78 +487,60 @@ __COLLECTIONS_IMPL__ = () => {
 	// dependencies:
 	//	LinkedList
 	//
-	Queue = () => {
+	Queue_t = () => {
+		_list = LinkedList_t();
 
-		__list = LinkedList();
-
-		// Adds the provided element to the end of the queue 
-		//
-		enqueue = (e) => {
-			__list.add(e);
-		};
-
-		// Removes and returns an element from the very beginning of the queue
-		//
-		dequeue = () => {
-			if (__list.length() == 0) {
-				throw "Queue.dequeue: Queue empty";
-			}
-			return __list.removeAt(0);
-		};
-
-		// Returns an element from the very beginning of the queue
-		//
-		peek = () => {
-			if (__list.length() == 0) {
-				throw "Queue.peek: Queue empty";
-			}
-			return __list.get(0);
-		};
-
-		// Returns true if there are no elements
-		// present in the queue, otherwise false
-		//
-		isEmpty = () => __list.length() == 0;
-
-		// Returns the element count of this queue
-		//
-		length = () => {
-			return __list.length();
-		};
-
-		// Creates and returns an enumerator for this queue
-		//
-		enumerator = () => {
-			return __list.enumerator();
-		};
-
-		// Returns the underlying enumerable
-		// that makes up this queue
-		toList = () => {
-			return __list;
-		};
-
-		// The constructed queue
 		this = {
-			enqueue = enqueue,
-			dequeue = dequeue,
-			peek = peek,
-			isEmpty = isEmpty,
-			length = length,
-			enumerator = enumerator,
-			toList = toList,
-			toString = () => __list.toString(this),
-
-			// Enqueues a new element to queue
-			// 	params:
-			// 			ref: Self reference
-			// 		element: Element to enqueue
+			// Adds the provided element to the end of the queue 
 			//
-			operator ref[+]element => {
-				ref.enqueue(element);
-				return this;
+			enqueue = e => {
+				_list.add(e);
+			},
+
+			// Removes and returns an element from the very beginning of the queue
+			//
+			dequeue = () => {
+				if (_list.length() == 0) {
+					throw __construct_exception_message([nameof(Queue_t), nameof(this.dequeue)], "Queue is empty");
+				}
+				return _list.removeAt(0);
+			},
+
+			// Returns an element from the very beginning of the queue
+			//
+			peek = () => {
+				if (_list.length() == 0) {
+					throw __construct_exception_message([nameof(Queue_t), nameof(this.peek)], "Queue is empty");
+				}
+				return _list.get(0);
+			},
+
+			// Returns true if there are no elements
+			// present in the queue, otherwise false
+			//
+			isEmpty = () => _list.length() == 0,
+
+			// Returns the element count of this queue
+			//
+			length = _list.length,
+
+			// Creates and returns an enumerator for this queue
+			//
+			enumerator = _list.enumerator,
+
+			// Returns the underlying enumerable
+			// that makes up this queue
+			toList = () => _list,
+
+			toString = () => _list.toString(this),
+
+			typeCode = () => __QUEUE_TCODE__,
+
+			operator self [+] e => {
+				self.enqueue(e);
+				return self;
 			}
-		};
+ 		};
 
 		return this;
 	};
@@ -552,20 +548,22 @@ __COLLECTIONS_IMPL__ = () => {
 	// See docs for Queue([0]).
 	// Creates a queue and populates it with initial values.
 	//
-	Queue += enumerable => {
-		queue = Queue();
+	Queue_t += enumerable => {
+		_queue = Queue_t();
 		foreach (e in enumerable) {
-			queue.enqueue(e);
+			_queue.enqueue(e);
 		}
-		return queue;
+		return _queue;
 	};
 
+	// Exports
 	return {
-		LinkedList = LinkedList,
-		Stack = Stack,
-		Queue = Queue
+		LinkedList 	= LinkedList_t,
+		Stack 		= Stack_t,
+		Queue 		= Queue_t
 	};
-};
+} // End __COLLECTIONS_LIB_EXPORTS__
 
 // Export library
-Collections = __COLLECTIONS_IMPL__();
+Collections = __COLLECTIONS_LIB_EXPORTS__;
+Collections = Collections();

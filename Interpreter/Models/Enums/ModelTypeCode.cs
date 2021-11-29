@@ -38,6 +38,7 @@ namespace Interpreter.Models.Enums
         IfClause,
         ElseIfClause,
         ElseClause,
-        CompilerConstDefinition
+        CompilerConstDefinition,
+        NameofExpression
     }
 }

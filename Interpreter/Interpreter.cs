@@ -275,8 +275,16 @@ namespace Interpreter
             ModelTypeCode.ObjectInitializationExpression    => EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope),
             ModelTypeCode.ArrayLiteralNotation              => EnterArrayLiteralNotation(expression as ArrayLiteralNotationModel, scope),
             ModelTypeCode.DictionaryLiteralNotation         => EnterDictionaryObjectOperable(expression as DictionaryLiteralNotation, scope),
+            ModelTypeCode.NameofExpression          => EnterNameofExpression(expression as NameofExpression, scope),
             _                                               => throw new InterpreterRuntimeException(expression, _filePath, $"Expression with type code '{expression.TypeCode}' is not implemented"),
         };
+
+        public IOperable EnterNameofExpression(NameofExpression expression, Scoping scope)
+        {
+            // Discard because we only need to check if the identifier path is valid
+            _ = EnterIdentifierExpression(expression.IdentifierModel, scope);
+            return (StringObjectOperable)expression.IdentifierModel.Identifier.Last();
+        }
 
         public IOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
 

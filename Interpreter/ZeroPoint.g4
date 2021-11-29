@@ -254,6 +254,11 @@ atom
 	| anonymous_function_definition_statement
 	| array_literal_notation
 	| dictionary_literal_notation
+	| nameof_expression
+	;
+
+nameof_expression
+	: NAMEOF '(' (IDENTIFIER|identifier_access) ')'
 	;
 
 literal
@@ -440,6 +445,8 @@ RETURN: 'return';
 TRY: 'try';
 CATCH: 'catch';
 THROW: 'throw';
+
+NAMEOF: 'nameof';
 
 CTCONST: '#const';
 

@@ -1,138 +1,233 @@
 ﻿
-__STD_IMPL__ = () => {
+#const __FILENAME__                         "std"
+#const __FILENAME_FULL__                    "std.0p"
+#const __LIB_NAME__                         "std"
 
-    // Warning: Modifying native functions in this file is not recommended
-    //          and may lead to inconsistent results.
+#const __N_ISNUMBER__                       native (value)              => <@"std.__is_number">
+#const __N_ISINTEGER__                      native (value)              => <@"std.__is_integer">
+#const __N_ISDECIMAL__                      native (value)              => <@"std.__is_decimal">
+#const __N_ISSTRINGOBJECT__                 native (value)              => <@"std.__is_string_object">
+#const __N_ISCHARACTER__                    native (value)              => <@"std.__is_character">
+#const __N_ISBOOL__                         native (value)              => <@"std.__is_bool">
+#const __N_ISOBJECT__                       native (value)              => <@"std.__is_object">
+#const __N_ISMETHOD__                       native (value)              => <@"std.__is_method">
 
-    // Dictionary natives
-    __dict_allocate = native () => <@"std.__dict_allocate">; // DEPRACTED: Use built in dictionary notation instead
+#const __N_CONSOLE_PRINT__                  native (obj)                => <@"std.print">
+#const __N_CONSOLE_PRINTLN__                native (obj)                => <@"std.println">
+#const __N_CONSOLE_READLN__                 native ()                   => <@"std.readln">
+#const __N_CONSOLE_SETCURSORPOSITION__      native (x, y)               => <@"std.setCursorPosition">
+#const __N_CONSOLE_SETCURSORVISIBILITY__    native (visible)            => <@"std.setCursorVisibility">
+#const __N_CONSOLE_SETBACKGROUNDCOLOR__     native (color)              => <@"std.setBackgroundColor">
 
-    __dict_set = native (dictRef, key, value) => <@"std.__dict_set">; // DEPRECATED
+#const __N_DELAY__                          native (millis)             => <@"std.delay">
+#const __N_SYSTEMMILLIS__                   native ()                   => <@"std.systemMillis">
+#const __N_TICKS__                          native ()                   => <@"std.ticks">
 
-    __dict_get = native (dictRef, key) => <@"std.__dict_get">; // DEPRECATED
-
-    __dict_contains = native (dictRef, key) => <@"std.__dict_contains">; // DEPRECATED
-
-    __dict_remove = native (dictRef, key) => <@"std.__dict_remove">; // DEPRECATED
-
-    __dict_length = native (dictRef) => <@"std.__dict_length">; // DEPRECATED
-
-    __dict_get_key_array = native (dictRef) => <@"std.__dict_get_key_array">; // DEPRECATED
-
-    __dict_get_value_array = native (dictRef) => <@"std.__dict_get_value_array">; // DEPRECATED
-
-    // Array natives
-    __array_allocate = native (s) => <@"std.__array_allocate">; // DEPRECATED: Use built in array notation instead
-
-    __array_length = native (ref) => <@"std.__array_length">; // DEPRECATED
-
-    __array_get = native (ref, index) => <@"std.__array_get">; // DEPRECATED
-
-    __array_set = native (ref, index, value) => <@"std.__array_set">; // DEPRECATED
-
-    // String natives
-    __string_array = native (s) => <@"std.String.__string_array">; // DEPRECATED: String literals now evaluate to objects
-
-    // Type check natives
-    __is_number = native (value) => <@"std.__is_number">;
-
-    __is_integer = native (value) => <@"std.__is_integer">;
-
-    __is_decimal = native (value) => <@"std.__is_decimal">;
-
-    __is_string = native (value) => <@"std.__is_string">; // DEPRECATED: Use __is_string_object instead
-
-    __is_string_object = native (value) => <@"std.__is_string_object">;
-
-    __is_character = native (value) => <@"std.__is_character">;
-
-    __is_bool = native (value) => <@"std.__is_bool">;
-
-    __is_object = native (value) => <@"std.__is_object">;
-
-    __is_method = native (value) => <@"std.__is_method">;
+#const __N_GET_MEMBER_NAMES__               native (obj)                => <@"std.getMemberNames">
+#const __N_GET_MEMBER_VALUE__               native (obj, name)          => <@"std.getMemberValue">
+#const __N_SET_MEMBER_VALUE__               native (obj, name, value)   => <@"std.setMemberValue">
+#const __N_CONTAINS_MEMBER__                native (obj, name)          => <@"std.containsMember">
 
 
-    //
-    //
-    print = native (obj) => <@"std.print">;
+#const STRING_EMPTY     ""
+#const DOT_SYM          "."
+#const COMMA_SYM        ","
+#const COLON_SYM        ":"
+#const PLUS_SYM         "+"
+#const MINUS_SYM        "-"
 
-    //
-    //
-    println = native (obj) => <@"std.println">;
+#const TICKS_UNTIL_UNIX_START 621355968000000000 // 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
 
-    println += () => println("");
 
-    setCursorPosition = native (x, y) => <@"std.setCursorPosition">;
+// Begin __STD_LIB_EXPORTS__
+#const __STD_LIB_EXPORTS__() => {
 
-    setCursorVisibility = native (visible) => <@"std.setCursorVisibility">;
+    // Quick way to instantate constants
+    NEW = T => T();
 
-    setBackgroundColor = native (color) => <@"std.setBackgroundColor">;
-
-    //
-    //
-    readln = native () => <@"std.readln">;
-
-    //
-    //
-    number = native (s) => <@"std.number">; // DEPRECATED
-
-    //
-    //
-    delay = native (millis) => <@"std.delay">;
-
-    //
-    // Returns milliseconds elapsed since system start
-    //
-    systemMillis = native () => <@"std.systemMillis">;
-
-    //
-    // Returns ticks elapsed since system start
-    //
-    systemTicks = () => {
-        return systemMillis() * 10000;
-    };
-
-    //
-    // Returns elapsed time since 0001-01-01 00:00:00 in ticks.
-    // 1 tick = 100 nanoseconds
-    //
-    ticks = native () => <@"std.ticks">;
-
-    //
-    // Returns elapsed time since the beginning of unix time (1970-01-01 00:00:00) in ticks.
-    // 1 tick = 100 nanoseconds
-    //
-    ticksUnix = () => {
-        return ticks() - __ticksUntilUnixStart__;
-    };
-
-    Console = {
-        print = print,
-        println = println,
-        readln = readln,
-        setCursorPosition = setCursorPosition,
-        setCursorVisibility = setCursorVisibility,
-        setBackgroundColor = setBackgroundColor,
-        Color = {
-            BLACK = 0,
-            DARK_BLUE = 1,
-            DARK_GREEN = 2,
-            DARK_CYAN = 3,
-            DARK_RED = 4,
-            DARK_MAGENTA = 5,
-            DARK_YELLOW = 6,
-            GRAY = 7,
-            DARK_GRAY = 8,
-            BLUE = 9,
-            GREEN = 10,
-            CYAN = 11,
-            RED = 12,
-            MAGENTA = 13,
-            YELLOW = 14,
-            WHITE = 15
+    MAKE_EXCEPTION_MSG = (idArr, exceptionMsg) => {
+        i = 0;
+        len = idArr.length();
+        idPath = STRING_EMPTY;
+        while (i < len) {
+            idPath += idArr[i];
+            if (i != len - 1) {
+                idPath += DOT_SYM;
+            }
+            i += 1;
         }
+        return idPath + COLON_SYM + " " + exceptionMsg;
     };
+
+    ESCSCHARS = s => {
+        if (this_lib.isCharacter(s)) {
+            s = "" + s;
+        }
+        s = s.replaceAll("\\", "\\\\");
+        s = s.replaceAll("\"", "\\\"");
+        s = s.replaceAll("\n", "\\n");
+        s = s.replaceAll("\t", "\\t");
+        return s.toString();
+    };
+
+    INTPOW = (x, y) => {
+        if (y < 0) {
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(INTPOW)], "Exponent was less than zero");
+        }
+        p = 1;
+        i = y;
+        while (i > 0) {
+            p *= x;
+            i -= 1;
+        }
+        return p;
+    };
+
+    ctod = {
+        ['0'] = 0,
+        ['1'] = 1,
+        ['2'] = 2,
+        ['3'] = 3,
+        ['4'] = 4,
+        ['5'] = 5,
+        ['6'] = 6,
+        ['7'] = 7,
+        ['8'] = 8,
+        ['9'] = 9
+    };
+
+    PARSE_INT = (s) => {
+        s = s.getChars();
+        sum = 0;
+        signum = 1;
+        e = s.length() - 1;
+        i = 0;
+        if (s[0] == MINUS_SYM) {
+            signum = -1;
+            e -= 1;
+            i += 1;
+        }
+        while (i < s.length()) {
+            d = s[i];
+            if (ctod.contains(d)) {
+                sum += ctod[d] * INTPOW(10, e);
+            }
+            else {
+                throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(PARSE_INT)], "Found illegal character '" + d + "' at index " + i + " when parsing input string");
+            }
+            i += 1;
+            e -= 1;
+        }
+
+        return signum * sum;
+    };
+
+    // TODO: Maybe it should parse string as int and shift decimal point instead?
+    PARSE_DECIMAL = (s) => {
+        i = 0;
+        dotSignCount = 0;
+        foreach (c in s) {
+            if (c == DOT_SYM) {
+                dotSignCount += 1;
+            }
+            i += 1;
+        }
+
+        if (dotSignCount > 1) {
+            throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(PARSE_DECIMAL)], "Illegal number format");
+        }
+
+        sum = .0;
+        hasDecimalPoint = (dotSignCount == 1);
+
+        if (hasDecimalPoint) {
+            segments = s.split(DOT_SYM);
+
+            integers = segments[0];
+            decimals = segments[1];
+
+            signum = 1;
+            if (integers.length() > 0) {
+                if (integers[0] == MINUS_SYM) {
+                    signum = -1;
+                    if (integers.length() > 1) {
+                        sum += PARSE_INT(integers.substring(1, integers.length()));
+                    }
+                }
+                else {
+                    sum += PARSE_INT(integers);
+                }
+            }
+
+            decimalSum = .0;
+            e = 0;
+            while (e < decimals.length()) {
+                d = decimals[e];
+                if (ctod.contains(d)) {
+                    decimalSum += ctod[d] / (INTPOW(10, e) + .0);
+                }
+                else {
+                    throw MAKE_EXCEPTION_MSG([__LIB_NAME__, nameof(PARSE_DECIMAL)], "Found illegal character '" + d + "' at index " + (integers.length() + e + 1) + " when parsing input string");
+                }
+                e += 1;
+            }
+
+            sum += decimalSum / 10;
+            sum *= signum;
+        }
+        else {
+            sum += PARSE_INT(s);
+        }
+
+        return sum;
+    };
+
+    SYSTEMMILLIS = __N_SYSTEMMILLIS__;
+
+    SYSTEMTICKS = () => {
+        return SYSTEMMILLIS() * 10000;
+    };
+
+    TICKS = __N_TICKS__;
+
+    TICKSUNIX = () => {
+        return TICKS() - TICKS_UNTIL_UNIX_START;
+    };
+    
+#const __CONSOLE_COLORS__ {
+    BLACK           = b'0,
+    DARK_BLUE       = b'1,
+    DARK_GREEN      = b'2,
+    DARK_CYAN       = b'3,
+    DARK_RED        = b'4,
+    DARK_MAGENTA    = b'5,
+    DARK_YELLOW     = b'6,
+    GRAY            = b'7,
+    DARK_GRAY       = b'8,
+    BLUE            = b'9,
+    GREEN           = b'10,
+    CYAN            = b'11,
+    RED             = b'12,
+    MAGENTA         = b'13,
+    YELLOW          = b'14,
+    WHITE           = b'15
+}
+
+#const __CONSOLE__() => {
+    // Add println overload
+    PRINTLN = __N_CONSOLE_PRINTLN__;
+    PRINTLN += () => PRINTLN(__STRING_EMPTY__);
+
+    return {
+        Color = __CONSOLE_COLORS__,
+        print = __N_CONSOLE_PRINT__,
+        println = PRINTLN,
+        readln = __N_CONSOLE_READLN__,
+        setCursorPosition = __N_CONSOLE_SETCURSORPOSITION__,
+        setCursorVisibility = __N_CONSOLE_SETCURSORVISIBILITY__,
+        setBackgroundColor = __N_CONSOLE_SETBACKGROUNDCOLOR__
+    };
+}
 
     Arrays = {
 
@@ -155,27 +250,27 @@ __STD_IMPL__ = () => {
         // Allocates storage for a new array
         //
         allocate =  
-                    //
-                    // Parameters:
-                    //  size: The size of the array
-                    //
-                    (size => alloc [size]) 
-                    +
+            //
+            // Parameters:
+            //  size: The size of the array
+            //
+            (size => alloc [size]) 
+            +
 
-                    //
-                    // Parameters:
-                    //  size: The size of the array
-                    //  generator: A provider that returns an initial value to populate the array with
-                    //
-                    ((size, generator) => {
-                        array = Arrays.allocate(size);
-                        i = 0;
-                        while (i < size) {
-                            array.set(i, generator());
-                            i += 1;
-                        }
-                        return array;
-                    }),
+            //
+            // Parameters:
+            //  size: The size of the array
+            //  generator: A provider that returns an initial value to populate the array with
+            //
+            ((size, generator) => {
+                array = Arrays.allocate(size);
+                i = 0;
+                while (i < size) {
+                    array.set(i, generator());
+                    i += 1;
+                }
+                return array;
+            }),
 
         //
         // Allocates storage for new array with zero index positions
@@ -183,6 +278,8 @@ __STD_IMPL__ = () => {
         empty = () => alloc [0]
     };
 
+
+#const ARRAYLIST_DEFAULT_CAPACITY 4
     //
     // Dynamically sized data structure that uses arrays internally.
     // Creates a list with initial values and initial capacity.
@@ -190,12 +287,12 @@ __STD_IMPL__ = () => {
     //  initialCapacity: Initial capacity of this list. Must be greater than
     //                   or equal to the size of the enumerable
     //
-    ArrayList = (enumerable, initialCapacity) => {
+    ArrayList_t = (enumerable, initialCapacity) => {
 
         initArray = () => {
             len = enumerable.length();
             if (initialCapacity < len) {
-                throw "Initial capacity cannot be set to a value less than the length of the initial enumerable";
+                throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t)], "Initial capacity cannot be set to a value less than the length of the initial enumerable");
             }
             a = alloc [initialCapacity];
             if (len > 0) {
@@ -250,7 +347,7 @@ __STD_IMPL__ = () => {
         //
         removeAt = index => {
             if (isIndexOutOfRange(index)) {
-                throw "Argument out of range";
+                throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t), nameof(removeAt)], "Argument out of range");
             }
             removedElement = _array[index];
             if (index == _size - 1) {
@@ -273,7 +370,7 @@ __STD_IMPL__ = () => {
         //
         insertAt = (index, e) => {
             if (index < 0 || index > _size) {
-                throw "Argument out of range";
+                throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t), nameof(insertAt)], "Argument out of range");
             }
             ensureCapacity(_size + 1);
             if (index == _size) {
@@ -297,7 +394,7 @@ __STD_IMPL__ = () => {
         //
         set = (index, e) => {
             if (isIndexOutOfRange(index)) {
-                throw "Argument out of range";
+                throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t), nameof(set)], "Argument out of range");
             }
             _array[index] = e;
         };
@@ -307,7 +404,7 @@ __STD_IMPL__ = () => {
         //
         get = index => {
             if (isIndexOutOfRange(index)) {
-                throw "Argument out of range";
+                throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t), nameof(get)], "Argument out of range");
             }
             return _array[index];
         };
@@ -372,11 +469,11 @@ __STD_IMPL__ = () => {
                 if (e === this) {
                     sb += "<this list>";
                 }
-                else if (__is_string_object(e)) {
-                    sb += "\"" + __escapeSpecialChars__(e) + "\"";
+                else if (this_lib.isStringObject(e)) {
+                    sb += "\"" + this_lib.escschars(e) + "\"";
                 }
-                else if (__is_character(e)) {
-                    sb += "'" + __escapeSpecialChars__(e) + "'";
+                else if (this_lib.isCharacter(e)) {
+                    sb += "'" + this_lib.escschars(e) + "'";
                 }
                 else {
                     sb += "" + e;
@@ -457,7 +554,7 @@ __STD_IMPL__ = () => {
         //
         capacity += c => {
             if (c < _size) {
-                throw "Cannot set capacity to a value smaller than list length";
+                throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t), nameof(capacity)], "Cannot set capacity to a value smaller than list length");
             }
             // Resize if needed
             resizeArray(c);
@@ -507,7 +604,7 @@ __STD_IMPL__ = () => {
             //
             operator _ [-] value => {
                 if (!remove(value)) {
-                    throw "Element is not present in the list";
+                    throw MAKE_EXCEPTION_MSG([nameof(ArrayList_t), nameof(this.__operator_sub__)], "Element is not present in the list");
                 }
                 return this;
             }
@@ -521,176 +618,48 @@ __STD_IMPL__ = () => {
     // Creates a list with initial capacity 4 if the provided enumerable is empty
     // otherwise the list capacity is twice the size of the enumerable.
     //
-    ArrayList += enumerable => 
-        ArrayList(enumerable, enumerable.length() == 0 ? 4 : enumerable.length() * 2);
+    ArrayList_t += enumerable => 
+        ArrayList_t(enumerable, enumerable.length() == 0 ? ARRAYLIST_DEFAULT_CAPACITY : enumerable.length() * 2);
 
     //
     // See docs for ArrayList([1]).
     // Creates an empty list with capacity 4.
     //
-    ArrayList += () => ArrayList(alloc [0]);
+    ArrayList_t += () => ArrayList_t(alloc [0]);
 
-    // Not recommended for regular math operations
-    __intPow__ = (x, y) => {
-        if (y < 0) {
-            throw "std.__intPow__: Exponent was less than zero";
-        }
-        p = 1;
-        i = y;
-        while (i > 0) {
-            p *= x;
-            i -= 1;
-        }
-        return p;
+    this_lib = {
+        isNumber        = __N_ISNUMBER__,
+        isInteger       = __N_ISINTEGER__,
+        isDecimal       = __N_ISDECIMAL__,
+        isStringObject  = __N_ISSTRINGOBJECT__,
+        isCharacter     = __N_ISCHARACTER__,
+        isBool          = __N_ISBOOL__,
+        isObject        = __N_ISOBJECT__,
+        isMethod        = __N_ISMETHOD__,
+
+        getMemberNames  = __N_GET_MEMBER_NAMES__,
+        getMemberValue  = __N_GET_MEMBER_VALUE__,
+        setMemberValue  = __N_SET_MEMBER_VALUE__,
+        containsMember  = __N_CONTAINS_MEMBER__,
+
+        parseInt        = PARSE_INT,
+        parseDecimal    = PARSE_DECIMAL,
+
+        delay           = __N_DELAY__,
+        systemMillis    = __N_SYSTEMMILLIS__,
+        systemTicks     = SYSTEMTICKS,
+        ticks           = __N_TICKS__,
+        ticksUnix       = TICKSUNIX,
+        Console         = NEW(__CONSOLE__),
+        Arrays          = Arrays,
+        ArrayList       = ArrayList_t,
+
+        escschars = ESCSCHARS,
+        escapeSpecialCharacters = ESCSCHARS // DEPRECATED
     };
 
-    __parseInt__ = (s) => {
-        s = s.getChars();
-        sum = 0;
-        signum = 1;
-        e = s.length() - 1;
-        i = 0;
-        if (s[0] == __minusSign__) {
-            signum = -1;
-            e -= 1;
-            i += 1;
-        }
-        while (i < s.length()) {
-            d = s[i];
-            if (__charToDigit__.contains(d)) {
-                    sum += __charToDigit__[d] * __intPow__(10, e);
-            }
-            else {
-                throw "Found illegal character '" + d + "' at index " + i + " when parsing input string";
-            }
-            i += 1;
-            e -= 1;
-        }
+    return this_lib;
+} // End __STD_LIB_EXPORTS__
 
-        return signum * sum;
-    };
-
-    // TODO: Maybe it should parse string as int and shift decimal point instead?
-    __parseDecimal__ = (s) => {
-        i = 0;
-        dotSignCount = 0;
-        foreach (c in s) {
-            if (c == __dotSign__) {
-                dotSignCount += 1;
-            }
-            i += 1;
-        }
-
-        if (dotSignCount > 1) {
-            throw "std.Convert.string.toDecimal: Illegal number format";
-        }
-
-        sum = .0;
-        hasDecimalPoint = (dotSignCount == 1);
-
-        if (hasDecimalPoint) {
-            segments = s.split(__dotSign__);
-
-            integers = segments[0];
-            decimals = segments[1];
-
-            signum = 1;
-            if (integers.length() > 0) {
-                if (integers[0] == __minusSign__) {
-                    signum = -1;
-                    if (integers.length() > 1) {
-                        sum += __parseInt__(integers.substring(1, integers.length()));
-                    }
-                }
-                else {
-                    sum += __parseInt__(integers);
-                }
-            }
-
-            decimalSum = .0;
-            e = 0;
-            while (e < decimals.length()) {
-                d = decimals[e];
-                if (__charToDigit__.contains(d)) {
-                    decimalSum += __charToDigit__[d] / (__intPow__(10, e) + .0);
-                }
-                else {
-                    throw "Found illegal character '" + d + "' at index " + (integers.length() + e + 1) + " when parsing input string";
-                }
-                e += 1;
-            }
-
-            sum += decimalSum / 10;
-            sum *= signum;
-        }
-        else {
-            sum += __parseInt__(s);
-        }
-
-        return sum;
-    };
-
-    __escapeSpecialChars__ = s => {
-        if (__is_character(s)) {
-            s = "" + s;
-        }
-        s = s.replaceAll("\\", "\\\\");
-        s = s.replaceAll("\"", "\\\"");
-        s = s.replaceAll("\n", "\\n");
-        s = s.replaceAll("\t", "\\t");
-        return s.toString();
-    };
-
-    // 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
-    __ticksUntilUnixStart__ = 621355968000000000;
-
-    // 0-9
-    __digits__ = "0123456789";
-
-    __charToDigit__ = {
-        ['0'] = 0,
-        ['1'] = 1,
-        ['2'] = 2,
-        ['3'] = 3,
-        ['4'] = 4,
-        ['5'] = 5,
-        ['6'] = 6,
-        ['7'] = 7,
-        ['8'] = 8,
-        ['9'] = 9
-    };
-
-    __minusSign__ = '-';
-    __plusSign__ = '+';
-    __dotSign__ = '.';
-    __commaSign__ = ',';
-    __emptyString__ = "";
-
-    return {
-        isNumber = __is_number,
-        isInteger = __is_integer,
-        isDecimal = __is_decimal,
-        isString = __is_string,
-        isStringObject = __is_string_object,
-        isBool = __is_bool,
-        isObject = __is_object,
-        isMethod = __is_method,
-
-        parseInt = __parseInt__,
-        parseDecimal = __parseDecimal__,
-
-        delay = delay,
-        systemMillis = systemMillis,
-        systemTicks = systemTicks,
-        ticks = ticks,
-        ticksUnix = ticksUnix,
-        Console = Console,
-        Arrays = Arrays,
-
-        ArrayList = ArrayList,
-
-        escapeSpecialCharacters = __escapeSpecialChars__
-    };
-};
-
-std = __STD_IMPL__();
+std = __STD_LIB_EXPORTS__;
+std = std();

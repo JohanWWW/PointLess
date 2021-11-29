@@ -422,5 +422,84 @@ namespace NativeLibraries
                 return new ArrayOperable(dictRef.Values.ToArray());
             }
         };
+
+        [ImplementationIdentifier("std.getMemberNames")]
+        public static readonly NativeFunctionStatementModel GetMemberNames = new NativeFunctionStatementModel("obj")
+        {
+            NativeImplementation = args =>
+            {
+                ObjectOperable obj = args[0].OperableType switch
+                {
+                    ObjectType.Object => (ObjectOperable)args[0],
+                    _ => throw new NativeImplementationException($"Cannot cast value of type '{args[0].OperableType}' to object")
+                };
+                return new ArrayObjectOperable(obj.Value.MemberNames.Select(n => new StringObjectOperable(n)).ToArray());
+            }
+        };
+
+        [ImplementationIdentifier("std.getMemberValue")]
+        public static readonly NativeFunctionStatementModel GetMemberValue = new NativeFunctionStatementModel("obj", "name")
+        {
+            NativeImplementation = args =>
+            {
+                ObjectOperable obj = args[0].OperableType switch
+                {
+                    ObjectType.Object => (ObjectOperable)args[0],
+                    _ => throw new NativeImplementationException($"Cannot cast value of type '{args[0].OperableType}' to object")
+                };
+                string memberName = args[1].OperableType switch
+                {
+                    ObjectType.StringObject => args[1].ToString(),
+                    _ => throw new NativeImplementationException($"Cannot cast value of type '{args[1].OperableType}' to string")
+                };
+
+                if (!obj.TryGetMember(memberName, out IOperable val))
+                    throw new NativeImplementationException($"Object does not contain a member by name '{memberName}'");
+
+                return val;
+            }
+        };
+
+        [ImplementationIdentifier("std.setMemberValue")]
+        public static readonly NativeFunctionStatementModel SetMemberValue = new NativeFunctionStatementModel("obj", "memberName", "value")
+        {
+            NativeImplementation = args =>
+            {
+                ObjectOperable obj = args[0].OperableType switch
+                {
+                    ObjectType.Object => (ObjectOperable)args[0],
+                    _ => throw new NativeImplementationException($"Cannot cast value of type '{args[0].OperableType}' to object")
+                };
+                string memberName = args[1].OperableType switch
+                {
+                    ObjectType.StringObject => args[1].ToString(),
+                    _ => throw new NativeImplementationException($"Could not cast value of type '{args[1].OperableType}' to string")
+                };
+
+                if (!obj.TrySetMember(memberName, args[2]))
+                    return BoolOperable.False;
+
+                return BoolOperable.True;
+            }
+        };
+
+        [ImplementationIdentifier("std.containsMember")]
+        public static readonly NativeFunctionStatementModel ContainsMember = new NativeFunctionStatementModel("obj", "memberName")
+        {
+            NativeImplementation = args =>
+            {
+                ObjectOperable obj = args[0].OperableType switch
+                {
+                    ObjectType.Object => (ObjectOperable)args[0],
+                    _ => throw new NativeImplementationException($"Cannot cast value of type '{args[0].OperableType}' to object")
+                };
+                string memberName = args[1].OperableType switch
+                {
+                    ObjectType.StringObject => args[1].ToString(),
+                    _ => throw new NativeImplementationException($"Could not cast value of type '{args[1].OperableType}' to string")
+                };
+                return obj.Value.ContainsMember(memberName) ? BoolOperable.True : BoolOperable.False;
+            }
+        };
     }
 }
