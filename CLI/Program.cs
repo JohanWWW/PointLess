@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Interpreter.Models;
 using Interpreter.Runtime;
+using Interpreter.Framework.Extern;
 
 namespace ZeroPointCLI
 {
@@ -256,7 +257,8 @@ namespace ZeroPointCLI
         {
             var environment = new RuntimeEnvironment();
 
-            var implementations = GetImplementations();
+            var nativeImplementations = GetNativeImplementations();
+            var externApis = GetExternApis();
 
             // Load system code
             var libFiles = new Dictionary<string, string>();
@@ -281,7 +283,7 @@ namespace ZeroPointCLI
             // Build and run all library sources
             foreach (string lib in compileOrder)
             {
-                var compiler = new ASTMapper(implementations);
+                var compiler = new ASTMapper(nativeImplementations, externApis);
 
                 RootModel compiledTree;
                 try
@@ -319,7 +321,7 @@ namespace ZeroPointCLI
 
             foreach (string srcName in project.CompileOrder)
             {
-                var compiler = new ASTMapper();
+                var compiler = new ASTMapper(null, externApis); // TODO: remove arguments
 
                 RootModel compiledTree;
                 try
@@ -345,7 +347,7 @@ namespace ZeroPointCLI
                 entryPointMethod.Value.GetOverload(1).GetConsumer().Invoke(args.Select(a => new StringOperable(a)).ToArray());
         }
 
-        private static NativeImplementationBase[] GetImplementations()
+        private static NativeImplementationBase[] GetNativeImplementations()
         {
             Type[] types = Assembly.Load(nameof(NativeLibraries)).GetTypes().Where(t => t.IsPublic).ToArray();
             NativeImplementationBase[] implementations = new NativeImplementationBase[types.Length];
@@ -354,6 +356,17 @@ namespace ZeroPointCLI
             {
                 implementations[i] = Activator.CreateInstance(types[i]) as NativeImplementationBase;
             }
+
+            return implementations;
+        }
+
+        private static ExternAPI[] GetExternApis()
+        {
+            Type[] types = Assembly.Load(string.Join('.', nameof(ZeroPointCLI), nameof(ExternLibraries))).GetTypes().Where(t => t.IsPublic && t.GetCustomAttribute<ExternAPIAttribute>() != null).ToArray();
+            ExternAPI[] implementations = new ExternAPI[types.Length];
+
+            for (int i = 0; i < types.Length; i++)
+                implementations[i] = Activator.CreateInstance(types[i]) as ExternAPI;
 
             return implementations;
         }

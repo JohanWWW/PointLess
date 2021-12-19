@@ -1,18 +1,14 @@
-﻿using Antlr4.Runtime;
-using Interpreter.Environment;
+﻿using Interpreter.Environment;
 using Interpreter.Environment.Exceptions;
 using Interpreter.Models;
 using Interpreter.Models.Delegates;
 using Interpreter.Models.Enums;
 using Interpreter.Models.Interfaces;
 using Interpreter.Runtime;
-using Microsoft.CSharp.RuntimeBinder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter
 {
@@ -269,13 +265,14 @@ namespace Interpreter
             ModelTypeCode.NativeProviderStatement           => EnterNativeProviderStatement(expression as NativeProviderStatementModel, scope),
             ModelTypeCode.NativeFunctionStatement           => EnterNativeFunctionStatement(expression as NativeFunctionStatementModel, scope),
             ModelTypeCode.NativeActionStatement             => EnterNativeActionStatement(expression as NativeActionStatementModel, scope),
+            ModelTypeCode.ExternMethodStatement             => EnterExternMethodStatement(expression as ExternMethodStatement, scope),
             // --Methods--
 
             ModelTypeCode.MethodCallStatement               => EnterFunctionCallStatement(expression as MethodCallStatementModel, scope),
             ModelTypeCode.ObjectInitializationExpression    => EnterObjectInitializationExpression(expression as ObjectInitializationExpressionModel, scope),
             ModelTypeCode.ArrayLiteralNotation              => EnterArrayLiteralNotation(expression as ArrayLiteralNotationModel, scope),
             ModelTypeCode.DictionaryLiteralNotation         => EnterDictionaryObjectOperable(expression as DictionaryLiteralNotation, scope),
-            ModelTypeCode.NameofExpression          => EnterNameofExpression(expression as NameofExpression, scope),
+            ModelTypeCode.NameofExpression                  => EnterNameofExpression(expression as NameofExpression, scope),
             _                                               => throw new InterpreterRuntimeException(expression, _filePath, $"Expression with type code '{expression.TypeCode}' is not implemented"),
         };
 
@@ -789,6 +786,23 @@ namespace Interpreter
                 method: new ActionMethod(() => actionStatement.NativeImplementation())
             );
             return new MethodOperable(action);
+        }
+
+        public IOperable<Method> EnterExternMethodStatement(ExternMethodStatement externMethodStatement, Scoping outerScope)
+        {
+            Method externMethod = new(
+                parameterCount: externMethodStatement.ParameterCount,
+                type: externMethodStatement.MethodType,
+                method: externMethodStatement.MethodType switch
+                {
+                    MethodType.Function => new FunctionMethod(args => externMethodStatement.Implementation(args)),
+                    MethodType.Provider => new ProviderMethod(() => externMethodStatement.Implementation(null)),
+                    MethodType.Consumer => new ConsumerMethod(args => externMethodStatement.Implementation(args)),
+                    MethodType.Action => new ActionMethod(() => externMethodStatement.Implementation(null)),
+                    _ => new InterpreterRuntimeException(externMethodStatement, _filePath, $"MethodType '{externMethodStatement.MethodType}' not implemented")
+                }
+            );
+            return new MethodOperable(externMethod);
         }
 
         public void EnterBlock(BlockModel block, Scoping scope)

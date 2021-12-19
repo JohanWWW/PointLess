@@ -1,9 +1,7 @@
 ﻿using Interpreter.Models.Enums;
+using Singulink.Numerics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Numerics;
 
 namespace Interpreter.Runtime
 {
@@ -110,6 +108,28 @@ namespace Interpreter.Runtime
 
         #endregion
 
+        public static implicit operator BoolOperable(bool value) => FromBool(value);
+
         public override string ToString() => Value ? TRUE_SYMBOL : FALSE_SYMBOL;
+
+        #region Convertible Implementations
+        public override TypeCode GetTypeCode() => TypeCode.Boolean;
+        public override bool ToBoolean(IFormatProvider provider) => Value;
+        public override BigDecimal ToBigDecimal(IFormatProvider provider) => Value ? 1 : 0;
+        public override BigInteger ToBigInteger(IFormatProvider provider) => Value ? 1 : 0;
+        public override byte ToByte(IFormatProvider provider) => Value ? (byte)1 : (byte)0;
+        public override char ToChar(IFormatProvider provider) => Value ? (char)1 : (char)0;
+        public override decimal ToDecimal(IFormatProvider provider) => Value ? 1m : 0m;
+        public override double ToDouble(IFormatProvider provider) => Value ? 1d : 0d;
+        public override short ToInt16(IFormatProvider provider) => Value ? (short)1 : (short)0;
+        public override int ToInt32(IFormatProvider provider) => Value ? 1 : 0;
+        public override long ToInt64(IFormatProvider provider) => Value ? 1 : 0;
+        public override sbyte ToSByte(IFormatProvider provider) => Value ? (sbyte)1 : (sbyte)0;
+        public override float ToSingle(IFormatProvider provider) => Value ? 1f : 0f;
+        public override ushort ToUInt16(IFormatProvider provider) => Value ? (ushort)1 : (ushort)0;
+        public override uint ToUInt32(IFormatProvider provider) => Value ? (uint)1 : 0;
+        public override ulong ToUInt64(IFormatProvider provider) => Value ? (ulong)1 : 0;
+        public override string ToString(IFormatProvider provider) => ToString();
+        #endregion
     }
 }

@@ -186,5 +186,25 @@ namespace Interpreter.Runtime
         public static implicit operator BigDecimalOperable(BigDecimal value) => new(value);
 
         public override string ToString() => Value.ToString(DECIMAL_FORMAT, DECIMAL_CULTURE);
+
+        #region Convertible Implementations
+        public override TypeCode GetTypeCode() => TypeCode.Object;
+        public override bool ToBoolean(IFormatProvider provider) => Value != 0;
+        public override BigDecimal ToBigDecimal(IFormatProvider provider) => Value;
+        public override BigInteger ToBigInteger(IFormatProvider provider) => (BigInteger)Value;
+        public override byte ToByte(IFormatProvider provider) => (byte)(int)Value;
+        public override char ToChar(IFormatProvider provider) => (char)(int)Value;
+        public override decimal ToDecimal(IFormatProvider provider) => (decimal)Value;
+        public override double ToDouble(IFormatProvider provider) => (double)Value;
+        public override short ToInt16(IFormatProvider provider) => (short)Value;
+        public override int ToInt32(IFormatProvider provider) => (int)Value;
+        public override long ToInt64(IFormatProvider provider) => (long)Value;
+        public override sbyte ToSByte(IFormatProvider provider) => (sbyte)(int)Value;
+        public override float ToSingle(IFormatProvider provider) => (float)Value;
+        public override ushort ToUInt16(IFormatProvider provider) => (ushort)(uint)Value;
+        public override uint ToUInt32(IFormatProvider provider) => (uint)Value;
+        public override ulong ToUInt64(IFormatProvider provider) => (ulong)Value;
+        public override string ToString(IFormatProvider provider) => Value.ToString(DECIMAL_FORMAT, provider);
+        #endregion
     }
 }

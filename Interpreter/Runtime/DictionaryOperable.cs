@@ -1,16 +1,18 @@
-﻿using Interpreter.Models.Enums;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
+    [Obsolete("Use " + nameof(DictionaryObjectOperable) + " instead")]
     public class DictionaryOperable : OperableBase<IDictionary<IOperable, IOperable>>
     {
         public DictionaryOperable(IDictionary<IOperable, IOperable> value) : base(value, ObjectType.Dictionary)
         {
+        }
+
+        public override TypeCode GetTypeCode()
+        {
+            throw new NotImplementedException();
         }
 
         public override IOperable<bool> StrictEqual(IOperable operand)

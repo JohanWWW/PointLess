@@ -2,9 +2,7 @@
 using Interpreter.Models.Delegates;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
@@ -365,6 +363,10 @@ namespace Interpreter.Runtime
             Method tsMethod = (ts as IOperable<MethodData>).Value.GetOverload(0);
             return tsMethod.GetProvider().Invoke().ToString();
         }
+
+        #region IConvertible implementations
+        public override TypeCode GetTypeCode() => TypeCode.Object;
+        #endregion
 
         public static implicit operator DictionaryObjectOperable(Dictionary<IOperable, IOperable> value) => new(value);
     }

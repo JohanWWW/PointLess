@@ -2,11 +2,7 @@
 using Interpreter.Types;
 using Singulink.Numerics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
@@ -280,5 +276,25 @@ namespace Interpreter.Runtime
         #endregion
 
         public static implicit operator CharacterOperable(int value) => new(value);
+
+        #region Convertible Implementations
+        public override TypeCode GetTypeCode() => TypeCode.Char;
+        public override bool ToBoolean(IFormatProvider provider) => Value != 0;
+        public override BigDecimal ToBigDecimal(IFormatProvider provider) => Value.Value;
+        public override BigInteger ToBigInteger(IFormatProvider provider) => Value.Value;
+        public override byte ToByte(IFormatProvider provider) => (byte)Value.Value;
+        public override char ToChar(IFormatProvider provider) => (char)Value.Value;
+        public override decimal ToDecimal(IFormatProvider provider) => Value.Value;
+        public override double ToDouble(IFormatProvider provider) => Value.Value;
+        public override short ToInt16(IFormatProvider provider) => (short)Value.Value;
+        public override int ToInt32(IFormatProvider provider) => Value.Value;
+        public override long ToInt64(IFormatProvider provider) => Value.Value;
+        public override sbyte ToSByte(IFormatProvider provider) => (sbyte)Value.Value;
+        public override float ToSingle(IFormatProvider provider) => Value.Value;
+        public override ushort ToUInt16(IFormatProvider provider) => (ushort)Value.Value;
+        public override uint ToUInt32(IFormatProvider provider) => (uint)Value.Value;
+        public override ulong ToUInt64(IFormatProvider provider) => (ulong)Value.Value;
+        public override string ToString(IFormatProvider provider) => ToString();
+        #endregion
     }
 }

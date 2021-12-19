@@ -10,10 +10,16 @@ namespace Interpreter.Runtime
     /// <summary>
     /// Represents the native array that is encapsulated by the framework's own Array class
     /// </summary>
+    [Obsolete("Use " + nameof(ArrayObjectOperable) + " instead")]
     public class ArrayOperable : OperableBase<IOperable[]>
     {
         public ArrayOperable(IOperable[] value) : base(value, ObjectType.Array)
         {
+        }
+
+        public override TypeCode GetTypeCode()
+        {
+            throw new NotImplementedException();
         }
 
         public override IOperable<bool> StrictEqual(IOperable operand)

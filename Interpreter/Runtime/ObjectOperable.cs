@@ -2,9 +2,7 @@
 using Interpreter.Models.Enums;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
@@ -354,5 +352,9 @@ namespace Interpreter.Runtime
             Method toString = toStringData.GetOverload(0);
             return toString.GetProvider().Invoke().ToString();
         }
+
+        #region IConvertible implementations
+        public override TypeCode GetTypeCode() => TypeCode.Object;
+        #endregion
     }
 }

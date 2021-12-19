@@ -12,12 +12,14 @@ using Singulink.Numerics;
 using Interpreter.Runtime;
 using Interpreter.Helpers;
 using Antlr4.Runtime.Tree;
+using Interpreter.Framework.Extern;
 
 namespace Interpreter
 {
     public class ASTMapper
     {
         private readonly IReadOnlyDictionary<string, IFunctionModel> _nativeImplementations;
+        private readonly IReadOnlyDictionary<string, IFunctionModel> _externApis;
         private readonly IDictionary<string, CompilerConstDefinition> _compilerConstDefinitions;
 
         private static readonly Regex _integerNumberPattern = new(@"^\d+$");
@@ -123,15 +125,17 @@ namespace Interpreter
             [UnaryOperator.Minus]                   = "__operator_unary_minus__"
         };
 
-        public ASTMapper(params NativeImplementationBase[] implementations)
+        public ASTMapper(NativeImplementationBase[] implementations, ExternAPI[] externApis)
         {
-            _nativeImplementations = implementations.SelectMany(i => i.GetImplementationMap()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            _nativeImplementations = implementations?.SelectMany(i => i.GetImplementationMap()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            _externApis = externApis?.SelectMany(i => i.GetImplementations()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             _compilerConstDefinitions = new Dictionary<string, CompilerConstDefinition>();
         }
 
         public ASTMapper()
         {
             _nativeImplementations = null;
+            _externApis = null;
             _compilerConstDefinitions = new Dictionary<string, CompilerConstDefinition>();
         }
 
@@ -551,6 +555,7 @@ namespace Interpreter
                 ZeroPointParser.RULE_lambda_function_statement  => EnterLambdaFunctionStatement(context.lambda_function_statement()),
                 ZeroPointParser.RULE_native_function_statement  => EnterNativeFunctionStatement(context.native_function_statement()),
                 ZeroPointParser.RULE_native_provider_statement  => EnterNativeProviderStatement(context.native_provider_statement()),
+                ZeroPointParser.RULE_extern_method_statement    => EnterExternMethodStatement(context.extern_method_statement()),
                 _                                               => throw new NotImplementedException($"Rule {ruleIndex} does not exist")
             };
         }
@@ -820,6 +825,15 @@ namespace Interpreter
             nf.StartToken = context.Start;
             nf.StopToken = context.Stop;
             return nf;
+        }
+
+        private ExternMethodStatement EnterExternMethodStatement(ZeroPointParser.Extern_method_statementContext context)
+        {
+            string implId = EnterInjectStatement(context.inject_statement());
+            var externMethod = _externApis[implId] as ExternMethodStatement;
+            externMethod.StartToken = context.Start;
+            externMethod.StopToken = context.Stop;
+            return externMethod;
         }
 
         private string EnterInjectStatement(ZeroPointParser.Inject_statementContext context)

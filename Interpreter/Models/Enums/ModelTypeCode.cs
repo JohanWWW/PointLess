@@ -39,6 +39,7 @@ namespace Interpreter.Models.Enums
         ElseIfClause,
         ElseClause,
         CompilerConstDefinition,
-        NameofExpression
+        NameofExpression,
+        ExternMethodStatement
     }
 }

@@ -1,10 +1,6 @@
 ﻿using Interpreter.Environment;
 using Interpreter.Models.Enums;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
@@ -48,5 +44,9 @@ namespace Interpreter.Runtime
 
             return BoolOperable.FromBool(Value != operand.Value);
         }
+
+        #region IConvertible implementations
+        public override TypeCode GetTypeCode() => TypeCode.Object;
+        #endregion
     }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
+    [Obsolete("Use " + nameof(StringObjectOperable) + " instead")]
     public class StringOperable : OperableBase<string>
     {
         public StringOperable(string value) : base(value, ObjectType.String)
@@ -32,6 +33,11 @@ namespace Interpreter.Runtime
                 ObjectType.Void => BoolOperable.FromBool(Value == null),
                 _ => throw MissingBinaryOperatorImplementation(operand, BinaryOperator.Equal)
             };
+        }
+
+        public override TypeCode GetTypeCode()
+        {
+            throw new NotImplementedException();
         }
 
         public override IOperable NotEqual(IOperable operand)

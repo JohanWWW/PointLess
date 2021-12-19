@@ -5,11 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class ArrayObjectOperable : OperableBase<RuntimeObject>
+    public class ArrayObjectOperable : OperableBase<RuntimeObject>, IArrayOperable
     {
         #region Private constants
         private const string METHOD_NAME_LENGTH                 = "length";
@@ -373,6 +372,10 @@ namespace Interpreter.Runtime
             for (byte i = 0; i < size; i++)
                 yield return initial;
         }
+
+        public IOperable[] GetArray() => _array;
+
+        public override TypeCode GetTypeCode() => TypeCode.Object;
 
         public static implicit operator ArrayObjectOperable(IOperable[] value) => new(value);
     }

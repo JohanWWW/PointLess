@@ -10,9 +10,17 @@ using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
-    public class BigIntOperable : OperableBase<BigInteger>
+    public class BigIntOperable : OperableBase<BigInteger>, IConvertible
     {
         public BigIntOperable(BigInteger value) : base(value, ObjectType.ArbitraryBitInteger)
+        {
+        }
+
+        public BigIntOperable(int value) : this((BigInteger)value)
+        {
+        }
+
+        public BigIntOperable(uint value) : this((BigInteger)value)
         {
         }
 
@@ -247,5 +255,25 @@ namespace Interpreter.Runtime
         public static implicit operator BigIntOperable(int value) => new(value);
 
         public override string ToString() => Value.ToString();
+
+        #region Convertible Implementations
+        public override TypeCode GetTypeCode() => TypeCode.Object;
+        public override bool ToBoolean(IFormatProvider provider) => Value != 0;
+        public override BigDecimal ToBigDecimal(IFormatProvider provider) => Value;
+        public override BigInteger ToBigInteger(IFormatProvider provider) => Value;
+        public override byte ToByte(IFormatProvider provider) => (byte)Value;
+        public override char ToChar(IFormatProvider provider) => (char)Value;
+        public override decimal ToDecimal(IFormatProvider provider) => (decimal)Value;
+        public override double ToDouble(IFormatProvider provider) => (double)Value;
+        public override short ToInt16(IFormatProvider provider) => (short)Value;
+        public override int ToInt32(IFormatProvider provider) => (int)Value;
+        public override long ToInt64(IFormatProvider provider) => (long)Value;
+        public override sbyte ToSByte(IFormatProvider provider) => (sbyte)Value;
+        public override float ToSingle(IFormatProvider provider) => (float)Value;
+        public override string ToString(IFormatProvider provider) => ToString();
+        public override ushort ToUInt16(IFormatProvider provider) => (ushort)Value;
+        public override uint ToUInt32(IFormatProvider provider) => (uint)Value;
+        public override ulong ToUInt64(IFormatProvider provider) => (ulong)Value;
+        #endregion
     }
 }

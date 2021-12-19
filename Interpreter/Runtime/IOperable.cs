@@ -9,7 +9,7 @@ namespace Interpreter.Runtime
     /// <summary>
     /// Represents a value from a literal or a variable
     /// </summary>
-    public interface IOperable
+    public interface IOperable : IValueConvertible
     {
         ObjectType OperableType { get; }
         object Value { get; }

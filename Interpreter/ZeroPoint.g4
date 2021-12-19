@@ -95,6 +95,7 @@ anonymous_function_definition_statement
 	| lambda_function_statement
 	| native_function_statement
 	| native_provider_statement
+	| extern_method_statement
 	;
 
 	// Accepts parameters and returns
@@ -152,6 +153,13 @@ anonymous_function_definition_statement
 		: NATIVE '(' ')' LAMBDA inject_statement
 		;
 
+	extern_method_statement
+		: (
+			('(' ')') |
+			('(' parameter_list ')') |
+			IDENTIFIER
+		  ) LAMBDA EXTERN inject_statement
+		;
 
 	// ++Special Methods++
 	operator_function_statement
@@ -432,6 +440,7 @@ VOID
 USE: 'use';
 IN: 'in';
 NATIVE: 'native';
+EXTERN: 'extern';
 OPERATOR: 'operator';
 UNARY: 'unary';
 INDEXER: 'indexer';

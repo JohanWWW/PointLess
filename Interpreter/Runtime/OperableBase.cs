@@ -1,9 +1,7 @@
 ﻿using Interpreter.Models.Enums;
+using Singulink.Numerics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Numerics;
 
 namespace Interpreter.Runtime
 {
@@ -27,6 +25,11 @@ namespace Interpreter.Runtime
         protected Exception MissingUnaryOperatorImplementation(UnaryOperator op)
         {
             return new MissingOperatorOverrideException($"Missing operator implementation for unary operator '{op}' on type '{OperableType}'");
+        }
+
+        protected Exception NotImplementedConvertible(Type targetType)
+        {
+            return new InvalidCastException($"Cannot convert value of type '{GetType().Name}' to '{targetType.Name}' due to missing implementation");
         }
 
         #region Binary Operators
@@ -78,6 +81,25 @@ namespace Interpreter.Runtime
 
         public override int GetHashCode() => HashCode.Combine(OperableType, Value);
 
+        public abstract TypeCode GetTypeCode();
+        public virtual object ToType(Type conversionType, IFormatProvider provider) => throw NotImplementedConvertible(conversionType);
+        public virtual bool ToBoolean(IFormatProvider provider)                     => throw NotImplementedConvertible(typeof(bool));
+        public virtual BigDecimal ToBigDecimal(IFormatProvider provider)            => throw NotImplementedConvertible(typeof(BigDecimal));
+        public virtual BigInteger ToBigInteger(IFormatProvider provider)            => throw NotImplementedConvertible(typeof(BigInteger));
+        public virtual byte ToByte(IFormatProvider provider)                        => throw NotImplementedConvertible(typeof(byte));
+        public virtual char ToChar(IFormatProvider provider)                        => throw NotImplementedConvertible(typeof(char));
+        public virtual DateTime ToDateTime(IFormatProvider provider)                => throw NotImplementedConvertible(typeof(DateTime));
+        public virtual decimal ToDecimal(IFormatProvider provider)                  => throw NotImplementedConvertible(typeof(decimal));
+        public virtual double ToDouble(IFormatProvider provider)                    => throw NotImplementedConvertible(typeof(double));
+        public virtual short ToInt16(IFormatProvider provider)                      => throw NotImplementedConvertible(typeof(short));
+        public virtual int ToInt32(IFormatProvider provider)                        => throw NotImplementedConvertible(typeof(int));
+        public virtual long ToInt64(IFormatProvider provider)                       => throw NotImplementedConvertible(typeof(long));
+        public virtual sbyte ToSByte(IFormatProvider provider)                      => throw NotImplementedConvertible(typeof(sbyte));
+        public virtual float ToSingle(IFormatProvider provider)                     => throw NotImplementedConvertible(typeof(float));
+        public virtual ushort ToUInt16(IFormatProvider provider)                    => throw NotImplementedConvertible(typeof(ushort));
+        public virtual uint ToUInt32(IFormatProvider provider)                      => throw NotImplementedConvertible(typeof(uint));
+        public virtual ulong ToUInt64(IFormatProvider provider)                     => throw NotImplementedConvertible(typeof(ulong));
+        public virtual string ToString(IFormatProvider provider)                    => throw NotImplementedConvertible(typeof(string));
     }
 
     public abstract class OperableBase<T> : OperableBase, IBinaryOperable<T>, IUnaryOperable<T>

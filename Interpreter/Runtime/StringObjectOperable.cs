@@ -2,12 +2,10 @@
 using Interpreter.Models.Delegates;
 using Interpreter.Runtime.Extensions;
 using Interpreter.Types;
+using Singulink.Numerics;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Interpreter.Runtime
 {
@@ -399,5 +397,25 @@ namespace Interpreter.Runtime
 
         // base.Value should not be included in hash because it has a variable hash code
         public override int GetHashCode() => HashCode.Combine(_stringValue, OperableType);
+
+        #region Convertible Implementations
+        public override TypeCode GetTypeCode() => TypeCode.String;
+        public override bool ToBoolean(IFormatProvider provider) => bool.Parse(_stringValue);
+        public override BigDecimal ToBigDecimal(IFormatProvider provider) => BigDecimal.Parse(_stringValue);
+        public override BigInteger ToBigInteger(IFormatProvider provider) => BigInteger.Parse(_stringValue);
+        public override byte ToByte(IFormatProvider provider) => byte.Parse(_stringValue);
+        public override char ToChar(IFormatProvider provider) => char.Parse(_stringValue);
+        public override decimal ToDecimal(IFormatProvider provider) => decimal.Parse(_stringValue);
+        public override double ToDouble(IFormatProvider provider) => double.Parse(_stringValue);
+        public override short ToInt16(IFormatProvider provider) => short.Parse(_stringValue);
+        public override int ToInt32(IFormatProvider provider) => int.Parse(_stringValue);
+        public override long ToInt64(IFormatProvider provider) => long.Parse(_stringValue);
+        public override sbyte ToSByte(IFormatProvider provider) => sbyte.Parse(_stringValue);
+        public override float ToSingle(IFormatProvider provider) => float.Parse(_stringValue);
+        public override ushort ToUInt16(IFormatProvider provider) => ushort.Parse(_stringValue);
+        public override uint ToUInt32(IFormatProvider provider) => uint.Parse(_stringValue);
+        public override ulong ToUInt64(IFormatProvider provider) => ulong.Parse(_stringValue);
+        public override string ToString(IFormatProvider provider) => ToString();
+        #endregion
     }
 }
