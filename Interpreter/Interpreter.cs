@@ -227,6 +227,9 @@ namespace Interpreter
                 case ModelTypeCode.WhileLoopStatement:
                     EnterWhileLoopStatement(statement as WhileLoopStatement, scope);
                     break;
+                case ModelTypeCode.DoWhileLoop:
+                    EnterDoWhileStatement(statement as DoWhileLoopStatement, scope);
+                    break;
                 case ModelTypeCode.ForeachLoopStatement:
                     EnterForeachLoopStatement(statement as ForeachLoopStatement, scope);
                     break;
@@ -241,6 +244,9 @@ namespace Interpreter
                     break;
                 case ModelTypeCode.CompilerConstDefinition:
                     // Don't interpret because it has already been processed by the compiler
+                    break;
+                case ModelTypeCode.DoStatement:
+                    EnterDoStatement(statement as DoStatement, scope);
                     break;
                 default:
                     throw new NotImplementedException($"Statement with type code '{statement.TypeCode}' is not implemented");
@@ -273,6 +279,7 @@ namespace Interpreter
             ModelTypeCode.ArrayLiteralNotation              => EnterArrayLiteralNotation(expression as ArrayLiteralNotationModel, scope),
             ModelTypeCode.DictionaryLiteralNotation         => EnterDictionaryObjectOperable(expression as DictionaryLiteralNotation, scope),
             ModelTypeCode.NameofExpression                  => EnterNameofExpression(expression as NameofExpression, scope),
+            ModelTypeCode.DoExpression                      => EnterDoExpression(expression as DoExpression, scope),
             _                                               => throw new InterpreterRuntimeException(expression, _filePath, $"Expression with type code '{expression.TypeCode}' is not implemented"),
         };
 
@@ -281,6 +288,16 @@ namespace Interpreter
             // Discard because we only need to check if the identifier path is valid
             _ = EnterIdentifierExpression(expression.IdentifierModel, scope);
             return (StringObjectOperable)expression.IdentifierModel.Identifier.Last();
+        }
+
+        public IOperable EnterDoExpression(DoExpression expression, Scoping scope)
+        {
+            Scoping doScope = new();
+            doScope.SetOuterScope(scope);
+
+            EnterBlock(expression.Body, doScope);
+
+            return EnterExpression(expression.Return, doScope);
         }
 
         public IOperable EnterBinaryExpression(BinaryExpressionModel expression, Scoping scope) => AttemptToEvaluateExpression(expression, scope);
@@ -1114,6 +1131,32 @@ namespace Interpreter
 
         public void EnterThrowStatement(ThrowStatement statement, Scoping scope) =>
             throw new LanguageException(EnterExpression(statement.Expression, scope), statement, _filePath);
+
+        public void EnterDoStatement(DoStatement statement, Scoping scope)
+        {
+            Scoping doScope = new();
+            doScope.SetOuterScope(scope);
+
+            EnterBlock(statement.Body, doScope);
+        }
+
+        public void EnterDoWhileStatement(DoWhileLoopStatement statement, Scoping scope)
+        {
+            IOperable condition;
+            do
+            {
+                Scoping doScope = new();
+                doScope.SetOuterScope(scope);
+
+                EnterBlock(statement.Body, doScope);
+
+                condition = EnterExpression(statement.Condition, scope);
+
+                if (condition.OperableType != ObjectType.Boolean)
+                    throw new InterpreterRuntimeException(statement, _filePath, $"While loop condition expression was not a boolean");
+            }
+            while ((bool)condition.Value);
+        }
 
         public ArrayObjectOperable EnterArrayLiteralNotation(ArrayLiteralNotationModel expression, Scoping scope)
         {

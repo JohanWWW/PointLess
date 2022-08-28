@@ -12,12 +12,15 @@ block
 statement
 	: assign_statement SEMICOLON
 	| conditional_statement
-	| loop_statement
+	| while_loop_statement
+	| dowhile_loop_statement SEMICOLON
+	| foreach_loop_statement
 	| method_call_statement SEMICOLON
 	| try_catch_statement
 	| throw_statement SEMICOLON
 	| indexer_set_call_statement SEMICOLON
 	| compiler_const_definition
+	| do_statement SEMICOLON
 	;
 	
 use_statement
@@ -54,15 +57,14 @@ else_statement
 	  '}'
 	;
 	
-loop_statement
-	: while_loop_statement
-	| foreach_loop_statement
-	;
-	
 while_loop_statement
 	: WHILE '(' expression ')' '{'
 		block
 	  '}'
+	;
+
+dowhile_loop_statement
+	: DO '{' block '}' WHILE '(' expression ')'
 	;
 
 foreach_loop_statement
@@ -71,6 +73,10 @@ foreach_loop_statement
 	  '}'
 	;
 	
+do_statement
+	: DO '{' block '}'
+	;
+
 try_catch_statement
 	: try_statement catch_statement
 	;
@@ -263,10 +269,15 @@ atom
 	| array_literal_notation
 	| dictionary_literal_notation
 	| nameof_expression
+	| do_expression
 	;
 
 nameof_expression
 	: NAMEOF '(' (IDENTIFIER|identifier_access) ')'
+	;
+
+do_expression
+	: '{' block DO RETURN expression SEMICOLON '}'
 	;
 
 literal
@@ -446,6 +457,7 @@ UNARY: 'unary';
 INDEXER: 'indexer';
 ALLOC: 'alloc';
 
+DO: 'do';
 WHILE: 'while';
 FOREACH: 'foreach';
 
@@ -458,6 +470,7 @@ THROW: 'throw';
 NAMEOF: 'nameof';
 
 CTCONST: '#const';
+CALLEXPR: 'callexpr';
 
 IDENTIFIER
 	: [A-Za-z0-9_]+

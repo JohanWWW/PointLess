@@ -28,15 +28,28 @@
 #const __N_SET_MEMBER_VALUE__               native (obj, name, value)   => <@"std.setMemberValue">
 #const __N_CONTAINS_MEMBER__                native (obj, name)          => <@"std.containsMember">
 
+#const __N_GETOVERLOD__						native (method_data, paramc)=> <@"std.getoverlod">
+#const __N_OVERLODPSUM__					native (method_data)		=> <@"std.overlodpsum">
+#const __N_METHODPCOUNT__					native (method)				=> <@"std.methodpcount">
+#const __N_METHODTYPE__						native (method)				=> <@"std.methodtype">
+#const __N_METHODIIDX__						native (method)				=> <@"std.methodiidx">
+#const __N_BUILDMETHOD__					native (method, type, fbody)=> <@"std.buildmethod">
 
-#const STRING_EMPTY     ""
-#const DOT_SYM          "."
-#const COMMA_SYM        ","
-#const COLON_SYM        ":"
-#const PLUS_SYM         "+"
-#const MINUS_SYM        "-"
+#const __N_DTDATA__							native (ticks)				=> <@"std.dtdata">
 
-#const TICKS_UNTIL_UNIX_START 621355968000000000 // 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
+#const __N_CTOI__							native (c)					=> <@"std.ctoi">
+#const __N_ITOC__							native (i)					=> <@"std.itoc">
+#const __N_CTOB__							native (c)					=> <@"std.ctob">
+
+
+#const STRING_EMPTY                         ""
+#const DOT_SYM                              "."
+#const COMMA_SYM                            ","
+#const COLON_SYM                            ":"
+#const PLUS_SYM                             "+"
+#const MINUS_SYM                            "-"
+
+#const TICKS_UNTIL_UNIX_START               621355968000000000 // 0001-00-00 00:00:00 --> 1970-01-01 00:00:00
 
 
 // Begin __STD_LIB_EXPORTS__
@@ -216,7 +229,7 @@
 #const __CONSOLE__() => {
     // Add println overload
     PRINTLN = __N_CONSOLE_PRINTLN__;
-    PRINTLN += () => PRINTLN(__STRING_EMPTY__);
+    PRINTLN += () => PRINTLN(STRING_EMPTY);
 
     return {
         Color = __CONSOLE_COLORS__,
@@ -641,6 +654,19 @@
         getMemberValue  = __N_GET_MEMBER_VALUE__,
         setMemberValue  = __N_SET_MEMBER_VALUE__,
         containsMember  = __N_CONTAINS_MEMBER__,
+
+        getoverlod      = __N_GETOVERLOD__,
+        overlodpsum     = __N_OVERLODPSUM__,
+        methodpcount    = __N_METHODPCOUNT__,
+        methodtype      = __N_METHODTYPE__,
+        methodiidx      = __N_METHODIIDX__,
+        buildmethod     = __N_BUILDMETHOD__,
+
+        dtdata          = __N_DTDATA__,
+
+        ctoi            = __N_CTOI__,
+        itoc            = __N_ITOC__,
+        ctob            = __N_CTOB__,
 
         parseInt        = PARSE_INT,
         parseDecimal    = PARSE_DECIMAL,

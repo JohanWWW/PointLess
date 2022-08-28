@@ -40,6 +40,9 @@ namespace Interpreter.Models.Enums
         ElseClause,
         CompilerConstDefinition,
         NameofExpression,
-        ExternMethodStatement
+        ExternMethodStatement,
+        DoStatement,
+        DoWhileLoop,
+        DoExpression
     }
 }

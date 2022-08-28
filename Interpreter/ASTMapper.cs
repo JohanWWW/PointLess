@@ -196,11 +196,14 @@ namespace Interpreter
                 ZeroPointParser.RULE_assign_statement           => EnterAssignStatement(context.assign_statement()),
                 ZeroPointParser.RULE_conditional_statement      => EnterConditionalStatement(context.conditional_statement()),
                 ZeroPointParser.RULE_method_call_statement      => EnterMethodCallStatement(context.method_call_statement()),
-                ZeroPointParser.RULE_loop_statement             => EnterLoopStatement(context.loop_statement()),
+                ZeroPointParser.RULE_while_loop_statement       => EnterWhileLoop(context.while_loop_statement()),
+                ZeroPointParser.RULE_dowhile_loop_statement     => EnterDoWhileLoop(context.dowhile_loop_statement()),
+                ZeroPointParser.RULE_foreach_loop_statement     => EnterForeachLoop(context.foreach_loop_statement()),
                 ZeroPointParser.RULE_try_catch_statement        => EnterTryCatchStatement(context.try_catch_statement()),
                 ZeroPointParser.RULE_throw_statement            => EnterThrowStatement(context.throw_statement()),
                 ZeroPointParser.RULE_indexer_set_call_statement => EnterIndexerSetCallStatement(context.indexer_set_call_statement()),
                 ZeroPointParser.RULE_compiler_const_definition  => EnterCompilerConstDefinition(context.compiler_const_definition()),
+                ZeroPointParser.RULE_do_statement               => EnterDoStatement(context.do_statement()),
                 _                                               => throw new NotImplementedException($"Rule {ruleIndex} does not exist")
             };
         }
@@ -220,6 +223,27 @@ namespace Interpreter
             _compilerConstDefinitions.Add(id, statement);
 
             return statement;
+        }
+
+        private IStatementModel EnterDoStatement(ZeroPointParser.Do_statementContext context)
+        {
+            return new DoStatement
+            {
+                Body = EnterBlock(context.block()),
+                StartToken = context.Start,
+                StopToken = context.Stop
+            };
+        }
+
+        private IStatementModel EnterDoWhileLoop(ZeroPointParser.Dowhile_loop_statementContext context)
+        {
+            return new DoWhileLoopStatement
+            {
+                Body = EnterBlock(context.block()),
+                Condition = EnterExpression(context.expression()),
+                StartToken = context.Start,
+                StopToken = context.Stop
+            };
         }
 
         private IStatementModel EnterAssignStatement(ZeroPointParser.Assign_statementContext context)
@@ -298,21 +322,6 @@ namespace Interpreter
                 StartToken = context.Start,
                 StopToken = context.Stop
             };
-        }
-
-        private ILoopStatementModel EnterLoopStatement(ZeroPointParser.Loop_statementContext context)
-        {
-            if (context.while_loop_statement().IsPresent())
-            {
-                return EnterWhileLoop(context.while_loop_statement());
-            }
-
-            if (context.foreach_loop_statement().IsPresent())
-            {
-                return EnterForeachLoop(context.foreach_loop_statement());
-            }
-
-            throw new NotImplementedException();
         }
 
         private WhileLoopStatement EnterWhileLoop(ZeroPointParser.While_loop_statementContext context)
@@ -396,6 +405,11 @@ namespace Interpreter
                 return EnterNameofExpression(ctx.nameof_expression());
             }
 
+            if (ctx.do_expression().IsPresent())
+            {
+                return EnterDoExpression(ctx.do_expression());
+            }
+
             if (ctx.literal().IsPresent())
             {
                 return EnterLiteral(ctx.literal());
@@ -466,6 +480,17 @@ namespace Interpreter
                     StartToken = ctx.Start,
                     StopToken = ctx.Stop
                 },
+                StartToken = ctx.Start,
+                StopToken = ctx.Stop
+            };
+        }
+
+        private IExpressionModel EnterDoExpression(ZeroPointParser.Do_expressionContext ctx)
+        {
+            return new DoExpression
+            {
+                Body = EnterBlock(ctx.block()),
+                Return = EnterExpression(ctx.expression()),
                 StartToken = ctx.Start,
                 StopToken = ctx.Stop
             };

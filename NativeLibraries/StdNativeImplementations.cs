@@ -501,5 +501,167 @@ namespace NativeLibraries
                 return obj.Value.ContainsMember(memberName) ? BoolOperable.True : BoolOperable.False;
             }
         };
+
+        [ImplementationIdentifier("std.getoverlod")]
+        public static readonly NativeFunctionStatementModel GetOverload = new NativeFunctionStatementModel("method_data", "paramc")
+        {
+            NativeImplementation = args =>
+            {
+                MethodData md = ((MethodDataOperable)args[0]).Value;
+                int paramc = (int)((BigIntOperable)args[1]).Value;
+
+                Method m = md.GetOverload(paramc);
+                return new MethodOperable(m);
+            }
+        };
+
+        [ImplementationIdentifier("std.overlodpsum")]
+        public static readonly NativeFunctionStatementModel GetOverloadParameterSummary = new NativeFunctionStatementModel("method_data")
+        {
+            NativeImplementation = args =>
+            {
+                MethodData md = ((MethodDataOperable)args[0]).Value;
+                IOperable[] paramCounts = md.GetOverloads().Select(kvp => kvp.Key).Select(paramCount => new BigIntOperable(paramCount)).ToArray();
+                return new ArrayObjectOperable(paramCounts);
+            }
+        };
+
+        [ImplementationIdentifier("std.methodpcount")]
+        public static readonly NativeFunctionStatementModel GetMethodParameterCount = new NativeFunctionStatementModel("method")
+        {
+            NativeImplementation = args =>
+            {
+                if (args[0].OperableType == ObjectType.MethodData)
+                {
+                    throw new NativeImplementationException($"An lvalue (MethodData) was provided to the function. An rvalue (Method) is required.");
+                }
+                Method m = ((MethodOperable)args[0]).Value;
+                return new BigIntOperable(m.ParameterCount);
+            }
+        };
+
+        [ImplementationIdentifier("std.methodtype")]
+        public static readonly NativeFunctionStatementModel GetMethodType = new NativeFunctionStatementModel("method")
+        {
+            NativeImplementation = args =>
+            {
+                if (args[0].OperableType == ObjectType.MethodData)
+                {
+                    throw new NativeImplementationException($"An lvalue (MethodData) was provided to the function. An rvalue (Method) is required.");
+                }
+                Method m = ((MethodOperable)args[0]).Value;
+                return new BigIntOperable((int)m.MethodType);
+            }
+        };
+
+        [ImplementationIdentifier("std.methodiidx")]
+        public static readonly NativeFunctionStatementModel GetMethodIsIndexer = new NativeFunctionStatementModel("method")
+        {
+            NativeImplementation = args =>
+            {
+                if (args[0].OperableType == ObjectType.MethodData)
+                {
+                    throw new NativeImplementationException($"An lvalue (MethodData) was provided to the function. An rvalue (Method) is required.");
+                }
+                Method m = ((MethodOperable)args[0]).Value;
+                return BoolOperable.FromBool(m.IsIndexerMethod);
+            }
+        };
+
+        [ImplementationIdentifier("std.buildmethod")]
+        public static readonly NativeFunctionStatementModel BuildMethod = new NativeFunctionStatementModel("paramc", "type", "fbody")
+        {
+            NativeImplementation = args =>
+            {
+                int paramc = (int)((BigIntOperable)args[0]).Value;
+                MethodType methodType = (MethodType)(int)((BigIntOperable)args[1]).Value;
+                Method initBody = ((MethodOperable)args[2]).Value;
+
+                switch (methodType)
+                {
+                    case MethodType.Action:
+                        ActionMethod am = initBody.GetAction();
+                        return new MethodOperable(new Method(0, new ActionMethod(() =>
+                        {
+                            am();
+                        }), methodType));
+
+                    case MethodType.Consumer:
+                        ConsumerMethod cm = initBody.GetConsumer();
+                        return new MethodOperable(new Method(paramc, new ConsumerMethod(arglist =>
+                        {
+                            var argsAsArray = new ArrayObjectOperable(arglist);
+                            cm(new IOperable[] { argsAsArray });
+                        }), methodType));
+
+                    case MethodType.Function:
+                        FunctionMethod fm = initBody.GetFunction();
+                        return new MethodOperable(new Method(paramc, new FunctionMethod(arglist =>
+                        {
+                            var argsAsArray = new ArrayObjectOperable(arglist);
+                            return fm(new IOperable[] { argsAsArray });
+                        }), methodType));
+
+                    case MethodType.Provider:
+                        ProviderMethod pm = initBody.GetProvider();
+                        return new MethodOperable(new Method(0, new ProviderMethod(() => pm()), methodType));
+
+                    default:
+                        throw new NativeImplementationException("Not a valid method type.");
+                }
+            }
+        };
+
+        [ImplementationIdentifier("std.dtdata")]
+        public static readonly NativeFunctionStatementModel GetDateTimeData = new NativeFunctionStatementModel("ticks")
+        {
+            NativeImplementation = args =>
+            {
+                long ticks = (long)((BigIntOperable)args[0]).Value;
+                DateTime dt = new(ticks);
+                return new ArrayObjectOperable(new IOperable[]
+                {
+                    (BigIntOperable)dt.Year,
+                    (BigIntOperable)dt.Month,
+                    (BigIntOperable)dt.Day,
+                    (BigIntOperable)dt.Hour,
+                    (BigIntOperable)dt.Minute,
+                    (BigIntOperable)dt.Second,
+                    (BigIntOperable)dt.Millisecond,
+                    (BigIntOperable)(int)dt.DayOfWeek,
+                    (BigIntOperable)dt.DayOfYear
+                });
+            }
+        };
+
+        [ImplementationIdentifier("std.ctoi")]
+        public static readonly NativeFunctionStatementModel CharacterToInteger = new NativeFunctionStatementModel("c")
+        {
+            NativeImplementation = args =>
+            {
+                CharacterOperable c = (CharacterOperable)args[0];
+                return (BigIntOperable)c.Value.Value;
+            }
+        };
+
+        [ImplementationIdentifier("std.ctob")]
+        public static readonly NativeFunctionStatementModel CharacterToByte = new NativeFunctionStatementModel("c")
+        {
+            NativeImplementation = args =>
+            {
+                CharacterOperable c = (CharacterOperable)args[0];
+                return (ByteOperable)c.Value.Value;
+            }
+        };
+
+        [ImplementationIdentifier("std.itoc")]
+        public static readonly NativeFunctionStatementModel IntegerToCharacter = new NativeFunctionStatementModel("i")
+        {
+            NativeImplementation = args =>
+            {
+                int i = (int)((BigIntOperable)args[0]).Value;
+                return (CharacterOperable)i;
+            }
+        };
     }
 }

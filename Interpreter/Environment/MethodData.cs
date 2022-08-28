@@ -42,6 +42,11 @@ namespace Interpreter.Environment
             return _overloads[parameterCount];
         }
 
+        public IDictionary<int, Method> GetOverloads()
+        {
+            return _overloads;
+        }
+
         public bool TryGetOverload(int parameterCount, out Method value) =>
             _overloads.TryGetValue(parameterCount, out value);
 
